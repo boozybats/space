@@ -1,0 +1,31 @@
+const p - плотность
+const M - молярная масса  //Mr(H2SO4) = 1 * 2 + 32 + 16 * 4 = 2 + 32 + 64 = 98 г/моль
+
+V - объем, изначально задаётся произвольно
+
+m = V / p
+m = M * n (n - кол-во в-ва)
+
+n = m / M
+
+g - гравитационное ускорение
+g = G * (m / r^2)
+G = 6,67408(31) * 10^−11
+
+function integral(func, precision = 1000) {
+	const a = 0;
+	const b = Math.PI;
+	const interval = (b - a) / precision;
+	var result = 0;
+
+	var x = a + interval;
+	var k = 4;
+	while (x < b) {
+		result += k * func(x);
+		x += interval;
+		k = k == 4 ? 2 : 4;
+	}
+
+	result = interval / 3 * (result + func(a) + func(b));
+	return result;
+}
