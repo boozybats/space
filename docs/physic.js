@@ -15,18 +15,38 @@
 	V  - volume
 */
 
-//gravitational constant
 const G = 6.6738480 * Math.pow(10, -11);
-const layers_count = 100;
+const LAYERS_COUNT = 1000;
+const PRESSURE_TEMPERATURE_CONST = 6669090909090;
 
 var PeriodicTable = {
 	Fe: {
 		M: 55.845,
-		p: 7.874
+		p: 7874
 	},
-	Zn: {
-		M: 64.38,
-		p: 7.133
+	Mg: {
+		M: 24.305,
+		p: 1738
+	},
+	Ni: {
+		M: 58.6934,
+		p: 8902
+	},
+	O: {
+		M: 15.999,
+		p: 1141
+	},
+	O2: {
+		M: 31.998,
+		p: 1141
+	},
+	S: {
+		M: 32.06,
+		p: 2070
+	},
+	Si: {
+		M: 28.085,
+		p: 2330
 	}
 };
 
@@ -52,6 +72,33 @@ class Phys {
 		return out;
 	}
 
+	static inf_lim(func, to = 999999) {
+		var precision = 100;
+		var x0 = 0;
+		var x1 = to;
+		var interval = (x1 - x0) / precision;
+
+		var position = 0;
+		var last;
+		for (var i = x0; Math.abs(i) < Math.abs(x1); i += interval) {
+			var res = func.call(this, i);
+			if (last) {
+				res > last ? position++ : position--;
+			}
+			last = res;
+		}
+
+		if (position > 1) {
+			return '+inf';
+		}
+		else if (position < -1) {
+			return '-inf';
+		}
+		else {
+			return 0;
+		}
+	}
+
 	static mass(p, V) {
 		return p * V;
 	}
@@ -61,8 +108,12 @@ class Item {
 	constructor(options = {
 		physic: {
 			matter: {
-				Fe: 800,
-				Si: 200
+				Fe: 37479066 * Math.pow(10, 13),
+				Mg: 13756767 * Math.pow(10, 13),
+				Ni: 2599704 * Math.pow(10, 13),
+				O2: 31954695 * Math.pow(10, 13),
+				S: 2058099 * Math.pow(10, 13),
+				Si: 2058099 * Math.pow(10, 14)
 			}
 		}
 	}) {
@@ -81,12 +132,7 @@ class Item {
 }
 
 class Physic {
-	constructor(options = {
-		matter: {
-			Fe: 800,
-			Si: 200
-		}
-	}) {
+	constructor(options = {}) {
 		this.initialize(options);
 	}
 
@@ -100,15 +146,25 @@ class Physic {
 		var out = 0;
 
 		var layers = this.layers;
-		for (var i of layers) {
-			var layer = layers[i];
-
+		for (var layer of layers) {
 			var radius = layer.radius + layer.height;
 			if (radius >= R) {
 				out = layer.density;
 				break;
 			}
 		}
+
+		return out;
+	}
+
+	get diameter() {
+		var out = 0;
+
+		var layers = this.layers;
+		for (var layer of layers) {
+			out += layer.height;
+		}
+		out *= 2;
 
 		return out;
 	}
@@ -130,7 +186,7 @@ class Physic {
 	}
 
 	get mass() {
-		var out = this.Mass();
+		var out = this.MassTotal();
 		return out;
 	}
 
@@ -138,9 +194,7 @@ class Physic {
 		var out = 0;
 
 		var layers = this.layers;
-		for (var i of layers) {
-			var layer = layers[i];
-
+		for (var layer of layers) {
 			var radius = layer.radius + layer.height;
 			out += layer.mass;
 			if (radius >= R) {
@@ -155,11 +209,11 @@ class Physic {
 		var out = 0;
 
 		var layers = this.layers;
-		for (var i of layers) {
-			var layer = layers[i];
+		for (var layer of layers) {
 			var radius = layer.radius + layer.height;
 			if (radius >= R) {
-				out = G * (this.MassTotal(R) * Density(R) / Math.pow(R, 2));
+				out = G * (this.MassTotal(R) * this.Density(R) / Math.pow(radius, 2));
+				break;
 			}
 		}
 
@@ -167,21 +221,35 @@ class Physic {
 	}
 
 	Temperature(R) {
+		var out = 0;
 
+		out = this.Pressure(R) * this.VolumeTotal(R) / PRESSURE_TEMPERATURE_CONST;
+
+		return out;
 	}
 
 	get volume() {
-		
+		return this.pure_volume_;
+	}
+
+	VolumeTotal(R = Infinity) {
+		var out = 0;
+
+		var layers = this.layers;
+		for (var layer of layers) {
+			var radius = layer.radius + layer.height;
+			out += layer.volume;
+			if (radius >= R) {
+				break;
+			}
+		}
+
+		return out;
 	}
 }
 
 class Matter {
-	constructor(options = {
-		matter: {
-			Fe: 800
-			Si: 200
-		}
-	}) {
+	constructor(options = {}) {
 		this.initialize(options);
 	}
 
@@ -205,7 +273,6 @@ class Matter {
 		this.substances_ = [];
 
 		this.init_substances(options.matter);
-		this.init_height();
 		this.update_layers();
 	}
 
@@ -223,7 +290,7 @@ class Matter {
 
 	get layer_height() {
 		var R = Phys.layer_height(this.volume_);
-		var out = R / layers_count;
+		var out = R / LAYERS_COUNT;
 		return out;
 	}
 
@@ -231,16 +298,16 @@ class Matter {
 		var out = [];
 
 		var substances = this.substances_;
-		for (var name of substances) {
-			if (options.hasOwnProperty(name)) {
-				var volume = substances[name];
-				var item = {
-					name: name,
-					volume: volume
-				};
+		for (var substance of substances) {
+			var name = substance.name;
+			var volume = substance.volume;
 
-				out.push(item);
-			}
+			var item = {
+				name: name,
+				volume: volume
+			};
+
+			out.push(item);
 		}
 
 		out.sort(function(a, b) {
@@ -257,9 +324,10 @@ class Matter {
 
 	update_layers() {
 		var layers = [];
-		var height = this.layer_height_;
+		var height = this.layer_height;
 		var arr = this.sorted_substances;
 
+		var self = this;
 		;(function core(R = 0, index = 0) {
 			var substance = arr[index];
 			if (substance) {
@@ -268,27 +336,27 @@ class Matter {
 
 				var residue;
 				var last = layers[layers.length - 1];
-				if (last && last.max_V < last.cur_V) {
-					var V = last.max_V - last.cur_V;
+				if (last && last.max_V > last.volume) {
+					var V = last.max_V - last.volume;
 					residue = Vs - V;
-					var current_V = residue >= 0 ? V : V + residue;
+					var volume = residue >= 0 ? V : V + residue;
 					var p = (last.density + density) / 2;
 
 					last.substances.push(substance.name);
-					last.cur_V += current_V;
-					last.mass += Phys.mass(density, current_V);
+					last.volume += volume;
+					last.mass += Phys.mass(density, volume);
 					last.density = p;
 				}
 				else {
-					var V = Phys.layer_volume(this.layer_height, R);
+					var V = Phys.layer_volume(self.layer_height, R);
 					residue = Vs - V;
-					var current_V = residue >= 0 ? V : V + residue;
+					var volume = residue >= 0 ? V : V + residue;
 
 					var layer = {
-						substances: [substance.name]
+						substances: [substance.name],
 						max_V: V,
-						cur_V: current_V,
-						mass: Phys.mass(density, current_V),
+						volume: volume,
+						mass: Phys.mass(density, volume),
 						density: density,
 						radius: R,
 						height: height
@@ -299,12 +367,16 @@ class Matter {
 
 				if (residue > 0) {
 					substance.volume = residue;
+					R += height;
 				}
 				else {
 					substance.volume = 0;
 					index++;
+					if (residue == 0) {
+						R += height;
+					}
 				}
-				core(R += height, index);
+				core(R, index);
 			}
 		})();
 
