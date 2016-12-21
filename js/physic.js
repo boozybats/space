@@ -142,7 +142,7 @@ class Item {
 		var aggregation = this.physic_.Pressure(CORE_MIN_RADIUS);
 
 		var out = {
-			aggregation: 
+			aggregation: 0
 		};
 
 		return out;
@@ -162,6 +162,17 @@ class Physic {
 		this.initialize(options);
 	}
 
+	get diameter() {
+		var out = 0;
+
+		this.matter_.each_layer(function(layer) {
+			out += layer.height;
+		});
+		out *= 2;
+
+		return out;
+	}
+
 	Density(R) {
 		var out = 0;
 
@@ -171,17 +182,6 @@ class Physic {
 				return false;
 			}
 		});
-
-		return out;
-	}
-
-	get diameter() {
-		var out = 0;
-
-		this.matter_.each_layer(function(layer) {
-			out += layer.height;
-		});
-		out *= 2;
 
 		return out;
 	}
