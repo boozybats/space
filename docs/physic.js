@@ -11,6 +11,7 @@
 	M  - molar mass
 	m  - mass
 	p  - density
+	P  - pascal
 	R  - radius
 	V  - volume
 */
@@ -18,35 +19,51 @@
 const G = 6.6738480 * Math.pow(10, -11);
 const LAYERS_COUNT = 1000;
 const PRESSURE_TEMPERATURE_CONST = 6669090909090;
+const CORE_MIN_RADIUS = 25;
+const NORMAL_PRESSURE = 101325;
 
 var PeriodicTable = {
 	Fe: {
 		M: 55.845,
-		p: 7874
+		p: 7874,
+		melting: 1812,
+		boiling: 3135
 	},
 	Mg: {
 		M: 24.305,
-		p: 1738
+		p: 1738,
+		melting: 924,
+		boiling: 1363
 	},
 	Ni: {
 		M: 58.6934,
-		p: 8902
+		p: 8902,
+		melting: 1726,
+		boiling: 3005
 	},
 	O: {
 		M: 15.999,
-		p: 1141
+		p: 1141,
+		melting: 54,
+		boiling: 90
 	},
 	O2: {
 		M: 31.998,
-		p: 1141
+		p: 1141,
+		melting: 54,
+		boiling: 90
 	},
 	S: {
 		M: 32.06,
-		p: 2070
+		p: 2070,
+		melting: 386,
+		boiling: 717
 	},
 	Si: {
 		M: 28.085,
-		p: 2330
+		p: 2330,
+		melting: 1683,
+		boiling: 2623
 	}
 };
 
@@ -72,8 +89,7 @@ class Phys {
 		return out;
 	}
 
-	static inf_lim(func, to = 999999) {
-		var precision = 100;
+	static inf_lim(func, to = 9999999, precision = 100) {
 		var x0 = 0;
 		var x1 = to;
 		var interval = (x1 - x0) / precision;
@@ -122,6 +138,16 @@ class Item {
 		}
 	}
 
+	get core() {
+		var aggregation = this.physic_.Pressure(CORE_MIN_RADIUS);
+
+		var out = {
+			aggregation: 
+		};
+
+		return out;
+	}
+
 	initialize(options) {
 		this.init_physic(options.physic);
 	}
@@ -136,23 +162,15 @@ class Physic {
 		this.initialize(options);
 	}
 
-	get core() {
-		var out = {
-			status: 'liquid'
-		};
-	}
-
 	Density(R) {
 		var out = 0;
 
-		var layers = this.layers;
-		for (var layer of layers) {
-			var radius = layer.radius + layer.height;
+		this.matter_.each_layer(function(layer, radius) {
 			if (radius >= R) {
 				out = layer.density;
-				break;
+				return false;
 			}
-		}
+		});
 
 		return out;
 	}
@@ -160,10 +178,9 @@ class Physic {
 	get diameter() {
 		var out = 0;
 
-		var layers = this.layers;
-		for (var layer of layers) {
+		this.matter_.each_layer(function(layer) {
 			out += layer.height;
-		}
+		});
 		out *= 2;
 
 		return out;
@@ -190,17 +207,36 @@ class Physic {
 		return out;
 	}
 
+	Mass(R) {
+		var out = 0;
+
+		var self = this;
+		this.matter_.each_layer(function(layer, radius) {
+			if (radius >= R) {
+				var m0 = (radius - R) / layer.height * layer.mass;
+				var sibling = self.matter_.nextSibling(layer);
+				var m1 = (sibling.height - sibling.radius + R) / sibling.height * sibling.mass;
+				out = m0 + m1;
+				return false;
+			}
+		});
+
+		return out;
+	}
+
 	MassTotal(R = Infinity) {
 		var out = 0;
 
-		var layers = this.layers;
-		for (var layer of layers) {
-			var radius = layer.radius + layer.height;
-			out += layer.mass;
+		this.matter_.each_layer(function(layer, radius) {
 			if (radius >= R) {
-				break;
+				var approx = (R - layer.radius) / layer.height * layer.mass;
+				out += approx;
+				return false;
 			}
-		}
+			else {
+				out += layer.mass;
+			}
+		});
 
 		return out;
 	}
@@ -208,23 +244,20 @@ class Physic {
 	Pressure(R) {
 		var out = 0;
 
-		var layers = this.layers;
-		for (var layer of layers) {
-			var radius = layer.radius + layer.height;
+		var self = this;
+		this.matter_.each_layer(function(layer, radius) {
 			if (radius >= R) {
-				out = G * (this.MassTotal(R) * this.Density(R) / Math.pow(radius, 2));
-				break;
+				out = G * (self.MassTotal(R) * self.Density(R) / Math.pow(R, 2));
+				return false;
 			}
-		}
+		});
 
 		return out;
 	}
 
 	Temperature(R) {
 		var out = 0;
-
 		out = this.Pressure(R) * this.VolumeTotal(R) / PRESSURE_TEMPERATURE_CONST;
-
 		return out;
 	}
 
@@ -235,14 +268,12 @@ class Physic {
 	VolumeTotal(R = Infinity) {
 		var out = 0;
 
-		var layers = this.layers;
-		for (var layer of layers) {
-			var radius = layer.radius + layer.height;
+		this.matter_.each_layer(function(layer, radius) {
 			out += layer.volume;
 			if (radius >= R) {
-				break;
+				return false;
 			}
-		}
+		});
 
 		return out;
 	}
@@ -267,6 +298,18 @@ class Matter {
 		}
 	}
 
+	each_layer(callback) {
+		var layers = this.layers_;
+		for (var layer of this.layers_) {
+			var radius = layer.radius + layer.height;
+			var res = callback(layer, radius);
+
+			if (res === false) {
+				break;
+			}
+		}
+	}
+
 	initialize(options) {
 		this.volume_ = 0;
 		this.layers_ = [];
@@ -285,12 +328,32 @@ class Matter {
 	}
 
 	get layers() {
-		return this.layers_;
+		var out = this.layers_;
+		return out;
 	}
 
 	get layer_height() {
 		var R = Phys.layer_height(this.volume_);
 		var out = R / LAYERS_COUNT;
+		return out;
+	}
+
+	nextSibling(layer) {
+		var out;
+		var radius = layer.radius;
+
+		var layers = this.layers_;
+		var isNext = false;
+		for (var layer of layers) {
+			if (isNext) {
+				out = layer;
+				break;
+			}
+			else if (layer.radius == radius) {
+				isNext = true;
+			}
+		}
+
 		return out;
 	}
 
