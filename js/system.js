@@ -1,12 +1,13 @@
+const FPS = 1000 / 60;
 const RESOLUTION_WIDTH = 1820;
 const RESOLUTION_HEIGHT = 1024;
 
 var Mouse = {
-	w: 20,
-	h: 30,
-	x: 0,
-	y: 0,
-	
+	w: 30,
+	h: 45,
+	x: RESOLUTION_WIDTH / 2,
+	y: RESOLUTION_HEIGHT / 2,
+	forceback: false
 };
 
 Loader.images({
@@ -56,15 +57,15 @@ Loader.images({
 			if (Mouse.x < 0) {
 				Mouse.x = 0;
 			}
-			else if (Mouse.x > canvas.width - Mouse.w) {
-				Mouse.x = canvas.width - Mouse.w;
+			else if (Mouse.x > RESOLUTION_WIDTH - Mouse.w) {
+				Mouse.x = RESOLUTION_WIDTH - Mouse.w;
 			}
 
 			if (Mouse.y < 0) {
 				Mouse.y = 0;
 			}
-			else if (Mouse.y > canvas.height - Mouse.h) {
-				Mouse.y = canvas.height - Mouse.h;
+			else if (Mouse.y > RESOLUTION_HEIGHT - Mouse.h) {
+				Mouse.y = RESOLUTION_HEIGHT - Mouse.h;
 			}
 		}
 	});
@@ -103,6 +104,9 @@ Loader.images({
 	// \AUTORESIZE
 
 	var renderer = new Renderer(canvas);
+	renderer.execution();
+
+	//MOUSE
 	var mouse_buffer = new Buffer({
 		image: function() {
 			return images.mouse;
@@ -121,5 +125,33 @@ Loader.images({
 		}
 	});
 	renderer.add(mouse_buffer);
-	renderer.execution();
+
+	var forceback_koeff = 500;
+	var forceback_min = 1;
+	var centerx = RESOLUTION_WIDTH / 2;
+	var centery = RESOLUTION_HEIGHT / 2;
+	setInterval(function() {
+		if (Mouse.forceback) {
+			if (Mouse.x != centerx) {
+				if (Mouse.x > centerx - forceback_min && Mouse.x < centerx + forceback_min) {
+					Mouse.x = centerx;
+				}
+				else {
+					var interval = (Mouse.x - centerx) / forceback_koeff;
+					Mouse.x -= interval;
+				}
+			}
+
+			if (Mouse.y != centery) {
+				if (Mouse.y > centery - forceback_min && Mouse.y < centery + forceback_min) {
+					Mouse.y = centery;
+				}
+				else {
+					var interval = (Mouse.y - centery) / forceback_koeff;
+					Mouse.y -= interval;
+				}
+			}
+		}
+	}, FPS);
+	// \MOUSE
 });
