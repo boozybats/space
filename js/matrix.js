@@ -11,13 +11,21 @@ class Mat {
 					}
 				}
 
-				this.a = a;
-				this.b = b;
+				this.a_ = a;
+				this.b_ = b;
 			}
 			else {
 				console.warn('Mat: error');
 			}
 		}
+	}
+
+	get a() {
+		return this.a_;
+	}
+
+	get b() {
+		return this.b_;
 	}
 
 	console() {
@@ -349,7 +357,7 @@ class Mat {
 		return out;
 	}
 
-	vec(vec) {
+	Vec(vec) {
 		//transform matrix(x + 1) and vector(x) at vector(x)
 
 		var a = this.a,
@@ -396,7 +404,7 @@ class Mat {
 class Mat2 extends Mat {
 	constructor(arr = []) {
 		super();
-		var filler = typeof arr == 'number' ? arr : false;
+		var filler = typeof arr == 'number' ? arr : undefined;
 
 		for (var i = 0; i < 2; i++) {
 			this[i] = [];
@@ -410,14 +418,14 @@ class Mat2 extends Mat {
 			}
 		}
 
-		this.a = this.b = 2;
+		this.a_ = this.b_ = 2;
 	}
 }
 
 class Mat3 extends Mat {
 	constructor(arr = []) {
 		super();
-		var filler = typeof arr == 'number' ? arr : false;
+		var filler = typeof arr == 'number' ? arr : undefined;
 
 		for (var i = 0; i < 3; i++) {
 			this[i] = [];
@@ -431,7 +439,7 @@ class Mat3 extends Mat {
 			}
 		}
 
-		this.a = this.b = 3;
+		this.a_ = this.b_ = 3;
 	}
 
 	static scale(vec) {
@@ -458,9 +466,9 @@ class Mat3 extends Mat {
 }
 
 class Mat4 extends Mat {
-	constructor() {
+	constructor(arr = []) {
 		super();
-		var filler = typeof arr == 'number' ? arr : false;
+		var filler = typeof arr == 'number' ? arr : undefined;
 
 		for (var i = 0; i < 4; i++) {
 			this[i] = [];
@@ -474,7 +482,7 @@ class Mat4 extends Mat {
 			}
 		}
 
-		this.a = this.b = 4;
+		this.a_ = this.b_ = 4;
 	}
 
 	normalize() {
@@ -534,7 +542,7 @@ class Mat4 extends Mat {
 	}
 
 	static perspective(ratio, near, far, fov) {
-		fov = Madth.DTR(fov);
+		fov = Math.DTR(fov);
 		var y = Math.cos(fov / 2) / Math.sin(fov / 2);
 		var x = y / ratio;
 		var d = 1;

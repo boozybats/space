@@ -4,7 +4,7 @@ class Heaven {
 	constructor(options = {
 		physic: {
 			matter: {
-				Fe: 50 * Math.pow(10, 6);
+				Fe: 50 * Math.pow(10, 6)
 			}
 		}
 	}) {
@@ -62,7 +62,7 @@ class Link extends Mesh {
 		this.fillStyle_ = '#000000';
 		this.body_ = new Body;
 
-		initialize_vertices();
+		this.initialize_vertices();
 	}
 
 	initialize_vertices() {

@@ -4,11 +4,11 @@ class Body {
 		rotation = new Vec3,
 		scale = new Vec3(1, 1, 1),
 		parent
-	}) {
-		this.position = position;
-		this.rotation = rotation;
-		this.scale = scale;
-		this.parent = parent;
+	} = {}) {
+		this.position_ = position;
+		this.rotation_ = rotation;
+		this.scale_ = scale;
+		this.parent_ = parent;
 	}
 
 	get position() {
