@@ -16,6 +16,10 @@ class Renderer {
 		ctx.clearRect(0, 0, w, h);
 	}
 
+	ctx() {
+		return this.ctx_;
+	}
+
 	draw(image, x, y, w, h) {
 		var ctx = this.ctx_;
 
@@ -29,7 +33,9 @@ class Renderer {
 		this.clear();
 
 		for (var buffer of stack) {
-			this.draw(buffer.image, buffer.x, buffer.y, buffer.w, buffer.h);
+			if (buffer.draw) {
+				buffer.draw(this);
+			}
 		}
 
 		var self = this;
@@ -42,39 +48,5 @@ class Renderer {
 		this.canvas_ = canvas;
 		this.ctx_ = canvas.getContext('2d');
 		this.stack_ = [];
-	}
-}
-
-class Buffer {
-	constructor(options = {}) {
-		this.initialize(options);
-	}
-
-	initialize(options) {
-		this.image_ = options.image;
-		this.h_ = options.h;
-		this.w_ = options.w;
-		this.x_ = options.x;
-		this.y_ = options.y;
-	}
-
-	get image() {
-		return this.image_();
-	}
-
-	get h() {
-		return this.h_();
-	}
-
-	get w() {
-		return this.w_();
-	}
-
-	get x() {
-		return this.x_();
-	}
-
-	get y() {
-		return this.y_();
 	}
 }

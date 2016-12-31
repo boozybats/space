@@ -120,49 +120,16 @@ class Phys {
 	}
 };
 
-class Item {
-	constructor(options = {
-		physic: {
-			matter: {
-				Fe: 37479066 * Math.pow(10, 13),
-				Mg: 13756767 * Math.pow(10, 13),
-				Ni: 2599704 * Math.pow(10, 13),
-				O2: 31954695 * Math.pow(10, 13),
-				S: 2058099 * Math.pow(10, 13),
-				Si: 2058099 * Math.pow(10, 14)
-			}
-		}
-	}) {
-		if (typeof options == 'object') {
-			this.initialize(options);
-		}
-	}
-
-	get core() {
-		var aggregation = this.physic_.Pressure(CORE_MIN_RADIUS);
-
-		var out = {
-			aggregation: 0
-		};
-
-		return out;
-	}
-
-	initialize(options) {
-		this.init_physic(options.physic);
-	}
-
-	init_physic(options) {
-		this.physic_ = new Physic(options);
-	}
-}
-
 class Physic {
 	constructor(options = {}) {
 		this.initialize(options);
 	}
 
 	get diameter() {
+		return this.diameter_;
+	}
+
+	Diameter() {
 		var out = 0;
 
 		this.matter_.each_layer(function(layer) {
@@ -189,6 +156,7 @@ class Physic {
 	initialize(options) {
 		this.init_matter(options.matter);
 		this.pure_volume_ = this.matter_.volume;
+		this.diameter_ = this.Diameter();
 	}
 
 	init_matter(options) {

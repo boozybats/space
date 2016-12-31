@@ -1,4 +1,4 @@
-class Loader{
+class Loader {
 	static images(array, callback) {
 		var out = {};
 		var total = 0;
@@ -10,6 +10,10 @@ class Loader{
 			}
 		}
 
+		function onerror() {
+			console.warn('image "' + this.src + '" error');
+		}
+
 		for (let i in array) {
 			total++;
 			if (array.hasOwnProperty(i)) {
@@ -17,6 +21,7 @@ class Loader{
 				out[i] = image;
 
 				image.onload = onload;
+				image.onerror = onerror;
 				image.src = array[i];
 			}
 		}
