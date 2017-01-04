@@ -1,14 +1,14 @@
 class Body {
 	constructor({
 		position = new Vec3,
-		rotation = new Vec3,
+		rotation = new Quaternion,
 		scale = new Vec3(1, 1, 1),
 		parent
 	} = {}) {
-		this.position_ = position;
-		this.rotation_ = rotation;
-		this.scale_ = scale;
-		this.parent_ = parent;
+		this.position = position;
+		this.rotation = rotation;
+		this.scale = scale;
+		this.parent = parent;
 	}
 
 	get position() {
@@ -29,7 +29,7 @@ class Body {
 	}
 
 	set rotation(val) {
-		if (val instanceof Vec3) {
+		if (val instanceof Quaternion) {
 			this.rotation_ = val;
 		}
 		else {
@@ -55,8 +55,8 @@ class Body {
 	}
 
 	set parent(val) {
-		if (val instanceof Body) {
-			this.panret_ = val;
+		if (!val || val instanceof Body) {
+			this.parent_ = val;
 		}
 		else {
 			console.warn('Body: parent must be Body');

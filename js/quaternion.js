@@ -5,19 +5,19 @@ class Quaternion {
 		this.z_ = z;
 		this.w_ = w;
 
-		this.euler_ = Euler.Quaternion(x, y, z, w);
+		this.euler = Euler.Quaternion(x, y, z, w);
 	}
 
 	static dif(quat1, quat2) {
 		var euler1 = quat1.euler,
 			euler2 = quat2.euler;
-		var eul = new Euler(
+		var euler = new Euler(
 			euler1.x - euler2.x,
 			euler1.y - euler2.y,
 			euler1.z - euler2.z
 		);
 
-		var out = Quaternion.Euler(eul);
+		var out = Quaternion.Euler(euler);
 
 		return out;
 	}
@@ -35,17 +35,24 @@ class Quaternion {
 		}
 	}
 
-	static Euler(eul = new Euler) {
+	static Euler(euler = new Euler, ...args) {
 		//return quaternion by using eulers as arguments
 
-		var roll = eul.x,
-			pitch = eul.y,
-			yaw = eul.z;
-		var nroll, npitch, nyaw;
+		var roll, pitch, yaw;
+		if (typeof euler === 'number') {
+			roll = euler || 0,
+			pitch = args[0] || 0,
+			yaw = args[1] || 0;
+		}
+		else {
+			roll = euler.x,
+			pitch = euler.y,
+			yaw = euler.z;
+		}
 
-		nroll = Math.DTR(roll);
-		npitch = Math.DTR(pitch);
-		nyaw = Math.DTR(yaw);
+		var nroll = Math.DTR(roll),
+			npitch = Math.DTR(pitch),
+			nyaw = Math.DTR(yaw);
 
 		var sr, sp, sy, cr, cp, cy;
 

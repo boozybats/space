@@ -1,13 +1,15 @@
 const LINKS_COUNT = 360 / 10;
 
-class Heaven {
+class Heaven extends Item {
 	constructor(options = {
+		renderer: undefined,
 		physic: {
 			matter: {
 				Fe: 50 * Math.pow(10, 6)
 			}
 		}
 	}) {
+		super(options);
 		this.initialize(options);
 	}
 
@@ -23,44 +25,37 @@ class Heaven {
 
 	initialize(options) {
 		this.init_physic(options.physic);
-		this.init_mesh();
+		this.init_mesh(options.renderer);
 	}
 
 	init_physic(options) {
 		this.physic_ = new Physic(options);
 	}
 
-	init_mesh() {
-		this.mesh_ = new Mesh(this.physic_.diameter);
-		this.initialize_links();
+	init_mesh(renderer) {
+		this.initialize_links(renderer);
 	}
 
-	initialize_links() {
+	initialize_links(renderer) {
+		var links = [];
 		for (var i = 0; i < LINKS_COUNT; i++) {
-			var link = new Link(i);
+			var link = new Link(this.body);
+			links.push(link);
 		}
+		renderer.add(...links);
 	}
 }
 
-class Link extends Mesh {
-	constructor() {
+class Link extends Item {
+	constructor(parent) {
 		super();
-		this.initialize();
+		this.initialize(parent);
 	}
 
-	get body() {
-		var body = {
-			position: position,
-			rotation: rotation,
-			scale: scale
-		};
-
-		return body;
-	}
-
-	initialize() {
-		this.fillStyle_ = '#000000';
-		this.body_ = new Body;
+	initialize(parent) {
+		this.mesh_ = new Mesh;
+		this.mesh.fillStyle = '#ffffff';
+		this.body.parent = parent;
 
 		this.initialize_vertices();
 	}
@@ -69,11 +64,11 @@ class Link extends Mesh {
 		var width = 0.1;
 		var height = 1;
 
-		this.vertices_ = Vertices.array(
+		this.mesh.vertices = Vertices.array(
 			[-width / 2, height / 2],
 			[width / 2, height / 2],
-			[-width / 2, -height / 2],
-			[width / 2, -height / 2]
+			[width / 2, -height / 2],
+			[-width / 2, -height / 2]
 		);
 	}
 }

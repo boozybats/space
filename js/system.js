@@ -2,6 +2,7 @@ const FPS = 1000 / 60;
 const RESOLUTION_WIDTH = 1820;
 const RESOLUTION_HEIGHT = 1024;
 
+var canvas;
 var Mouse = {
 	w: 30,
 	h: 45,
@@ -124,14 +125,10 @@ Loader.images({
 	window.onresize = onresize;
 	// \AUTORESIZE
 
-	var renderer = new Renderer(canvas);
-	renderer.execution();
-
 	// MOUSE
 	Mouse.draw = function(renderer) {
 		renderer.draw(images.mouse, this.x, this.y, this.w, this.h);
 	}
-	renderer.add(Mouse);
 
 	var forceback_koeff = 500;
 	var forceback_min = 1;
@@ -151,4 +148,15 @@ Loader.images({
 		}
 	}, FPS);
 	// \MOUSE
+
+	gameplay();
 });
+
+// SHOW ONCE AT SESSION
+var consoleoneusednames = [];
+console.one = function(name, callback) {
+	if (consoleoneusednames.indexOf(name) == -1) {
+		consoleoneusednames.push(name);
+		callback();
+	}
+}

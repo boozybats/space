@@ -3,8 +3,8 @@ class Renderer {
 		this.initialize(canvas);
 	}
 
-	add(buffer) {
-		this.stack_.push(buffer);
+	add(...buffer) {
+		this.stack_.push(...buffer);
 	}
 
 	clear() {
@@ -16,7 +16,7 @@ class Renderer {
 		ctx.clearRect(0, 0, w, h);
 	}
 
-	ctx() {
+	get ctx() {
 		return this.ctx_;
 	}
 
@@ -48,5 +48,29 @@ class Renderer {
 		this.canvas_ = canvas;
 		this.ctx_ = canvas.getContext('2d');
 		this.stack_ = [];
+		this.offsetWidth_ = canvas.width;
+		this.offsetHeight_ = canvas.height;
+
+		this.camera_ = new Camera;
+		this.camera_.upgradeProjectiveMatrix(
+			Mat4.translate(
+				new Vec3(
+					this.offsetWidth_ / 2,
+					this.offsetHeight_ / 2,
+					0
+				)
+			)
+		);
+	}
+
+	get mvpmatrix() {
+		var camera = this.camera_;
+		var mvpmatrix = Mat.multi(
+			Mat4.translate(camera.body.position.inverse()),
+			Mat4.rotate(camera.body.rotation.inverse()),
+			camera.projectiveMatrix
+		);
+
+		return mvpmatrix;
 	}
 }

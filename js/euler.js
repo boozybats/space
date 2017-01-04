@@ -34,8 +34,22 @@ class Euler {
 		return out;
 	}
 
-	static Quaternion(x = 0, y = 0, z = 0, w = 1) {
+	static Quaternion(quat = new Quaternion, ...args) {
 		//return euler by using quaternion as arguments
+
+		var x, y, z, w;
+		if (typeof quat === 'number') {
+			x = quat,
+			y = args[0],
+			z = args[1],
+			w = args[2];
+		}
+		else {
+			x = quat.x,
+			y = quat.y,
+			z = quat.z,
+			w = quat.w;
+		}
 
 		var m = [];
 		var xx = x * x, x2 = x * 2,
@@ -79,9 +93,9 @@ class Euler {
 		}
 
 		var out = new Euler(
-			Math.RTD(vec[0]),
-			Math.RTD(vec[1]),
-			Math.RTD(vec[2])
+			Math.RTD(vec.x),
+			Math.RTD(vec.y),
+			Math.RTD(vec.z)
 		);
 
 		return out;

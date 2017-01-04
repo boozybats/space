@@ -344,6 +344,6 @@ class Vec4 extends Vec {
 		this.z_ = z;
 		this.w_ = w;
 
-		item.length_ = 4;
+		this.length_ = 4;
 	}
 }

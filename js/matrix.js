@@ -1,9 +1,9 @@
 class Mat {
-	constructor(a = 0, b = 0, arr = []) {
+	constructor(a = 0, b = 0, arr) {
 		//custom matrix usable only for squad matrix functions
 
 		if (this.constructor === Mat) {
-			if (arr && arr.length == a * b) {
+			if (!arr || arr.length == a * b) {
 				for (var i = 0; i < a; i++) {
 					this[i] = [];
 					for (var j = 0; j < b; j++) {
@@ -184,7 +184,7 @@ class Mat {
 		var out = new Mat(a, c);
 
 		if (b == b1) {
-			for (i = 0; i < a; i++) {
+			for (var i = 0; i < a; i++) {
 				for (var j = 0; j < c; j++) {
 					for (var k = 0; k < b; k++) {
 						out[i][j] += mat1[i][k] * mat2[k][j];
@@ -201,6 +201,56 @@ class Mat {
 		}
 		else {
 			console.warn('Mat: multi: error');
+		}
+	}
+
+	normalize() {
+		//normalize a matrix 4x4 in matrix 3x3
+
+		var a = this.a;
+
+		switch (a) {
+			case 4:
+			var out = new Mat3;
+			var a00 = this[0][0], a01 = this[0][1], a02 = this[0][2], a03 = this[0][3],
+				a10 = this[1][0], a11 = this[1][1], a12 = this[1][2], a13 = this[1][3],
+				a20 = this[2][0], a21 = this[2][1], a22 = this[2][2], a23 = this[2][3],
+				a30 = this[3][0], a31 = this[3][1], a32 = this[3][2], a33 = this[3][3];
+			var b00 = a00 * a11 - a01 * a10,
+				b01 = a00 * a12 - a02 * a10,
+				b02 = a00 * a13 - a03 * a10,
+				b03 = a01 * a12 - a02 * a11,
+				b04 = a01 * a13 - a03 * a11,
+				b05 = a02 * a13 - a03 * a12,
+				b06 = a20 * a31 - a21 * a30,
+				b07 = a20 * a32 - a22 * a30,
+				b08 = a20 * a33 - a23 * a30,
+				b09 = a21 * a32 - a22 * a31,
+				b10 = a21 * a33 - a23 * a31,
+				b11 = a22 * a33 - a23 * a32,
+				det = b00 * b11 - b01 * b10 + b02 * b09 + b03 * b08 - b04 * b07 + b05 * b06;
+
+			if (det) {
+				det = 1.0 / det;
+
+				out[0][0] = (a11 * b11 - a12 * b10 + a13 * b09) * det;
+				out[0][1] = (a12 * b08 - a10 * b11 - a13 * b07) * det;
+				out[0][2] = (a10 * b10 - a11 * b08 + a13 * b06) * det;
+
+				out[1][0] = (a02 * b10 - a01 * b11 - a03 * b09) * det;
+				out[1][1] = (a00 * b11 - a02 * b08 + a03 * b07) * det;
+				out[1][2] = (a01 * b08 - a00 * b10 - a03 * b06) * det;
+
+				out[2][0] = (a31 * b05 - a32 * b04 + a33 * b03) * det;
+				out[2][1] = (a32 * b02 - a30 * b05 - a33 * b01) * det;
+				out[2][2] = (a30 * b04 - a31 * b02 + a33 * b00) * det;
+
+				return out;
+			}
+			else {
+				console.warn('Mat4: normalize: error');
+			}
+			break;
 		}
 	}
 
@@ -329,7 +379,7 @@ class Mat {
 			}
 
 			var vec = Vec.class(...vecarr);
-			vec = this.vec(vec);
+			vec = this.Vec(vec);
 
 			for (z in vec) {
 				if (z.length == 1) {
@@ -357,17 +407,26 @@ class Mat {
 		return out;
 	}
 
-	Vec(vec) {
+	Vec(vec, ...args) {
 		//transform matrix(x + 1) and vector(x) at vector(x)
 
 		var a = this.a,
 			b = this.b;
 
 		if (a == b) {
-			var x = vec.x,
+			var x, y, z, w;
+			if (typeof vec === 'number') {
+				x = vec,
+				y = args[0],
+				z = args[1],
+				w = args[2];
+			}
+			else {
+				x = vec.x,
 				y = vec.y,
 				z = vec.z,
 				w = vec.w;
+			}
 
 			var res = isFinite(x) + isFinite(y) + isFinite(z) + isFinite(w);
 			var out;
@@ -485,50 +544,6 @@ class Mat4 extends Mat {
 		this.a_ = this.b_ = 4;
 	}
 
-	normalize() {
-		//normalize a matrix 4x4 in matrix 3x3
-
-		var out = new Mat3;
-		var a00 = this[0][0], a01 = this[0][1], a02 = this[0][2], a03 = this[0][3],
-			a10 = this[1][0], a11 = this[1][1], a12 = this[1][2], a13 = this[1][3],
-			a20 = this[2][0], a21 = this[2][1], a22 = this[2][2], a23 = this[2][3],
-			a30 = this[3][0], a31 = this[3][1], a32 = this[3][2], a33 = this[3][3];
-		var b00 = a00 * a11 - a01 * a10,
-			b01 = a00 * a12 - a02 * a10,
-			b02 = a00 * a13 - a03 * a10,
-			b03 = a01 * a12 - a02 * a11,
-			b04 = a01 * a13 - a03 * a11,
-			b05 = a02 * a13 - a03 * a12,
-			b06 = a20 * a31 - a21 * a30,
-			b07 = a20 * a32 - a22 * a30,
-			b08 = a20 * a33 - a23 * a30,
-			b09 = a21 * a32 - a22 * a31,
-			b10 = a21 * a33 - a23 * a31,
-			b11 = a22 * a33 - a23 * a32,
-			det = b00 * b11 - b01 * b10 + b02 * b09 + b03 * b08 - b04 * b07 + b05 * b06;
-
-		if (det) {
-			det = 1.0 / det;
-
-			out[0][0] = (a11 * b11 - a12 * b10 + a13 * b09) * det;
-			out[0][1] = (a12 * b08 - a10 * b11 - a13 * b07) * det;
-			out[0][2] = (a10 * b10 - a11 * b08 + a13 * b06) * det;
-
-			out[1][0] = (a02 * b10 - a01 * b11 - a03 * b09) * det;
-			out[1][1] = (a00 * b11 - a02 * b08 + a03 * b07) * det;
-			out[1][2] = (a01 * b08 - a00 * b10 - a03 * b06) * det;
-
-			out[2][0] = (a31 * b05 - a32 * b04 + a33 * b03) * det;
-			out[2][1] = (a32 * b02 - a30 * b05 - a33 * b01) * det;
-			out[2][2] = (a30 * b04 - a31 * b02 + a33 * b00) * det;
-
-			return out;
-		}
-		else {
-			console.warn('Mat4: normalize: error');
-		}
-	}
-
 	static orthogonal(near, far) {
 		var d = far - near;
 		var out = new Mat4([
@@ -546,7 +561,7 @@ class Mat4 extends Mat {
 		var y = Math.cos(fov / 2) / Math.sin(fov / 2);
 		var x = y / ratio;
 		var d = 1;
-		var out = mat4([
+		var out = new Mat4([
 			x, 0, 0, 0,
 			0, y, 0, 0,
 			0, 0, far / (far - near), d,
