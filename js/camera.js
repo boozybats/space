@@ -1,8 +1,6 @@
-const DEFAULT_WIDTH      = 1920;
-const DEFAULT_HEIGHT     = 1080;
-const DEFAULT_NEARFIELD  = 0.9999;
-const DEFAULT_FARFIELD   = 10000;
-const DEFAULT_FOV        = 60;
+const DEFAULT_NEARFIELD  = 0;
+const DEFAULT_FARFIELD   = 1;
+const DEFAULT_FOV        = 90;
 
 class Camera {
 	constructor() {
@@ -13,25 +11,20 @@ class Camera {
 		return this.body_;
 	}
 
-	get deepOffset() {
-		return this.deepOffset_;
-	}
-
 	initialize() {
 		this.body_ = new Body();
-		this.projectiveMatrix_ = Mat4.perspective(
-			DEFAULT_WIDTH / DEFAULT_HEIGHT,
+		this.projectionMatrix_ = Mat4.orthogonal(
+			RESOLUTION_WIDTH,
+			RESOLUTION_HEIGHT,
 			DEFAULT_NEARFIELD,
-			DEFAULT_FARFIELD,
-			DEFAULT_FOV
+			DEFAULT_FARFIELD
 		);
-		this.deepOffset_ = DEFAULT_NEARFIELD;
 		this.skyBox = [0, 0, 0, 255];
 		this.skyBoxType = 'fill';
 	}
 
-	get projectiveMatrix() {
-		return this.projectiveMatrix_;
+	get projectionMatrix() {
+		return this.projectionMatrix_;
 	}
 
 	get skyBox() {
@@ -58,12 +51,5 @@ class Camera {
 		else {
 			console.warn('Camera: skyBoxType: error');
 		}
-	}
-
-	upgradeProjectiveMatrix(mat) {
-		this.projectiveMatrix_ = Mat.multi(
-			this.projectiveMatrix_,
-			mat
-		);
 	}
 }

@@ -32,7 +32,8 @@ class Renderer {
 
 		this.clear();
 
-		for (var buffer of stack) {
+		for (var i = stack.length - 1; i >= 0; i--) {
+			var buffer = stack[i];
 			if (buffer.draw) {
 				buffer.draw(this);
 			}
@@ -52,15 +53,6 @@ class Renderer {
 		this.offsetHeight_ = canvas.height;
 
 		this.camera_ = new Camera;
-		this.camera_.upgradeProjectiveMatrix(
-			Mat4.translate(
-				new Vec3(
-					this.offsetWidth_ / 2,
-					this.offsetHeight_ / 2,
-					0
-				)
-			)
-		);
 	}
 
 	get mvpmatrix() {
@@ -68,7 +60,7 @@ class Renderer {
 		var mvpmatrix = Mat.multi(
 			Mat4.translate(camera.body.position.inverse()),
 			Mat4.rotate(camera.body.rotation.inverse()),
-			camera.projectiveMatrix
+			camera.projectionMatrix
 		);
 
 		return mvpmatrix;

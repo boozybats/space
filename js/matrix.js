@@ -544,19 +544,20 @@ class Mat4 extends Mat {
 		this.a_ = this.b_ = 4;
 	}
 
-	static orthogonal(near, far) {
+	static orthogonal(width, height, near, far) {
 		var d = far - near;
 		var out = new Mat4([
 				d, 0, 0, 0,
 				0, d, 0, 0,
 				0, 0, 1, 0,
-				0, 0, 0, 1
+				width / 2, height / 2, 0, 1
 			]);
 
 		return out;
 	}
 
-	static perspective(ratio, near, far, fov) {
+	static perspective(width, height, near, far, fov) {
+		var ratio = width / height,
 		fov = Math.DTR(fov);
 		var y = Math.cos(fov / 2) / Math.sin(fov / 2);
 		var x = y / ratio;
@@ -565,7 +566,7 @@ class Mat4 extends Mat {
 			x, 0, 0, 0,
 			0, y, 0, 0,
 			0, 0, far / (far - near), d,
-			0, 0, -(near * far) / (far - near), 1
+			width / 2, height / 2, -(far * near) / (far - near), 1
 		]);
 
 		return out;

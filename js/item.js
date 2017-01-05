@@ -12,6 +12,7 @@ class Item {
 	}
 
 	draw(renderer) {
+		var out = [];
 		var matrix = Mat.multi(this.mvmatrix, renderer.mvpmatrix);
 
 		var vertices = this.mesh_.vertices;
@@ -22,11 +23,11 @@ class Item {
 			ctx.beginPath();
 			for (var vertex of vertices) {
 				var vec = matrix.Vec(vertex);
+				out.push(vec);
+
+				var x = vec.x;
+				var y = vec.y;
 				var z = vec.z;
-				z = z > 0 ? 1 / z : -z;
-				console.one('1', () => console.log(vec.x, vec.y));
-				var x = vec.x / z;
-				var y = vec.y / z;
 
 				if (isFirstPoint) {
 					isFirstPoint = false;
@@ -47,6 +48,8 @@ class Item {
 				ctx.stroke();
 			}
 		}
+
+		return out;
 	}
 
 	get mesh() {
@@ -68,5 +71,9 @@ class Item {
 		while(body);
 
 		return mvmatrix;
+	}
+
+	get physic() {
+		return this.physic_;
 	}
 }
