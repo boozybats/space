@@ -1,17 +1,53 @@
 class Mesh {
-	constructor() {
-		this.initialize();
+	constructor(shader, vertexIndicesArray, {
+		drawStyle = 'TRIANGLES',
+		textures
+	}) {
+		this.shader = shader;
+		this.vertexIndicesArray = vertexIndicesArray;
+		this.textures = textures;
+		this.drawStyle = drawStyle;
 	}
 
-	get fillStyle() {
-		return this.fillStyle_;
+	get drawStyle() {
+		return this.drawStyle_;
 	}
 
-	set fillStyle(val) {
-		this.fillStyle_ = val;
+	set drawStyle(val) {
+		if (typeof val === 'string') {
+			this.drawStyle_ = val;
+		}
+		else {
+			console.warn('Mesh: drawStyle: error');
+		}
 	}
 
-	initialize() {
-		this.fillStyle_ = '#000000';
+	get shader() {
+		return this.shader_;
+	}
+
+	set shader(val) {
+		if (val instanceof Shader) {
+			this.shader_ = val;
+		}
+		else {
+			console.warn('Mesh: shader: error');
+		}
+	}
+
+	get textures() {
+		return this.textures_;
+	}
+
+	set textures(val) {
+		this.textures_ = val;
+	}
+
+	get vertexIndicesArray() {
+		return this.vertexIndicesArray_;
+	}
+
+	set vertexIndicesArray(val) {
+		this.vertexIndicesArray_ = val;
 	}
 }

@@ -3,12 +3,27 @@ class Body {
 		position = new Vec3,
 		rotation = new Quaternion,
 		scale = new Vec3(1, 1, 1),
-		parent
+		parent,
+		children = []
 	} = {}) {
 		this.position = position;
 		this.rotation = rotation;
 		this.scale = scale;
 		this.parent = parent;
+		this.children = children;
+	}
+
+	get children() {
+		return this.children;
+	}
+
+	set children(val) {
+		if (val instanceof Array) {
+			this.children_ = val;
+		}
+		else {
+			console.warn('Body: children: error');
+		}
 	}
 
 	get position() {
@@ -56,6 +71,14 @@ class Body {
 
 	set parent(val) {
 		if (!val || val instanceof Body) {
+			if (this.parent) {
+				var index = this.parent.children.indexOf(this);
+				this.parent.children.splice(index, 1);
+			}
+			if (val) {
+				val.children.push(this);
+			}
+
 			this.parent_ = val;
 		}
 		else {

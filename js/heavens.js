@@ -21,7 +21,7 @@ class Heaven extends Item {
 	}
 
 	get core() {
-		var aggregation = this.physic_.Pressure(CORE_MIN_RADIUS);
+		var aggregation = this.physic.Pressure(CORE_MIN_RADIUS);
 
 		var out = {
 			aggregation: 0
@@ -32,29 +32,74 @@ class Heaven extends Item {
 
 	draw(renderer) {
 		var all = [];
-		var links = this.links_;
+		var links = this.links;
+		var color = this.physic.color;
 
 		for (var link of links) {
-			all.push(link.draw(renderer));
+			all.push(link.screenPosition(renderer));
 		}
 
-		var isFirstPoint = true;
 		var ctx = renderer.ctx;
 		ctx.beginPath();
+
+		var isFirstPoint = true;
 		for (var vec of all) {
 			var v0 = vec[2],
-				v1 = vec[3];
+				v1 = vec[1];
+
 			if (isFirstPoint) {
-				ctx.moveTo(v0.x, v0.y);
-				ctx.lineTo(v1.x, v1.y);
 				isFirstPoint = false;
+				ctx.moveTo(v0.x, v0.y);
+			}
+			ctx.lineTo(v1.x, v1.y);
+		}
+
+		ctx.closePath();
+		
+		ctx.fillStyle = color.rgb;
+		ctx.fill();
+
+		var inverse = color.halfinverse();
+		var lastv;
+
+		ctx.beginPath();
+
+		for (var i = 0; i < all.length; i++) {
+			var vec = all[i];
+
+			var v0 = vec[2],
+				v1 = vec[3],
+				v2 = vec[0],
+				v3 = vec[1];
+
+			if (i == 0) {
+				ctx.moveTo(v0.x, v0.y);
 			}
 			else {
+				ctx.moveTo(v0.x, v0.y);
+				ctx.lineTo(lastv.x, lastv.y);
 				ctx.lineTo(v1.x, v1.y);
+				ctx.lineTo(v0.x, v0.y);
+			}
+			ctx.lineTo(v1.x, v1.y);
+			ctx.lineTo(v2.x, v2.y);
+			ctx.lineTo(v3.x, v3.y);
+			ctx.lineTo(v0.x, v0.y);
+
+			lastv = v0;
+
+			if (i == all.length - 1) {
+				var fvec = all[0];
+				ctx.moveTo(fvec[2].x, fvec[2].y);
+				ctx.lineTo(lastv.x, lastv.y);
+				ctx.lineTo(fvec[3].x, fvec[3].y);
+				ctx.lineTo(fvec[2].x, fvec[2].y);
 			}
 		}
+
 		ctx.closePath();
-		ctx.fillStyle = 'red';
+		
+		ctx.fillStyle = inverse.rgb;
 		ctx.fill();
 	}
 
@@ -73,6 +118,10 @@ class Heaven extends Item {
 	init_physic(options) {
 		this.physic_ = new Physic(options);
 	}
+
+	get links() {
+		return this.links_;
+	}
 }
 
 class Link extends Item {
@@ -83,7 +132,6 @@ class Link extends Item {
 		var deg = index * interval;
 
 		this.mesh_ = new Mesh;
-		this.mesh.fillStyle = '#ffffff';
 		this.body.parent = parent;
 		this.body.rotation = Quaternion.Euler(0, 0, deg);
 
@@ -97,7 +145,7 @@ class Link extends Item {
 
 	initialize_vertices(radius) {
 		var height = 2 * Math.PI * radius / LINKS_COUNT;
-		var width = height / 10;
+		var width = height / 8;
 
 		this.mesh.vertices = Vertices.array(
 			[-width / 2, height / 2],

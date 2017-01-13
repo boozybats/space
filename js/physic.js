@@ -27,43 +27,50 @@ var PeriodicTable = {
 		M: 55.845,
 		p: 7874,
 		melting: 1812,
-		boiling: 3135
+		boiling: 3135,
+		color: new Color(235, 233, 232)
 	},
 	Mg: {
 		M: 24.305,
 		p: 1738,
 		melting: 924,
-		boiling: 1363
+		boiling: 1363,
+		color: new Color(130, 130, 120)
 	},
 	Ni: {
 		M: 58.6934,
 		p: 8902,
 		melting: 1726,
-		boiling: 3005
+		boiling: 3005,
+		color: new Color(222, 222, 222)
 	},
 	O: {
 		M: 15.999,
 		p: 1141,
 		melting: 54,
-		boiling: 90
+		boiling: 90,
+		color: new Color(10, 110, 255, 0.1)
 	},
 	O2: {
 		M: 31.998,
 		p: 1141,
 		melting: 54,
-		boiling: 90
+		boiling: 90,
+		color: new Color(10, 110, 255, 0.1)
 	},
 	S: {
 		M: 32.06,
 		p: 2070,
 		melting: 386,
-		boiling: 717
+		boiling: 717,
+		color: new Color(225, 220, 125)
 	},
 	Si: {
 		M: 28.085,
 		p: 2330,
 		melting: 1683,
-		boiling: 2623
+		boiling: 2623,
+		color: new Color(90, 110, 150)
 	}
 };
 
@@ -129,10 +136,14 @@ class Physic {
 		return this.diameter_;
 	}
 
+	get color() {
+		return this.matter.color_;
+	}
+
 	Diameter() {
 		var out = 0;
 
-		this.matter_.each_layer(function(layer) {
+		this.matter.each_layer(function(layer) {
 			out += layer.height;
 		});
 		out *= 2;
@@ -143,7 +154,7 @@ class Physic {
 	Density(R) {
 		var out = 0;
 
-		this.matter_.each_layer(function(layer, radius) {
+		this.matter.each_layer(function(layer, radius) {
 			if (radius >= R) {
 				out = layer.density;
 				return false;
@@ -155,18 +166,22 @@ class Physic {
 
 	initialize(options) {
 		this.init_matter(options.matter);
-		this.pure_volume_ = this.matter_.volume;
+		this.pure_volume_ = this.matter.volume;
 		this.diameter_ = this.Diameter();
 	}
 
 	init_matter(options) {
-		this.matter_ = new Matter({
+		this.matter = new Matter({
 			matter: options
 		});
 	}
 
+	get last_layer() {
+		return this.matter.last_layer;
+	}
+
 	get layers() {
-		var out = this.matter_.layers;
+		var out = this.matter.layers;
 		return out;
 	}
 
@@ -179,10 +194,10 @@ class Physic {
 		var out = 0;
 
 		var self = this;
-		this.matter_.each_layer(function(layer, radius) {
+		this.matter.each_layer(function(layer, radius) {
 			if (radius >= R) {
 				var m0 = (radius - R) / layer.height * layer.mass;
-				var sibling = self.matter_.nextSibling(layer);
+				var sibling = self.matter.nextSibling(layer);
 				var m1 = (sibling.height - sibling.radius + R) / sibling.height * sibling.mass;
 				out = m0 + m1;
 				return false;
@@ -195,7 +210,7 @@ class Physic {
 	MassTotal(R = Infinity) {
 		var out = 0;
 
-		this.matter_.each_layer(function(layer, radius) {
+		this.matter.each_layer(function(layer, radius) {
 			if (radius >= R) {
 				var approx = (R - layer.radius) / layer.height * layer.mass;
 				out += approx;
@@ -213,7 +228,7 @@ class Physic {
 		var out = 0;
 
 		var self = this;
-		this.matter_.each_layer(function(layer, radius) {
+		this.matter.each_layer(function(layer, radius) {
 			if (radius >= R) {
 				out = G * (self.MassTotal(R) * self.Density(R) / Math.pow(R, 2));
 				return false;
@@ -236,7 +251,7 @@ class Physic {
 	VolumeTotal(R = Infinity) {
 		var out = 0;
 
-		this.matter_.each_layer(function(layer, radius) {
+		this.matter.each_layer(function(layer, radius) {
 			out += layer.volume;
 			if (radius >= R) {
 				return false;
@@ -293,6 +308,12 @@ class Matter {
 				this.add_substance(i, options[i]);
 			}
 		}
+	}
+
+	get last_layer() {
+		var out = this.layers_[this.layers_.length - 1];
+
+		return out;
 	}
 
 	get layers() {
@@ -412,6 +433,10 @@ class Matter {
 		})();
 
 		this.layers_ = layers;
+		
+		var layer = this.last_layer;
+		var substance = layer.substances[layer.substances.length - 1];
+		this.color_ = PeriodicTable[substance].color;
 	}
 
 	get volume() {
