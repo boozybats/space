@@ -1,14 +1,12 @@
 class Scene {
 	constructor(name, project) {
-		//scene needs to show interactive 3D animation
-
 		this.name = name;
 		this.project = project;
-		this.cameras = [];             //array of scene's Camera
-		this.directionalLight = [];   //array of directional lights
-		this.pointLight = [];         //array of point lights
-		this.items = [];      //array of scene's elements
-		this.functionsonupdate = {};  //object of onupdate functions
+		this.cameras = [];
+		this.directionalLight = [];
+		this.pointLight = [];
+		this.items = [];
+		this.functionsonupdate = {};
 	}
 
 	appendCamera(camera) {
@@ -19,31 +17,29 @@ class Scene {
 		this.cameras.push(camera);
 	}
 
-	appendElement(item) {
+	appendItem(item) {
 		if (!(item instanceof Item)) {
-			console.warn('Scene: appendElement: error');
+			console.warn('Scene: appendItem: error');
 		}
 
 		var renderer = this.project.webGLRenderer;
 
-		//new clone element with parent element properties
 		var n_item = new CloneItem(this, item);
 		n_item.drawStyle = item.mesh.drawStyle;
 
-		//if object must be drawn
 		if (item.mesh) {
-			n_item.setShader(item.mesh.shader);                     //initializes shader in program
-			n_item.setAttributes(item.attributes);                  //initializes all attributes in buffers
-			n_item.setVertexIndices(item.mesh.vertexIndicesArray);  //initializes vertex indices in buffer
-			n_item.setTextures(item.mesh.textures);                 //textures of element to send in shader and get array of activity
-			n_item.updateShaderUniforms(item.uniforms);             //updates uniforms at shader
+			n_item.shader = item.mesh.shader;
+			n_item.attributes = item.mesh.attributes;
+			n_item.vertexIndices = item.mesh.vertexIndices;
+			n_item.textures = item.mesh.textures;
+			n_item.updateShaderUniforms(item.mesh.uniforms);
 		}
-		this.items.push(n_item);  //pushes new element in array of scene's elements
+		this.items.push(n_item);
 
 		return n_item;
 	}
 
-	appendFunctionOnUpdate(name, fun) {
+	addFunctionOnUpdate(name, fun) {
 		if (typeof name !== "string") {
 			console.warn('Scene: appendFunctionOnUpdate: name isn\'t a string');
 		}
@@ -56,7 +52,7 @@ class Scene {
 		this.functionsonupdate[name] = fun;
 	}
 
-	get camers() {
+	get cameras() {
 		return this.cameras_;
 	}
 
@@ -191,47 +187,5 @@ class Scene {
 		}
 
 		return out;
-	}
-
-	startUpdateOfScene() {
-		//updater of scene, redraws all scene at short time
-		//intervals between update will be send at function arguments as a path of event
-
-		var project = this.project;
-		var canvas = project.canvas.domElement;
-		var webglrenderer = project.webGLRenderer;
-
-		//onupdate functions of scene
-		var functions = this.functionsonupdate;
-
-		//start time for delta time
-		var startTime = new Date().getTime() / 1000;
-
-		var self = this;
-		(function update() {
-			//break update on stop
-			if (self.stopUpdate_) {
-				self.stopUpdate_ = false;
-				return;
-			}
-
-			var currentTime = new Date().getTime() / 1000;  //current time of updating
-			var deltaTime = currentTime - startTime;      //delta of current and start times
-			startTime = currentTime;  //update start time
-
-			//run all onupdate functions
-			for (var i in functions) {
-				if (functions.hasOwnPropery(i)) {
-					functions[i](deltaTime);
-				}
-			}
-
-			webglrenderer.drawScene({deltaTime});  //draw scene function
-			requestAnimationFrame(update, canvas);  //framework timer
-		})();
-	}
-
-	stopUpdateOfScene() {
-		this.stopUpdate_ = true;
 	}
 }

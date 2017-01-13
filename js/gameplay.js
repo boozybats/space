@@ -1,18 +1,44 @@
-const UNIT = 100;
+var diffuseShader = new Shader(
+	`attribute vec3 a_Position;
+	uniform mat4 u_MVMatrix;
+	uniform mat4 u_MVPMatrix;
+	void main(void) {
+		gl_Position = u_MVPMatrix * u_MVMatrix * vec4(a_Position, 1.0);
+	}`,
+	`void main(void) {
+		gl_FragColor = vec4(1.0, 1.0, 0.5, 1.0);
+	}`
+);
 
 function gameplay() {
-	var renderer = new Renderer(canvas);
-	renderer.execution();
-	renderer.add(Mouse);
+	var project = new Project;
 
-	for (var i = 0; i < 30; i++) {
-	var h = new Heaven({
-		body: new Body({
-			position: new Vec3(100, 0),
-			rotation: Quaternion.Euler(0, 0, 0),
-			scale: new Vec3(1, 1)
-		})
+	project.attachCanvas(canvas);
+
+	project.initializeWebGLRenderer();
+	var webGLRenderer = project.webGLRenderer;
+	var gl = webGLRenderer.webGL;
+	webGLRenderer.setup();
+
+	//var shader = diffuseShader.initialize(gl);
+
+	var sceneName = 'main';
+	var scene = project.createNewScene(sceneName);
+	project.selectScene(sceneName);
+
+	var camera = new Camera;
+	camera.body = new Body({
+		position: new Vec3(0, 0, -500),
+		rotation: Quaternion.Euler(0, 0, 90)
 	});
-	renderer.add(h);
-	}
+	scene.appendCamera(camera);
+
+	project.start();
+
+	var heaven = new Heaven({
+		shader: diffuseShader
+	});
+	heaven.appendToScene(scene);
+
+	console.log(project);
 }

@@ -3,31 +3,20 @@ class CloneItem {
 		name = 'empty',
 		body = new Body,
 		collider,
-		physic
+		physic,
+		enabled = true
 	} = {}) {
-		if (!(scene instanceof Scene)) {
-			console.warn('CloneItem: scene isn\'t a Scene');
-		}
-		else if (typeof name !== "string") {
-			console.warn('CloneItem: name isn\'t string');
-		}
-		else if (!(body instanceof Body)) {
-			console.warn('CloneItem: body isn\'t Body');
-		}
-		else if (collider && !(collider instanceof Collider)) {
-			console.warn('CloneItem: collider isn\'t Collider');
-		}
-		else if (physic && !(physic instanceof Physic)) {
-			console.warn('CloneItem: physic isn\'t Physic');
-		}
-
-		//this class supports to easily prototype functions
-
 		this.project = scene.project;
 		this.scene = scene;
-		this.enable = true;
+		this.enabled = enabled;
 		this.name = name;
-		this.body = new Body(body.position, body.rotation, body.scale);
+		this.body = new Body({
+			position: body.position,
+			rotation: body.rotation,
+			scale: body.scale,
+			parent: body.parent,
+			children: body.children
+		});
 		this.collider = collider;
 		this.physic = physic;
 	}
@@ -59,11 +48,11 @@ class CloneItem {
 		}
 	}
 
-	get availabeFrames() {
+	get unavailableFrames() {
 		return this.availableFrames_;
 	}
 
-	set availabeFrames(array) {
+	set unavailableFrames(array) {
 		if (typeof array === 'object') {
 			this.availableFrames_ = array;
 		}
@@ -90,7 +79,7 @@ class CloneItem {
 	}
 
 	set collider(val) {
-		if (val instanceof Project) {
+		if (!val || val instanceof Project) {
 			this.collider_ = val;
 		}
 		else {
@@ -131,16 +120,16 @@ class CloneItem {
 		return d;
 	}
 
-	get enable() {
-		return this.enable_;
+	get enabled() {
+		return this.enabled_;
 	}
 
-	set enable(val) {
+	set enabled(val) {
 		if (typeof val === 'boolean') {
-			this.enable_ = val;
+			this.enabled_ = val;
 		}
 		else {
-			console.warn('CloneItem: enable: error');
+			console.warn('CloneItem: enabled: error');
 		}
 	}
 
@@ -166,15 +155,16 @@ class CloneItem {
 				gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
 				gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(attribute), gl.STATIC_DRAW);
 
-				var attr = [gl.getAttribLocation(shader, i), attribute.size];  //sends attribute to shader
-				if (attr[0] >= 0) {  //if shader contain attribute
+				var attr = [gl.getAttribLocation(shader, i), attribute.size];
+				//if shader contains attribute
+				if (attr[0] >= 0) {
 					gl.vertexAttribPointer(attr[0], attr[1], gl.FLOAT, false, 0, 0);
 					gl.enableVertexAttribArray(attr[0]);
 
 					attributesArray.push([buffer, attr]);
 				}
 				else {
-					console.warn(`Shader doesnt contain ${i} attribute or this attribute unusable`);
+					console.warn(`Shader doesnt contain '${i}' attribute or this attribute unusable`);
 				}
 
 				gl.bindBuffer(gl.ARRAY_BUFFER, null);
@@ -184,8 +174,8 @@ class CloneItem {
 		return attributesArray;
 	}
 
-	initializeVertexIndices(indices) {
-		if (typeof indices !== 'object'){
+	initializeVertexIndices(vertices) {
+		if (typeof vertices !== 'object') {
 			console.warn('CloneItem: initializeVertexIndices: error');
 		}
 
@@ -193,10 +183,10 @@ class CloneItem {
 		var VIOBuffer = gl.createBuffer();
 
 		gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, VIOBuffer);
-		gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(indices), gl.STATIC_DRAW);
+		gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(vertices), gl.STATIC_DRAW);
 		gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, null);
 
-		VIOBuffer.number = indices.length;
+		VIOBuffer.number = vertices.length;
 
 		return VIOBuffer;
 	}
@@ -327,17 +317,39 @@ class CloneItem {
 		}
 	}
 
+	set physic(val) {
+		if (!val || val instanceof Physic) {
+			this.physic_ = val;
+		}
+		else {
+			console.warn('CloneItem: physic: error');
+		}
+	}
+
+	get scene() {
+		return this.scene_;
+	}
+
+	set scene(val) {
+		if (val instanceof Scene) {
+			this.scene_ = val;
+		}
+		else {
+			console.warn('CloneItem: scene: error');
+		}
+	}
+
 	get shader() {
 		return this.shader_;
 	}
 
-	set shader(shader) {
-		if (shader instanceof Shader) {
+	set shader(val) {
+		if (val instanceof Shader) {
 			var webGL = this.scene.project.webGLRenderer.webGL;
-			this.shader_ = shader.initializeShader(webGL);
+			this.shader_ = val.initialize(webGL);
 		}
 		else {
-			console.warn('CloneItem: setShader: error');
+			console.warn('CloneItem: shader: error');
 		}
 	}
 
@@ -348,7 +360,7 @@ class CloneItem {
 	set textures(texturesList) {
 		if (texturesList) {
 			if (typeof texturesList !== 'object') {
-				console.warn('CloneItem: setTextures: error');
+				console.warn('CloneItem: textures: error');
 			}
 
 			//change or create new list of textures to clone element
@@ -388,7 +400,6 @@ class CloneItem {
 		//updates element attributes
 
 		var gl = this.project.webGLRenderer.webGL;
-		var shader = this.shader;
 		var attributes = this.attributes;
 
 		if (attributes) {
@@ -413,6 +424,8 @@ class CloneItem {
 		else if (typeof name != "string") {
 			console.warn('CloneItem: updateShaderUniformArray: name ins\'t a string');
 		}
+
+		return false;
 
 		//send the array in shader
 		//shader get array as "type u_Variable[x]", where x - size of array
@@ -445,7 +458,7 @@ class CloneItem {
 			if (uniforms.hasOwnProperty(i)) {
 				var uniform = uniforms[i];
 
-				if (typeof uniform === "function") {
+				if (typeof uniform === 'function') {
 					continue;
 				}
 				else if (uniform instanceof Array) {
@@ -453,7 +466,7 @@ class CloneItem {
 					continue;
 				}
 
-				//unavailable to send images
+				//unavailable to send images from uniforms
 				if (uniform.src) {
 					console.warn('Uniforms can\'t containt image objects, put texture in mesh, 3-rd argument, key: Textures');
 				}
@@ -466,7 +479,7 @@ class CloneItem {
 				//mat, vec, float
 
 				if (uniform instanceof Mat) {
-					type = "mat";
+					type = 'mat';
 
 					switch(uniform.a) {
 						case 2:
@@ -483,18 +496,18 @@ class CloneItem {
 					}
 				}
 				else if (uniform instanceof Vec) {
-					type = "vec";
+					type = 'vec';
 
-					switch(str) {
-						case vec2:
+					switch(uniform.constructor) {
+						case Vec2:
 							str = 'uniform2fv';
 							break;
 
-						case vec3:
+						case Vec3:
 							str = 'uniform3fv';
 							break;
 
-						case vec4:
+						case Vec4:
 							str = 'uniform4fv';
 							break;
 					}
@@ -530,9 +543,10 @@ class CloneItem {
 		}
 	}
 
-	set vertexIndices(VI) {
-		if (typeof VI === "object") {
-			this.VIOBuffer = this.initializeVertexIndices(VIArray);
+	set vertexIndices(vertices) {
+		if (vertices instanceof Array) {
+			this.VIOBuffer = this.initializeVertexIndices(vertices);
+			this.VIOBuffer.length = vertices.length;
 		}
 		else {
 			console.warn('CloneItem: vertexIndices: error');
@@ -552,5 +566,3 @@ class CloneItem {
 		}
 	}
 }
-
-CloneElement.prototype.;

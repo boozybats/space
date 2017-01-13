@@ -14,7 +14,7 @@ class Body {
 	}
 
 	get children() {
-		return this.children;
+		return this.children_;
 	}
 
 	set children(val) {
@@ -23,6 +23,28 @@ class Body {
 		}
 		else {
 			console.warn('Body: children: error');
+		}
+	}
+
+	get parent() {
+		return this.parent_;
+	}
+
+	set parent(val) {
+		if (!val || val instanceof Body) {
+			if (this.parent) {
+				var children = this.parent.children;
+				children.splice(children.indexOf(this), 1);
+			}
+			
+			if (val) {
+				val.children.push(this);
+			}
+
+			this.parent_ = val;
+		}
+		else {
+			console.warn('Body: parent must be Body');
 		}
 	}
 
@@ -62,27 +84,6 @@ class Body {
 		}
 		else {
 			console.warn('Body: scale must be Vec3');
-		}
-	}
-
-	get parent() {
-		return this.parent_;
-	}
-
-	set parent(val) {
-		if (!val || val instanceof Body) {
-			if (this.parent) {
-				var index = this.parent.children.indexOf(this);
-				this.parent.children.splice(index, 1);
-			}
-			if (val) {
-				val.children.push(this);
-			}
-
-			this.parent_ = val;
-		}
-		else {
-			console.warn('Body: parent must be Body');
 		}
 	}
 }

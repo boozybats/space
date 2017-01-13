@@ -2,7 +2,7 @@ class WebGLRenderer {
 	constructor(project) {
 		var gl;
 		var canvas = project.canvas.canvas;
-		var methods = ["webgl", "experimental-webgl", "webkit-3d", "moz-webgl"];
+		var methods = ['webgl', 'experimental-webgl', 'webkit-3d', 'moz-webgl'];
 
 		for (var method of methods) {
 			try {
@@ -21,22 +21,22 @@ class WebGLRenderer {
 
 				break;
 			}	 
-		} 
+		}
 
 		if (!gl) {
 			console.warn('WebGLRenderer: error');
 		}
 	}
 
-	clearScene(skyBoxType, skyBox) {
-		var gl = this.WebGL;
+	clearScene(skyBoxType, skyBoxColor) {
+		var gl = this.webGL;
 
 		switch(skyBoxType) {
 			case 'fill':
-			gl.clearColor(skyBox[0], skyBox[1], skyBox[2], skyBox[3]);
+			gl.clearColor(...skyBoxColor.Array);
 			break;
 
-			case: 'transparent':
+			case 'transparent':
 			gl.clearColor(0, 0, 0, 0);
 			break;
 		}
@@ -45,23 +45,12 @@ class WebGLRenderer {
 		gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 	}
 
-	get currentScene() {
-		return this.currentScene_;
-	}
-
-	set currentScene(val) {
-		if (val instanceof Scene) {
-			this.currentScene_ = val;
-		}
-		else {
-			console.warn('WebGLRenderer: currentScene: error');
-		}
-	}
-
-	drawScene() {
+	drawScene({
+		deltaTime = 0
+	} = {}) {
 		var project = this.project;
 		var redraws = project.redraws;
-		var scene = this.currentScene;
+		var scene = project.currentScene;
 		var items = scene.items;
 		var cameras = scene.cameras;
 
@@ -70,20 +59,20 @@ class WebGLRenderer {
 		//for (var r = 0; r < redraws.length; r++) {
 			(arr => {
 				for (var camera of cameras) {  //for every camera draw new field
-					self.clearScene(camera.skyBoxType, camera.skyBox);
+					self.clearScene(camera.skyBoxType, camera.skyBoxColor);
 
 					//project matrix from camera
 					self.mvpmatrix = Mat.multi(
 						Mat4.translate(camera.body.position.inverse()),
-						Mat4.translate(new Vec3(0, 0, -camera.body.deepOffset)),
+						Mat4.translate(new Vec3(0, 0, -camera.deepOffset)),
 						Mat4.rotate(camera.body.rotation.inverse()),
-						Mat4.translate(new Vec3(0, 0, camera.body.deepOffset)),
-						camera.projectiveMatrix
+						Mat4.translate(new Vec3(0, 0, camera.deepOffset)),
+						camera.projectionMatrix
 					);
 
 					for (var item of arr) {
 						//check to access item at frame
-						if (item.availableFrames && item.availableFrames.indexOf(r) == -1) {
+						if (item.unavailableFrames && item.unavailableFrames.indexOf(r) == -1) {
 							continue;
 						}
 
@@ -119,17 +108,18 @@ class WebGLRenderer {
 
 		var self = this;
 		project.addRedrawFunction(0, function(item, camera) {
-			var scene = self.currentScene;
+			var scene = project.currentScene;
 			var shader = item.shader;
 
 			if (shader) {
 				var eyeposition = camera.body.position;
 
-				if (!(item.Body instanceof Body)) {
+				if (!(item.body instanceof Body)) {
 					console.warn(`Item '${item.name}' doesnt have a body`);
 				}
 
-				var mvmatrix = item.mvmatrix.normalize();
+				var mvmatrix = item.mvmatrix;
+				var mvnmatrix = mvmatrix.normalize();
 
 				item.updateAttributes();
 				item.updateTextures();
@@ -138,15 +128,15 @@ class WebGLRenderer {
 				item.updateShaderUniforms({
 					u_EyePosition: eyeposition,
 					u_MVMatrix: mvmatrix,
-					u_MVPMatrix: renderer.mvpmatrix,
+					u_MVPMatrix: self.mvpmatrix,
 					u_MVNMatrix: mvnmatrix
 				});
 
-				var lightsUniforms = scene.getSceneLights();
-				item.updateShaderUniforms(lightsUniforms);
+				//var lightsUniforms = scene.sceneLights;
+				//item.updateShaderUniforms(lightsUniforms);
 
 				gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, item.VIOBuffer);
-				gl.drawElements(gl[item.drawStyle], item.VIOBuffer.number, gl.UNSIGNED_SHORT, 0);
+				gl.drawElements(gl[item.drawStyle], item.VIOBuffer.length, gl.UNSIGNED_SHORT, 0);
 			}
 		});
 	}
@@ -165,7 +155,7 @@ class WebGLRenderer {
 	}
 
 	get viewportHeight() {
-		return viewportHeight_;
+		return this.viewportHeight_;
 	}
 
 	set viewportHeight(val) {

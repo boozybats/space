@@ -1,6 +1,6 @@
 class Canvas {
 	constructor(width, height) {
-		var canvas = document.createElement("canvas");
+		var canvas = document.createElement('canvas');
 		canvas.oncontextmenu = function() {
 			return false;
 		}

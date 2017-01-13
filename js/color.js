@@ -9,15 +9,11 @@ class Color {
 		this.length = arr.length;
 	}
 
-	halfinverse() {
+	get Array() {
 		var out = [];
 		for (var i = 0; i < this.length; i++) {
-			if (i <= 2) {
-				out.push(Math.abs(125 - this[i]));
-			}
+			out.push(this[i]);
 		}
-
-		out = new Color(...out);
 
 		return out;
 	}
@@ -39,7 +35,7 @@ class Color {
 		var out = [];
 		for (var i = 0; i < this.length; i++) {
 			if (i <= 2) {
-				out.push(256 - this[i]);
+				out.push(255 - this[i]);
 			}
 		}
 

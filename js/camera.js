@@ -1,5 +1,5 @@
-const DEFAULT_NEARFIELD  = 0;
-const DEFAULT_FARFIELD   = 1;
+const DEFAULT_NEARFIELD  = 0.9999;
+const DEFAULT_FARFIELD   = 10000;
 const DEFAULT_FOV        = 90;
 
 class Camera {
@@ -7,25 +7,34 @@ class Camera {
 		name = 'camera',
 		body = new Body,
 		deepOffset = DEFAULT_NEARFIELD, 
-		projectiveMatrix = Mat4.orthogonal(
-			RESOLUTION_WIDTH,
-			RESOLUTION_HEIGHT,
+		projectionMatrix = Mat4.perspective(
+			RESOLUTION_WIDTH / RESOLUTION_HEIGHT,
 			DEFAULT_NEARFIELD,
-			DEFAULT_FARFIELD
+			DEFAULT_FARFIELD,
+			DEFAULT_FOV
 		),
-		skyBox = new Color(0, 0, 0, 255),
+		skyBoxColor = new Color(0, 0, 0, 255),
 		skyBoxType = 'fill'
-	}) {
+	} = {}) {
 		this.name = name,
 		this.body = body;
 		this.deepOffset = deepOffset;
-		this.projectionMatrix = projectiveMatrix;
-		this.skyBox = skyBox;
+		this.projectionMatrix = projectionMatrix;
+		this.skyBoxColor = skyBoxColor;
 		this.skyBoxType = skyBoxType;
 	}
 
 	get body() {
 		return this.body_;
+	}
+
+	set body(val) {
+		if (val instanceof Body) {
+			this.body_ = val;
+		}
+		else {
+			console.warn('Camera: body: error');
+		}
 	}
 
 	get deepOffset() {
@@ -53,13 +62,22 @@ class Camera {
 		return this.projectionMatrix_;
 	}
 
-	get skyBox() {
-		return this.skyBox_;
+	set projectionMatrix(val) {
+		if (val instanceof Mat) {
+			this.projectionMatrix_ = val;
+		}
+		else {
+			console.warn('Camera: projectionMatrix: error');
+		}
 	}
 
-	set skyBox(val) {
-		if (val instanceof Array) {
-			this.skyBox_ = val;
+	get skyBoxColor() {
+		return this.skyBoxColor_;
+	}
+
+	set skyBoxColor(val) {
+		if (val instanceof Color) {
+			this.skyBoxColor_ = val;
 		}
 		else {
 			console.warn('Camera: skyBox: error');
@@ -72,7 +90,7 @@ class Camera {
 
 	set skyBoxType(val) {
 		if (typeof val === 'string') {
-			this.skyBox_ = val;
+			this.skyBoxType_ = val;
 		}
 		else {
 			console.warn('Camera: skyBoxType: error');

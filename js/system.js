@@ -1,6 +1,6 @@
 const FPS = 1000 / 60;
-const RESOLUTION_WIDTH = 1820;
-const RESOLUTION_HEIGHT = 1024;
+const RESOLUTION_WIDTH = 1920;
+const RESOLUTION_HEIGHT = 1080;
 
 var canvas;
 var Mouse = {
@@ -21,35 +21,33 @@ Loader.images({
 		window.webkitRequestAnimationFrame;
 
 	// CANVAS APPEND
-	canvas = document.createElement('canvas');
-	canvas.width = RESOLUTION_WIDTH;
-	canvas.height = RESOLUTION_HEIGHT;
-
-	document.body.appendChild(canvas);
+	canvas = new Canvas(RESOLUTION_WIDTH, RESOLUTION_HEIGHT);
+	var canvasdom = canvas.canvas;
+	canvas.appendTo(document.body);
 
 	// POINTER LOCK IDENTIFICATION
 	function isLocked() {
-		return canvas === document.pointerLockElement ||
-			canvas === document.mozPointerLockElement ||
-			canvas === document.webkitPointerLockElement;
+		return canvasdom === document.pointerLockElement ||
+			canvasdom === document.mozPointerLockElement ||
+			canvasdom === document.webkitPointerLockElement;
 	}
 
 	var exitPointerLock = document.exitPointerLock ||
 		document.mozExitPointerLock  ||
 		document.webkitExitPointerLock;
 
-	canvas.requestPointerLock = canvas.requestPointerLock ||
-		canvas.mozRequestPointerLock ||
-		canvas.webkitRequestPointerLock;
+	canvasdom.requestPointerLock = canvasdom.requestPointerLock ||
+		canvasdom.mozRequestPointerLock ||
+		canvasdom.webkitRequestPointerLock;
 
-	canvas.addEventListener('click', () => {
+	canvasdom.addEventListener('click', () => {
 		if (!isLocked()) {
-			canvas.requestPointerLock();
+			canvasdom.requestPointerLock();
 		}
 	});
 
 	var mousehidden = false;
-	canvas.addEventListener('mousemove', (event) => {
+	canvasdom.addEventListener('mousemove', (event) => {
 		if (isLocked()) {
 			var x = event.movementX;
 			var y = event.movementY;
@@ -66,13 +64,13 @@ Loader.images({
 
 			if (!mousehidden) {
 				mousehidden = true;
-				canvas.style.cursor = 'none';
+				canvasdom.style.cursor = 'none';
 			}
 		}
 		else {
 			if (mousehidden) {
 				mousehidden = false;
-				canvas.style.cursor = 'default';
+				canvasdom.style.cursor = 'default';
 			}
 		}
 
@@ -106,20 +104,20 @@ Loader.images({
 		};
 
 		if (win.w / ratio > win.h) {
-			canvas.style.height = '100%';
-			var height = cssheight = canvas.offsetHeight;
+			canvasdom.style.height = '100%';
+			var height = cssheight = canvasdom.offsetHeight;
 			var width = csswidth = height * ratio;
-			canvas.style.width = width + 'px';
-			canvas.style.marginLeft = (win.w - width) / 2 + 'px';
-			canvas.style.marginTop = 0;
+			canvasdom.style.width = width + 'px';
+			canvasdom.style.marginLeft = (win.w - width) / 2 + 'px';
+			canvasdom.style.marginTop = 0;
 		}
 		else {
-			canvas.style.width = '100%';
-			var width = csswidth = canvas.offsetWidth;
+			canvasdom.style.width = '100%';
+			var width = csswidth = canvasdom.offsetWidth;
 			var height = cssheight = width / ratio;
-			canvas.style.height = height + 'px';
-			canvas.style.marginLeft = 0;
-			canvas.style.marginTop = (win.h - height) / 2 + 'px';
+			canvasdom.style.height = height + 'px';
+			canvasdom.style.marginLeft = 0;
+			canvasdom.style.marginTop = (win.h - height) / 2 + 'px';
 		}
 	})();
 	window.onresize = onresize;

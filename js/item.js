@@ -2,27 +2,15 @@ class Item {
 	constructor({
 		name = 'empty',
 		body = new Body,
-		mesh = new Mesh,
-		collider = new Collider,
-		physic = new Physic,
-		attributes,
-		uniforms
-	}) {
+		mesh,
+		collider,
+		physic
+	} = {}) {
 		this.name = name;
 		this.body = body;
 		this.mesh = mesh;
-		this.attributes = attributes;
-		this.uniforms = uniforms;
 		this.collider = collider;
 		this.physic = physic;
-	}
-
-	get attributes() {
-		return this.attributes_;
-	}
-
-	set attributes(val) {
-		this.attributes_ = val;
 	}
 
 	get body() {
@@ -43,7 +31,7 @@ class Item {
 	}
 
 	set collider(val) {
-		if (val instanceof Collider) {
+		if (!val || val instanceof Collider) {
 			this.collider_ = val;
 		}
 		else {
@@ -76,7 +64,7 @@ class Item {
 	}
 
 	set mesh(val) {
-		if (val instanceof Mesh) {
+		if (!val || val instanceof Mesh) {
 			this.mesh_ = val;
 		}
 		else {
@@ -102,19 +90,11 @@ class Item {
 	}
 
 	set physic(val) {
-		if (val instanceof Physic) {
+		if (!val || val instanceof Physic) {
 			this.physic_ = val;
 		}
 		else {
 			console.warn('Item: physic: error');
 		}
-	}
-
-	get uniforms() {
-		return this.uniforms_;
-	}
-
-	set uniforms(val) {
-		this.uniforms_ = val;
 	}
 }

@@ -1,12 +1,31 @@
 class Mesh {
-	constructor(shader, vertexIndicesArray, {
+	constructor({
+		shader,
+		vertexIndices = [],
 		drawStyle = 'TRIANGLES',
-		textures
-	}) {
+		attributes = {},
+		uniforms = {},
+		textures = []
+	} = {}) {
+		this.attributes = attributes;
+		this.uniforms = uniforms;
 		this.shader = shader;
-		this.vertexIndicesArray = vertexIndicesArray;
+		this.vertexIndices = vertexIndices;
 		this.textures = textures;
 		this.drawStyle = drawStyle;
+	}
+
+	get attributes() {
+		return this.attributes_;
+	}
+
+	set attributes(val) {
+		if (typeof val === 'object') {
+			this.attributes_ = val;
+		}
+		else {
+			console.warn('Item: attributes: error');
+		}
 	}
 
 	get drawStyle() {
@@ -27,7 +46,7 @@ class Mesh {
 	}
 
 	set shader(val) {
-		if (val instanceof Shader) {
+		if (!val || val instanceof Shader) {
 			this.shader_ = val;
 		}
 		else {
@@ -43,11 +62,29 @@ class Mesh {
 		this.textures_ = val;
 	}
 
-	get vertexIndicesArray() {
-		return this.vertexIndicesArray_;
+	get vertexIndices() {
+		return this.vertexIndices_;
 	}
 
-	set vertexIndicesArray(val) {
-		this.vertexIndicesArray_ = val;
+	set vertexIndices(val) {
+		if (val instanceof Array) {
+			this.vertexIndices_ = val;
+		}
+		else {
+			console.warn('Mesh: vertexIndices: error');
+		}
+	}
+
+	get uniforms() {
+		return this.uniforms_;
+	}
+
+	set uniforms(val) {
+		if (typeof val === 'object') {
+ 			this.uniforms_ = val;
+		}
+		else {
+			console.warn('Item: uniforms: error');
+		}
 	}
 }

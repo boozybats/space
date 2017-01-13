@@ -1,8 +1,7 @@
 class Project {
 	constructor() {
-		//start work with engine from creation class Project
-		this.scenesArray = [];  //project's scenes
-		this.redraws = [];      //each function of redraw array is calling on every update
+		this.scenes = [];
+		this.redraws = [];
 	}
 
 	addRedrawFunction(index, fun, callback) {
@@ -15,10 +14,6 @@ class Project {
 		else if (callback && typeof callback != "function") {
 			console.warn('Project: addRedrawFunction: callback isn\'t a function');
 		}
-
-		//adds new redraw function
-		//if haven't index - pushes to array
-		//after drawning of all elements calls callback function
 
 		var functionsArray = [fun, callback];
 		if (index) {
@@ -44,7 +39,7 @@ class Project {
 
 	set canvas(val) {
 		if (!val || val instanceof Canvas) {
-			this.canvas = val;
+			this.canvas_ = val;
 		}
 		else {
 			console.warn('Project: canvas: error');
@@ -57,9 +52,22 @@ class Project {
 		}
 
 		var scene = new Scene(name, this);
-		this.scenesArray.push(scene);
+		this.scenes.push(scene);
 
 		return scene;
+	}
+
+	get currentScene() {
+		return this.currentScene_;
+	}
+
+	set currentScene(val) {
+		if (val instanceof Scene) {
+			this.currentScene_ = val;
+		}
+		else {
+			console.warn('WebGLRenderer: currentScene: error');
+		}
 	}
 
 	detachCanvasElement() {
@@ -91,27 +99,67 @@ class Project {
 		}
 	}
 
-	get scenesArray() {
-		return this.scenesArray_;
+	get scenes() {
+		return this.scenes_;
 	}
 
-	set scenesArray(val) {
+	set scenes(val) {
 		if (val instanceof Array) {
-			this.scenesArray_ = val;
+			this.scenes_ = val;
 		}
 		else {
-			console.warn('Project: scenesArray: error');
+			console.warn('Project: scenes: error');
 		}
+	}
+
+	start() {
+		//updater of scene, redraws all scene at short time
+		//intervals between update will be send at function arguments as a path of event
+
+		var canvas = this.canvas.canvas;
+		var webglrenderer = this.webGLRenderer;
+
+		var functions = this.currentScene.functionsonupdate;
+		var startTime = new Date().getTime() / 1000;
+
+		var self = this;
+		(function update() {
+			if (self.stopUpdate_) {
+				self.stopUpdate_ = false;
+				return;
+			}
+
+			var currentTime = new Date().getTime() / 1000;
+			var deltaTime = currentTime - startTime;
+			startTime = currentTime;
+
+			for (var i in functions) {
+				if (functions.hasOwnPropery(i)) {
+					functions[i]({deltaTime});
+				}
+			}
+
+			webglrenderer.drawScene({deltaTime});
+			requestAnimationFrame(update, canvas);
+		})();
+	}
+
+	stop() {
+		this.stopUpdate_ = true;
 	}
 
 	selectScene(index) {
-		if (typeof index !== "number") {
-			console.warn('Project: selectScene: error');
+		if (typeof index === 'number') {
+			this.currentScene = this.scenes[index];
 		}
-
-		//selects scene in project to work with it
-
-		this.webGLRenderer.currentScene = this.scenesArray[index];
+		else if (typeof index === 'string') {
+			for (var scene of this.scenes) {
+				if (scene.name === index) {
+					this.currentScene = scene;
+					break;
+				}
+			}
+		}
 	}
 
 	get webGLRenderer() {
