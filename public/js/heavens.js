@@ -41,13 +41,19 @@ class Heaven extends Item {
 	}
 
 	initialize_links(shader) {
+		var textures = [
+			Item.image('images/img0.jpg'),
+			Item.image('images/img1.jpg')
+		];
+
 		this.links = [];
 		for (var i = 0; i < LINKS_COUNT; i++) {
 			var link = new Link({
 				parent: this.body,
 				radius: this.physic.diameter,
 				shader: shader,
-				index: i
+				index: i,
+				texture: (i % 2 == 0) ? textures[0] : textures[1]
 			});
 			this.links.push(link);
 		}
@@ -72,9 +78,9 @@ class Link extends Item {
 			parent,
 			radius,
 			shader,
-			index
+			index,
+			texture
 		}) {
-
 		var interval = 360 / LINKS_COUNT;
 		var deg = index * interval;
 
@@ -94,7 +100,10 @@ class Link extends Item {
 				vertexIndices: [
 					0, 1, 2,
 					2, 3, 0
-				]
+				],
+				textures: {
+					u_Sampler: texture
+				}
 			})
 		});
 

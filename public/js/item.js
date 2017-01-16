@@ -52,9 +52,13 @@ class Item {
 	static image(src) {
 		var image = new Image();
 		image.onload = function() {
-			this.loaded = true
+			this.loaded = true;
+		}
+		image.onerror = function() {
+			this.loaded = false;
 		}
 		image.src = src;
+		image.constructor = Item.image;
 
 		return image;
 	}

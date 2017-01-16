@@ -28,6 +28,29 @@ class Mat {
 		return this.b_;
 	}
 
+	static compare(mat0, mat1) {
+		var out = true;
+		var a0 = mat0.a,
+			b0 = mat0.b;
+		var a1 = mat1.a,
+			b1 = mat1.b;
+
+		if (a0 == a1 && b0 == b1) {
+			for (var i = 0; i < a0; i++) {
+				for (var j = 0; j < b0; j++) {
+					if (mat0[i][j] !== mat1[i][j]) {
+						out = false;
+					}
+				}
+			}
+		}
+		else {
+			out = false;
+		}
+
+		return out;
+	}
+
 	console() {
 		//draw matrix as a table in console
 
@@ -185,8 +208,8 @@ class Mat {
 
 		if (b == b1) {
 			for (var i = 0; i < a; i++) {
-				for (var j = 0; j < c; j++) {
-					for (var k = 0; k < b; k++) {
+				for (var k = 0; k < c; k++) {
+					for (var j = 0; j < b; j++) {
 						out[i][j] += mat1[i][k] * mat2[k][j];
 					}
 				}

@@ -16,11 +16,9 @@ class WebGLRenderer {
 				this.project = project;
 				this.viewportWidth = canvas.width,
 				this.viewportHeight = canvas.height;
-
 				this.webGL = gl;
-
 				break;
-			}	 
+			}
 		}
 
 		if (!gl) {
@@ -112,14 +110,14 @@ class WebGLRenderer {
 			var shader = item.shader;
 
 			if (shader) {
-				var eyeposition = camera.body.position;
-
 				if (!(item.body instanceof Body)) {
 					console.warn(`Item '${item.name}' doesnt have a body`);
 				}
+				
+				var eyeposition = camera.body.position;
 
 				var mvmatrix = item.mvmatrix;
-				var mvnmatrix = mvmatrix.normalize();
+				//var mvnmatrix = mvmatrix.normalize();
 
 				item.updateAttributes();
 				item.updateTextures();
@@ -129,7 +127,7 @@ class WebGLRenderer {
 					u_EyePosition: eyeposition,
 					u_MVMatrix: mvmatrix,
 					u_MVPMatrix: self.mvpmatrix,
-					u_MVNMatrix: mvnmatrix
+					//u_MVNMatrix: mvnmatrix
 				});
 
 				//var lightsUniforms = scene.sceneLights;

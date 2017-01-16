@@ -44,6 +44,25 @@ class Vec {
 		return out;
 	}
 
+	static compare(vec0, vec1) {
+		var out = true;
+		var length0 = vec0.length,
+			length1 = vec1.length;
+
+		if (length0 == length1) {
+			for (var i = 0; i < length0; i++) {
+				if (vec0[i] !== vec1[i]) {
+					out = false;
+				}
+			}
+		}
+		else {
+			out = false;
+		}
+
+		return out;
+	}
+
 	static corner(vec1, vec2) {
 		//calculate corner between 2 vectors
 	

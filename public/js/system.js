@@ -9,12 +9,13 @@ var Mouse = {
 	x: RESOLUTION_WIDTH / 2,
 	y: RESOLUTION_HEIGHT / 2,
 	forceback: false,
-	keepchase: true
+	keepchase: false
 };
 
 Loader.images({
-	mouse: 'images/mouse.png'
-}, (images) => {
+	mouse: 'images/mouse.png',
+	transparent: 'images/transparent.jpg'
+}, images => {
 	window.requestAnimationFrame = window.requestAnimationFrame ||
 		window.mozRequestAnimationFrame ||
 		window.msRequestAnimationFrame ||
@@ -22,8 +23,8 @@ Loader.images({
 
 	// CANVAS APPEND
 	canvas = new Canvas(RESOLUTION_WIDTH, RESOLUTION_HEIGHT);
-	var canvasdom = canvas.canvas;
 	canvas.appendTo(document.body);
+	var canvasdom = canvas.canvas;
 
 	// POINTER LOCK IDENTIFICATION
 	function isLocked() {
@@ -47,7 +48,7 @@ Loader.images({
 	});
 
 	var mousehidden = false;
-	canvasdom.addEventListener('mousemove', (event) => {
+	canvasdom.addEventListener('mousemove', event => {
 		if (isLocked()) {
 			var x = event.movementX;
 			var y = event.movementY;
@@ -97,7 +98,6 @@ Loader.images({
 	;(onresize = function() {
 		var  ratio = RESOLUTION_WIDTH / RESOLUTION_HEIGHT
 
-
 		var win = {
 			w: window.innerWidth,
 			h: window.innerHeight
@@ -123,31 +123,7 @@ Loader.images({
 	window.onresize = onresize;
 	// \AUTORESIZE
 
-	// MOUSE
-	Mouse.draw = function(renderer) {
-		renderer.draw(images.mouse, this.x, this.y, this.w, this.h);
-	}
-
-	var forceback_koeff = 500;
-	var forceback_min = 1;
-	var centerx = RESOLUTION_WIDTH / 2;
-	var centery = RESOLUTION_HEIGHT / 2;
-	setInterval(function() {
-		if (Mouse.forceback) {
-			if (Mouse.x < centerx - forceback_min || Mouse.x > centerx + forceback_min) {
-				var interval = (Mouse.x - centerx) / forceback_koeff;
-				Mouse.x -= interval;
-			}
-
-			if (Mouse.y < centery - forceback_min || Mouse.y > centery + forceback_min) {
-				var interval = (Mouse.y - centery) / forceback_koeff;
-				Mouse.y -= interval;
-			}
-		}
-	}, FPS);
-	// \MOUSE
-
-	gameplay();
+	gameplay(images);
 });
 
 // SHOW ONCE AT SESSION

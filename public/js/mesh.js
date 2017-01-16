@@ -5,7 +5,7 @@ class Mesh {
 		drawStyle = 'TRIANGLES',
 		attributes = {},
 		uniforms = {},
-		textures = []
+		textures = {}
 	} = {}) {
 		this.attributes = attributes;
 		this.uniforms = uniforms;

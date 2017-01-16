@@ -1,7 +1,10 @@
 class Project {
-	constructor() {
+	constructor({
+		transparentImage
+	}) {
 		this.scenes = [];
 		this.redraws = [];
+		this.transparentImage = transparentImage;
 	}
 
 	addRedrawFunction(index, fun, callback) {
