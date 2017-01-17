@@ -401,7 +401,7 @@ class Mat {
 				vecarr.push(arr[i * num + z]);
 			}
 
-			var vec = Vec.class(...vecarr);
+			var vec = new Vec(...vecarr);
 			vec = this.Vec(vec);
 
 			for (z in vec) {

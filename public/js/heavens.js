@@ -1,5 +1,3 @@
-const LINKS_COUNT = 360 / 12;
-
 class Heaven extends Item {
 	constructor({
 		name = 'asteroid',
@@ -17,17 +15,9 @@ class Heaven extends Item {
 			physic: physic
 		});
 
-		this.initialize_links(shader);
-	}
+		this.vertexCount_ = 360;
 
-	appendToScene(scene) {
-		if (!(scene instanceof Scene)) {
-			console.warn('Heaven: appendToScene: error');
-		}
-
-		for (var link of this.links) {
-			scene.appendItem(link);
-		}
+		this.initialize_mesh(shader);
 	}
 
 	get core() {
@@ -40,87 +30,60 @@ class Heaven extends Item {
 		return out;
 	}
 
-	initialize_links(shader) {
-		var textures = [
-			Item.image('images/img0.jpg'),
-			Item.image('images/img1.jpg')
-		];
+	initialize_mesh(shader) {
+		var startVI = [0, 0, 0];
+		var a_Position = [...startVI];
+		a_Position.size = 3;
+		var VI = [];
+		var radius = this.physic.diameter / 2;
 
-		this.links = [];
-		for (var i = 0; i < LINKS_COUNT; i++) {
-			var link = new Link({
-				parent: this.body,
-				radius: this.physic.diameter,
-				shader: shader,
-				index: i,
-				texture: (i % 2 == 0) ? textures[0] : textures[1]
-			});
-			this.links.push(link);
+		for (var i = 0; i < this.vertexCount_; i++) {
+			var index = i + 1;
+			if (i == 0) {
+				VI.push(index, 0);
+			}
+			else {
+				VI.push(index, index, 0);
+			}
+			a_Position.push(...this.vertex(i, radius));
 		}
+		VI.push(1);
+
+		var normalmap = Item.image('images/heaven_normalmap.jpg');
+		var a_Normal = Item.normals(a_Position, VI);
+		var a_UI = Item.UIs(a_Position, VI);
+
+		this.mesh = new Mesh({
+			attributes: {
+				a_Position,
+				a_Normal,
+				a_UI
+			},
+			textures: {
+				u_NormalMap: normalmap
+			},
+			uniforms: {
+				u_Radius: radius,
+				u_Color: this.physic.color.normal.Vec
+			},
+			vertexIndices: VI,
+			shader: shader
+		});
 	}
 
-	get links() {
-		return this.links_;
-	}
+	vertex(index, radius = this.physic.diameter / 2) {
+		var out;
 
-	set links(val) {
-		if (val instanceof Array) {
-			this.links_ = val;
-		}
-		else {
-			console.warn('Heaven: links: error');
-		}
-	}
-}
-
-class Link extends Item {
-	constructor({
-			parent,
-			radius,
-			shader,
-			index,
-			texture
-		}) {
-		var interval = 360 / LINKS_COUNT;
+		var radius = radius;
+		var interval = 360 / this.vertexCount_;
 		var deg = index * interval;
 
 		var rad = Math.DTR(deg);
 		var x = Math.cos(rad) * radius,
 			y = Math.sin(rad) * radius;
 
-		super({
-			name: 'link',
-			body: new Body({
-				parent: parent,
-				position: new Vec3(x, y, 0),
-				rotation: Quaternion.Euler(0, 0, -deg)
-			}),
-			mesh: new Mesh({
-				shader: shader,
-				vertexIndices: [
-					0, 1, 2,
-					2, 3, 0
-				],
-				textures: {
-					u_Sampler: texture
-				}
-			})
-		});
+		out = [x, y, 0];
 
-		this.initialize_vertices(radius);
-	}
-
-	initialize_vertices(radius) {
-		var height = 2 * Math.PI * radius / LINKS_COUNT;
-		var width = height / 8;
-
-		var a_Position = [
-			-width / 2, height / 2, 0,
-			width / 2, height / 2, 0,
-			width / 2, -height / 2, 0,
-			-width / 2, -height / 2, 0
-		];
-		a_Position.size = 3;
-		this.mesh.attributes['a_Position'] = a_Position;
+		return out;
 	}
 }

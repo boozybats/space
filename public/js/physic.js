@@ -28,21 +28,21 @@ var PeriodicTable = {
 		p: 7874,
 		melting: 1812,
 		boiling: 3135,
-		color: new Color(235, 233, 232)
+		color: new Color(235, 233, 232, 1)
 	},
 	Mg: {
 		M: 24.305,
 		p: 1738,
 		melting: 924,
 		boiling: 1363,
-		color: new Color(130, 130, 120)
+		color: new Color(130, 130, 120, 1)
 	},
 	Ni: {
 		M: 58.6934,
 		p: 8902,
 		melting: 1726,
 		boiling: 3005,
-		color: new Color(222, 222, 222)
+		color: new Color(222, 222, 222, 1)
 	},
 	O: {
 		M: 15.999,
@@ -63,14 +63,14 @@ var PeriodicTable = {
 		p: 2070,
 		melting: 386,
 		boiling: 717,
-		color: new Color(225, 220, 125)
+		color: new Color(225, 220, 125, 1)
 	},
 	Si: {
 		M: 28.085,
 		p: 2330,
 		melting: 1683,
 		boiling: 2623,
-		color: new Color(90, 110, 150)
+		color: new Color(90, 110, 150, 1)
 	}
 };
 

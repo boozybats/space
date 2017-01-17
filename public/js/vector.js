@@ -1,5 +1,20 @@
 class Vec {
-	constructor() {
+	constructor(...arr) {
+		if (this.constructor === Vec) {
+			var out;
+			switch (arr.length) {
+				case 4:
+				this.w_ = arr[3];
+
+				case 3:
+				this.z_ = arr[2];
+
+				case 2:
+				this.x_ = arr[0];
+				this.y_ = arr[1];
+			}
+			this.length_ = arr.length;
+		}
 	}
 
 	basis() {
@@ -19,27 +34,6 @@ class Vec {
 			ww = this.w / sum;
 
 		var out = this.constructor(xx, yy, zz, ww);
-
-		return out;
-	}
-
-	static class(...arr) {
-		//return vector class same arguments length
-
-		var out;
-		switch (arr.length) {
-			case 2:
-			out = new Vec2(...arr);
-			break;
-
-			case 3:
-			out = new Vec3(...arr);
-			break;
-
-			case 4:
-			out = new Vec4(...arr);
-			break;
-		}
 
 		return out;
 	}

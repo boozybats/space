@@ -7,7 +7,6 @@ class Scene {
 		this.pointLight = [];
 		this.items = [];
 		this.functionsonupdate = {};
-		this.attributesStorage_ = [];
 	}
 
 	appendCamera(camera) {

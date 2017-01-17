@@ -60,8 +60,8 @@ class Shader {
 		gl.enable(gl.BLEND);
 		gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
 
-		return program;
-	
+		var out = new Program(program);
+		return out;
 	}
 
 	get vertexShader() {
@@ -74,6 +74,82 @@ class Shader {
 		}
 		else {
 			console.warn('Shader: vertexShader: error');
+		}
+	}
+}
+
+class Program {
+	constructor(program) {
+		this.program = program;
+
+		this.attributesStorage = {};
+		this.attributesLocation = {};
+		this.texturesLocation = {};
+		this.uniformsStorage = {};
+		this.uniformsLocation = {};
+	}
+
+	get attributesLocation() {
+		return this.attributesLocation_;
+	}
+
+	set attributesLocation(val) {
+		if (typeof val === 'object') {
+			this.attributesLocation_ = val;
+		}
+	}
+
+	get attributesStorage() {
+		return this.attributesStorage_;
+	}
+
+	set attributesStorage(val) {
+		if (typeof val === 'object') {
+			this.attributesStorage_ = val;
+		}
+	}
+
+	get program() {
+		return this.program_;
+	}
+
+	set program(val) {
+		this.program_ = val;
+	}
+
+	get texturesLocation() {
+		return this.texturesLocation_;
+	}
+
+	set texturesLocation(val) {
+		if (typeof val === 'object') {
+			this.texturesLocation_ = val;
+		}
+	}
+
+	get uniformsStorage() {
+		return this.uniformsStorage_;
+	}
+
+	set uniformsStorage(val) {
+		if (typeof val === 'object') {
+			this.uniformsStorage_ = val;
+		}
+		else {
+			console.warn('Shader: uniformsStorage: error');
+		}
+	}
+
+	get uniformsLocation() {
+		return this.uniformsLocation_;
+	}
+
+	set uniformsLocation(val) {
+		if (typeof val === 'object') {
+			this.uniformsLocation_ = val;
+		}
+		else {
+			console.warn('Shader: uniformsLocation: error');
 		}
 	}
 }

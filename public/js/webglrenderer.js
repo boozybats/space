@@ -115,19 +115,19 @@ class WebGLRenderer {
 				}
 				
 				var eyeposition = camera.body.position;
-
 				var mvmatrix = item.mvmatrix;
-				//var mvnmatrix = mvmatrix.normalize();
 
 				item.updateAttributes();
 				item.updateTextures();
+
+				var mvnmatrix = mvmatrix.normalize();
 
 				//update MVMatrix and MVPMatrix
 				item.updateShaderUniforms({
 					u_EyePosition: eyeposition,
 					u_MVMatrix: mvmatrix,
 					u_MVPMatrix: self.mvpmatrix,
-					//u_MVNMatrix: mvnmatrix
+					u_MVNMatrix: mvnmatrix
 				});
 
 				//var lightsUniforms = scene.sceneLights;

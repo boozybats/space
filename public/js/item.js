@@ -41,7 +41,7 @@ class Item {
 
 	instance(scene) {
 		if ((scene instanceof Scene)) {
-			var out = scene.appendElement(this);
+			var out = scene.appendItem(this);
 			return out;
 		}
 		else {
@@ -89,6 +89,36 @@ class Item {
 		}
 	}
 
+	static normals(vertices, indices) {
+		//only if vertices size == 3
+		var out = [];
+		out.size = 3;
+
+		for (var i = 0; i < indices.length; i += 3) {
+			var i0 = indices[i] * 3,
+				i1 = indices[i + 1] * 3,
+				i2 = indices[i + 2] * 3;
+			var v0 = [vertices[i0], vertices[i0 + 1], vertices[i0 + 2]],
+				v1 = [vertices[i1], vertices[i1 + 1], vertices[i1 + 2]],
+				v2 = [vertices[i2], vertices[i2 + 1], vertices[i2 + 2]];
+			var nx = ((v0[1] - v1[1]) * (v0[2] - v2[2])) - ((v0[2] - v1[2]) * (v0[1] - v2[1])),
+				ny = ((v0[2] - v1[2]) * (v0[0] - v2[0])) - ((v0[0] - v1[0]) * (v0[2] - v2[2])),
+				nz = ((v0[0] - v1[0]) * (v0[1] - v2[1])) - ((v0[1] - v1[1]) * (v0[0] - v2[0]));
+			var length = Math.sqrt((nx * nx) + (ny * ny) + (nz * nz));
+			nx = nx / length;
+			ny = ny / length;
+			nz = nz / length;
+
+			out.push(
+				nx, ny, nz,
+				nx, ny, nz,
+				nx, ny, nz
+			);
+		}
+
+		return out;
+	}
+
 	get physic() {
 		return this.physic_;
 	}
@@ -100,5 +130,54 @@ class Item {
 		else {
 			console.warn('Item: physic: error');
 		}
+	}
+
+	static UIs(vertices, indices) {
+		//only if vertices size == 3
+		var out = [];
+		out.size = 2;
+
+		var min = {};
+		var max = {};
+
+		for (var i = 0; i < vertices.length; i += 3) {
+			var x = vertices[i],
+				y = vertices[i + 1];
+
+			if (typeof min.x === 'undefined') {
+				min.x = x;
+				min.y = y;
+				max.x = x;
+				max.y = y;
+			}
+
+			min.x = Math.min(min.x, x);
+			min.y = Math.min(min.y, y);
+			max.x = Math.max(max.x, x);
+			max.y = Math.max(max.y, y);
+		}
+
+		var distx = max.x - min.x,
+			disty = max.y - min.y;
+
+		for (var i = 0; i < indices.length; i += 3) {
+			var i0 = indices[i] * 3,
+				i1 = indices[i + 1] * 3,
+				i2 = indices[i + 2] * 3;
+			var v0 = [vertices[i0], vertices[i0 + 1], vertices[i0 + 2]],
+				v1 = [vertices[i1], vertices[i1 + 1], vertices[i1 + 2]],
+				v2 = [vertices[i2], vertices[i2 + 1], vertices[i2 + 2]];
+
+			var x0 = (v0[0] - min.x) / distx,
+				y0 = (v0[1] - min.y) / disty;
+			var x1 = (v1[0] - min.x) / distx,
+				y1 = (v1[1] - min.y) / disty;
+			var x2 = (v2[0] - min.x) / distx,
+				y2 = (v2[1] - min.y) / disty;
+
+			out.push(x0, y0, x1, y1, x2, y2);
+		}
+
+		return out;
 	}
 }

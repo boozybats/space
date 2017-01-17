@@ -1,6 +1,6 @@
 const FPS = 1000 / 60;
-const RESOLUTION_WIDTH = 1920;
-const RESOLUTION_HEIGHT = 1080;
+const RESOLUTION_WIDTH = screen.width;
+const RESOLUTION_HEIGHT = screen.height;
 
 var canvas;
 var Mouse = {
