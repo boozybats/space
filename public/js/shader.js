@@ -83,20 +83,9 @@ class Program {
 		this.program = program;
 
 		this.attributesStorage = {};
-		this.attributesLocation = {};
-		this.texturesLocation = {};
 		this.uniformsStorage = {};
-		this.uniformsLocation = {};
-	}
-
-	get attributesLocation() {
-		return this.attributesLocation_;
-	}
-
-	set attributesLocation(val) {
-		if (typeof val === 'object') {
-			this.attributesLocation_ = val;
-		}
+		this.texturesCount = -1;
+		this.id = GUID();
 	}
 
 	get attributesStorage() {
@@ -117,16 +106,6 @@ class Program {
 		this.program_ = val;
 	}
 
-	get texturesLocation() {
-		return this.texturesLocation_;
-	}
-
-	set texturesLocation(val) {
-		if (typeof val === 'object') {
-			this.texturesLocation_ = val;
-		}
-	}
-
 	get uniformsStorage() {
 		return this.uniformsStorage_;
 	}
@@ -140,16 +119,31 @@ class Program {
 		}
 	}
 
-	get uniformsLocation() {
-		return this.uniformsLocation_;
+	get texturesCount() {
+		return this.texturesCount_;
 	}
 
-	set uniformsLocation(val) {
-		if (typeof val === 'object') {
-			this.uniformsLocation_ = val;
+	set texturesCount(val) {
+		if (typeof val === 'number') {
+			this.texturesCount_ = val;
 		}
 		else {
-			console.warn('Shader: uniformsLocation: error');
+			console.warn('Program: texturesCount: error');
 		}
+	}
+}
+
+var guid = [];
+function GUID() {
+	function path() {
+		return (Math.random() * 8999 + 1000).toFixed(0);
+	}
+	var key = `${path()}-${path()}-${path()}`;
+	if (guid.indexOf(key) === -1) {
+		guid.push(key);
+		return key;
+	}
+	else {
+		return GUID();
 	}
 }

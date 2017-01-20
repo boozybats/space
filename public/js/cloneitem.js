@@ -20,6 +20,9 @@ class CloneItem {
 		this.collider = collider;
 		this.physic = physic;
 
+		this.attributes = {};
+		this.uniforms = {};
+
 		this.matrixStorage_ = [];
 	}
 
@@ -41,25 +44,12 @@ class CloneItem {
 		return this.attributes_;
 	}
 
-	set attributes(attributes) {
-		if (typeof attributes === 'object') {
-			this.attributes_ = this.initializeAttributes(attributes);
+	set attributes(val) {
+		if (typeof val === 'object') {
+			this.attributes_ = val;
 		}
 		else {
 			console.warn('CloneItem: attributes: error');
-		}
-	}
-
-	get unavailableFrames() {
-		return this.availableFrames_;
-	}
-
-	set unavailableFrames(array) {
-		if (typeof array === 'object') {
-			this.availableFrames_ = array;
-		}
-		else {
-			console.warn('CloneItem: availableFrames: error');
 		}
 	}
 
@@ -73,6 +63,41 @@ class CloneItem {
 		}
 		else {
 			console.warn('CloneItem: body: error');
+		}
+	}
+
+	changeAttributes(val) {
+		/* updates attributes:
+			if new - add
+			else - update */
+		if (typeof val === 'object') {
+			var attributes = this.initializeAttributes(val);
+			
+			for (var i in attributes) {
+				if (attributes.hasOwnProperty(i)) {
+					var attribute = attributes[i];
+					this.attributes[i] = attribute;
+				}
+			}
+		}
+		else {
+			console.warn('CloneItem: changeAttributes: error');
+		}
+	}
+
+	changeUniforms(val) {
+		if (typeof val === 'object') {
+			var uniforms = this.initializeUniforms(val);
+			
+			for (var i in uniforms) {
+				if (uniforms.hasOwnProperty(i)) {
+					var uniform = uniforms[i];
+					this.uniforms[i] = uniform;
+				}
+			}
+		}
+		else {
+			console.warn('CloneItem: changeUniforms: error');
 		}
 	}
 
@@ -135,58 +160,172 @@ class CloneItem {
 		}
 	}
 
-	initializeAttributes(attributes) {
+	initializeAttributes(attributes = {}) {
 		if (typeof attributes !== 'object') {
 			console.warn('CloneItem: initializeAttributes: error');
 		}
 
-		//returns all buffers, which has been sended as arguments
-		//writes buffers at WebGL storage
-		//gets associative massive format: Array[0,1,2,3] => size=x
+		/* gets as argument attributes-object with names of this attributes,
+		as example: {a_Position: [...], a_UI: [...]}, every array must have
+		method "size" (usually "3") which shows how much values in one vertex. */
 
 		var out = {};
+
 		var gl = this.project.webGLRenderer.webGL;
 		var shader = this.shader;
 		var program = this.program;
 
-		var attrs = this.attributes;
-		var locations = shader.attributesLocation;
+		if (this.scene.lastShaderID != shader.id) {
+			this.scene.lastShaderID = shader.id;
+			gl.useProgram(program);
+		}
+
+		//methods to optimization of attributes initializing
+		var old_attributes = this.attributes;
 
 		for (var i in attributes) {
 			if (attributes.hasOwnProperty(i)) {
-				var attribute = attributes[i];
-				var buffer = gl.createBuffer();
+				var data = attributes[i];
 
-				var size = attribute.size;
-				var index;
+				var buffer = gl.createBuffer();
+				var size = data.size;
 
 				gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
-				gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(attribute), gl.STATIC_DRAW);
+				gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(data), gl.STATIC_DRAW);
 
-				if (attrs && typeof locations[i] !== 'undefined') {
-					var attr = attrs[i];
-					attr[0] = [buffer, attribute];
+				//if attribute location is determined
+				if (old_attributes && typeof old_attributes[i] !== 'undefined') {
+					//so just change buffer and path for comparison
+					old_attributes[i][0] = buffer;
+					old_attributes[i][3] = data;
 				}
+				//if attribute first time in shader
 				else {
-					index = gl.getAttribLocation(program, i);
-					locations[i] = true;
-
-					var arr0 = [buffer, attribute];
-					var arr1 = [index, size];
+					var index = gl.getAttribLocation(program, i);
+					var arr = [buffer, index, size, data];
 
 					//if shader contains attribute
 					if (index >= 0) {
 						gl.vertexAttribPointer(index, size, gl.FLOAT, false, 0, 0);
 						gl.enableVertexAttribArray(index);
-
-						out[i] = [arr0, arr1];
 					}
 					else {
-						console.warn(`Shader doesnt contain '${i}' attribute or this attribute is unusable`);
+						//console.warn(`Shader doesnt contain '${i}' attribute or this is unusable`);
 					}
+
+					out[i] = arr;
 				}
 
 				gl.bindBuffer(gl.ARRAY_BUFFER, null);
+			}
+		}
+
+		return out;
+	}
+
+	initializeUniforms(uniforms = {}) {
+		if (typeof uniforms !== 'object') {
+			console.warn('CloneItem: initializeUniforms: error');
+		}
+
+		/* gets as argument uniforms-object with names of this uniforms,
+		as example: {u_MVMatrix: Mat4, u_Lights: [DirectionalLight, PointLight]},
+		takes uniforms with classes: Mat, Vec, float */
+
+		var out = {};
+
+		var gl = this.project.webGLRenderer.webGL;
+		var shader = this.shader;
+		var program = this.program;
+
+		var old_uniforms = this.uniforms;
+
+		if (this.scene.lastShaderID != shader.id) {
+			this.scene.lastShaderID = shader.id;
+			gl.useProgram(program);
+		}
+
+		for (var i in uniforms) {
+			if (uniforms.hasOwnProperty(i)) {
+				var data = uniforms[i];
+
+				if (old_uniforms && typeof old_uniforms[i] !== 'undefined') {
+					old_uniforms[i][0] = data;
+				}
+				else {
+					//define type of uniform, uniform can have next types:
+					//Mat, Vec, float
+
+					var index = gl.getUniformLocation(program, i);
+					if (!index) {
+						//console.warn(`Shader doesnt contain '${i}' uniform or this is unusable`);
+					}
+
+					var type, method;
+
+					if (data instanceof Mat) {
+						type = 'mat';
+
+						switch(data.a) {
+							case 2:
+							method = 'uniformMatrix2fv';
+							break;
+
+							case 3:
+							method = 'uniformMatrix3fv';
+							break;
+
+							case 4:
+							method = 'uniformMatrix4fv';
+							break;
+						}
+					}
+					else if (data instanceof Vec) {
+						type = 'vec';
+
+						switch(data.length) {
+							case 2:
+							method = 'uniform2fv';
+							break;
+
+							case 3:
+							method = 'uniform3fv';
+							break;
+
+							case 4:
+							method = 'uniform4fv';
+							break;
+						}
+					}
+					else if (typeof data === 'number') {
+						type = 'float';
+					}
+					else if (data instanceof Image) {
+						type = 'image';
+
+						let buffer = gl.createTexture();
+						gl.bindTexture(gl.TEXTURE_2D, buffer);
+						gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
+						gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+						gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+						gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, this.project.transparentImage);
+						gl.bindTexture(gl.TEXTURE_2D, null);
+
+						data.onload = function() {
+							gl.bindTexture(gl.TEXTURE_2D, buffer);
+							gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, this);
+							gl.bindTexture(gl.TEXTURE_2D, null);
+						}
+						//update onload
+						data.src = data.src;
+
+						[index, method] = [[index, ++shader.texturesCount], buffer];
+					}
+
+					var arr = [data, index, type, method];
+
+					out[i] = arr;
+				}
 			}
 		}
 
@@ -205,103 +344,9 @@ class CloneItem {
 		gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(vertices), gl.STATIC_DRAW);
 		gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, null);
 
-		VIOBuffer.number = vertices.length;
+		VIOBuffer.length = vertices.length;
 
 		return VIOBuffer;
-	}
-
-	initializeTextures(TexturesList) {
-		if (TexturesList && typeof TexturesList !== 'object') {
-			console.warn('CloneItem: initializeTextures: error');
-		}
-
-		if (!TexturesList) {
-			return true;
-		}
-
-		var out = [];
-
-		var gl = this.project.webGLRenderer.webGL;
-		var shader = this.shader;
-		var program = this.program;
-
-		var locations = shader.texturesLocation;
-
-		gl.useProgram(program);
-
-		for (var i in TexturesList) {
-			//goes throw all uniforms and update in shader
-			if (TexturesList.hasOwnProperty(i)) {
-				var texture = TexturesList[i];
-				if (texture instanceof Array) {
-					for (var z = 0; z < texture.length; z++) {
-						//creates new image buffer data
-
-						var image = texture[z];
-						var n_texture = gl.createTexture();
-
-						if (!image.src) {
-							console.warn('CloneItem: initializeTextures: one of images without src');
-						}
-
-						gl.bindTexture(gl.TEXTURE_2D, n_texture);
-						gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, image.width, image.height, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
-						gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
-						gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
-						gl.bindTexture(gl.TEXTURE_2D, null);
-
-						gl.activeTexture(gl.TEXTURE0 + z);
-						gl.bindTexture(gl.TEXTURE_2D, n_texture);
-						gl.texSubImage2D(gl.TEXTURE_2D, 0, 0, 0, gl.RGBA, gl.UNSIGNED_BYTE, image);
-
-						out.push([n_texture, z]);
-					}
-
-					//collection function of all textures
-
-					if (typeof locations[i] === 'undefined') {
-						locations[i] = gl.getUniformLocation(program, i);
-					}
-					var _location = locations[i];
-
-					var samplerArray = new Int32Array(texture.length);
-					var length = samplerArray.length;
-
-					while(length--) {
-						samplerArray[length] = length;
-					}
-
-					gl.uniform1iv(_location, samplerArray);
-				}
-				else {
-					var image = texture;
-					var texture = gl.createTexture();
-
-					if (!image.src) {
-						console.warn('CloneItem: initializeTextures: image without src');
-					}
-
-					//binding single image to send in shader
-					
-					if (typeof locations[i] === 'undefined') {
-						locations[i] = gl.getUniformLocation(program, i);
-					}
-					var _location = locations[i];
-
-					gl.bindTexture(gl.TEXTURE_2D, texture);
-					gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
-					gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, image);
-					gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
-					gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
-					gl.bindTexture(gl.TEXTURE_2D, null);
-					gl.uniform1i(_location, 0);
-
-					out.push([texture, 0]);
-				}
-			}
-		}
-
-		return out;
 	}
 
 	get mvmatrix() {
@@ -422,253 +467,114 @@ class CloneItem {
 		}
 	}
 
-	get storage() {
-		return this.storage_;
+	get unavailableFrames() {
+		return this.availableFrames_;
 	}
 
-	set storage(val) {
-		if (val instanceof Array) {
-			this.storage_ = val;
+	set unavailableFrames(array) {
+		if (typeof array === 'object') {
+			this.availableFrames_ = array;
 		}
 		else {
-			console.warn('CloneItem: store: error');
+			console.warn('CloneItem: availableFrames: error');
 		}
 	}
 
-	get textures() {
-		return this.textures_;
+	get uniforms() {
+		return this.uniforms_;
 	}
 
-	set textures(texturesList) {
-		if (texturesList) {
-			if (typeof texturesList !== 'object') {
-				console.warn('CloneItem: textures: error');
-			}
-
-			//change or create new list of textures to clone element
-			//textures could be changed at parent element
-
-			var out = {};
-
-			var timer;
-			function setTimer() {		
-				clearTimeout(timer);
-				timer = setTimeout(cycle, 100);
-			}
-
-			var self = this;
-			var cycle;
-			;(cycle = function() {
-				for (var y in texturesList) {
-					if (texturesList.hasOwnProperty(y)) {
-						var texture = texturesList[y];
-						if (texture instanceof Array) {
-							if (!out[y]) {
-								out[y] = [];
-							}
-							var cell = out[y];
-
-							for (var i = 0; i < texture.length; i++) {
-								if (image.constructor != Item.image) {
-									console.warn('Textures sended to shader must be created by ItemImage function');
-								}
-
-								var image = texture[i];
-								if (image.loaded) {
-									cell[i] = image;
-								}
-								else {
-									cell[i] = self.project.transparentImage;
-
-									setTimer();
-								}
-							}
-						}
-						else {
-							if (texture.constructor != Item.image) {
-								console.warn('Textures sended to shader must be created by ItemImage function');
-							}
-
-							if (texture.loaded) {
-								out[y] = texture;
-							}
-							else {
-								out[y] = self.project.transparentImage;
-
-								setTimer();
-							}
-						}
-					}
-				}
-
-				self.textures_ = self.initializeTextures(out);
-			})();
+	set uniforms(val) {
+		if (typeof val === 'object') {
+			this.uniforms_ = val;
 		}
 		else {
-			console.warn('CloneItem: textures: error');
+			console.warn('CloneItem: uniforms: error');
 		}
+	}
+
+	update() {
+		this.updateAttributes();
+		this.updateUniforms();
 	}
 
 	updateAttributes() {
+		/* enables attributes in shader or miss them
+		if already activated */
+
 		var gl = this.project.webGLRenderer.webGL;
 		var attributes = this.attributes;
 		var storage = this.shader.attributesStorage;
 
+		var shader = this.shader;
+		var program = this.program;
+
+		if (this.scene.lastShaderID != shader.id) {
+			this.scene.lastShaderID = shader.id;
+			gl.useProgram(program);
+		}
+
 		if (attributes) {
 			for (var i in attributes) {
 				if (attributes.hasOwnProperty(i)) {
-					var attr = attributes[i];
+					var attribute = attributes[i];
 
-					var arr0 = attr[0];
-					var buffer = arr0[0];
-					var attribute = arr0[1];
+					var [buffer, index, size, data] = [...attribute];
 
-					var arr1 = attr[1];
-					var index = arr1[0];
-					var size = arr1[1];
+					if (!compare(data, storage[i])) {
+						storage[i] = data;
 
-					if (!compare(attribute, storage[index])) {
-						storage[index] = attribute;
-
-						gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
-						gl.vertexAttribPointer(index, size, gl.FLOAT, false, 0, 0);
-						gl.enableVertexAttribArray(index);
-						gl.bindBuffer(gl.ARRAY_BUFFER, null);
+						if (index >= 0) {
+							gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
+							gl.vertexAttribPointer(index, size, gl.FLOAT, false, 0, 0);
+							gl.enableVertexAttribArray(index);
+							gl.bindBuffer(gl.ARRAY_BUFFER, null);
+						}
 					}
 				}
 			}
 		}
 	}
 
-	updateShaderUniformArray(uniforms, name) {
-		if (!(uniforms instanceof Array)) {
-			console.warn('CloneItem: updateShaderUniformArray: uniforms isn\'t an array');
-		}
-		else if (typeof name !== 'string') {
-			console.warn('CloneItem: updateShaderUniformArray: name ins\'t a string');
-		}
-
-		return;
-
-		//send the array in shader
-		//shader get array as "type u_Variable[x]", where x - size of array
+	updateUniforms() {
+		/* enables uniforms in shader or miss them
+		if already activated */
 
 		var gl = this.project.webGLRenderer.webGL;
-		var program = this.program;
-		var type = uniforms[0].constructor;  //define type of first element
-
-		//THIS ONE DOESN'T WORK!
-	}
-
-	updateShaderUniforms(uniforms, program = this.program) {
-		if (uniforms && typeof uniforms !== 'object') {
-			console.warn('CloneItem: updateShaderUniforms: uniforms isn\'t an object');
-		}
-
-		//update shader uniforms
-		//this function can be called once for one shader, and only usable to update uniforms data
-
-		if (!uniforms) {
-			return true;
-		}
-
-		var gl = this.project.webGLRenderer.webGL;
+		var uniforms = this.uniforms;
 		var storage = this.shader.uniformsStorage;
-		var location = this.shader.uniformsLocation;
 
-		gl.useProgram(program);
+		var shader = this.shader;
+		var program = this.program;
+
+		if (this.scene.lastShaderID != shader.id) {
+			this.scene.lastShaderID = shader.id;
+			gl.useProgram(program);
+		}
 
 		for (var i in uniforms) {
 			if (uniforms.hasOwnProperty(i)) {
 				var uniform = uniforms[i];
-				if (typeof uniform === 'function') {
-					continue;
-				}
-				else if (uniform instanceof Array) {
-					//this.updateShaderUniformArray(uniform, i);
-					continue;
-				}
-				else if (compare(uniform, storage[i])) {
-					continue;
-				}
-				storage[i] = uniform;
+				var [data, index, type, method] = [...uniform];
 
-				//unavailable to send images from uniforms
-				if (uniform.src) {
-					console.warn('Uniforms can\'t containt image objects, put texture in mesh, key: Textures');
-				}
+				if (type == 'image' || index && !compare(data, storage[i])) {
+					storage[i] = data;
 
-				if (typeof location[i] === 'undefined') {
-					location[i] = gl.getUniformLocation(program, i);
-				}
-				var _location = location[i];
-				var type, str;
-
-				//step to define type of uniform
-				//uniform could have next types:
-				//mat, vec, float
-
-				if (uniform instanceof Mat) {
-					type = 'mat';
-
-					switch(uniform.a) {
-						case 2:
-							str = 'uniformMatrix2fv';
-							break;
-
-						case 3:
-							str = 'uniformMatrix3fv';
-							break;
-
-						case 4:
-							str = 'uniformMatrix4fv';
-							break;
+					if (type == 'vec') {
+						gl[method](index, new Float32Array(data.inline()));
+					}
+					else if (type == 'mat') {
+						gl[method](index, false, new Float32Array(data.inline()));
+					}
+					else if (type == 'float') {
+						gl.uniform1f(index, data);
+					}
+					else if (type == 'image') {
+						gl.activeTexture(gl.TEXTURE0 + index[1]);
+						gl.bindTexture(gl.TEXTURE_2D, method);
+						gl.uniform1i(index[0], index[1]);
 					}
 				}
-				else if (uniform instanceof Vec) {
-					type = 'vec';
-
-					switch(uniform.length) {
-						case 2:
-							str = 'uniform2fv';
-							break;
-
-						case 3:
-							str = 'uniform3fv';
-							break;
-
-						case 4:
-							str = 'uniform4fv';
-							break;
-					}
-				}
-				else if (typeof uniform === 'number') {
-					type = 'float';
-				}
-
-				//sending uniforms by special functions at WebGL
-
-				if (type == 'vec') {
-					gl[str](_location, new Float32Array(uniform.inline()));
-				}
-				else if (type == 'mat') {
-					gl[str](_location, false, new Float32Array(uniform.inline()));
-				}
-				else if (type == 'float') {
-					gl.uniform1f(_location, uniforms[i]);
-				}
-			}
-		}
-	}
-
-	updateTextures() {
-		var gl = this.project.webGLRenderer.webGL;
-		var textures = this.textures;
-
-		if (textures) {
-			for (var texture of textures) {
-				gl.activeTexture(gl.TEXTURE0 + texture[1]);
-				gl.bindTexture(gl.TEXTURE_2D, texture[0]);
 			}
 		}
 	}

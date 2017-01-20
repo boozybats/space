@@ -3,8 +3,8 @@ class Scene {
 		this.name = name;
 		this.project = project;
 		this.cameras = [];
-		this.directionalLight = [];
-		this.pointLight = [];
+		this.directionalLights = [];
+		this.pointLights = [];
 		this.items = [];
 		this.functionsonupdate = {};
 	}
@@ -29,10 +29,9 @@ class Scene {
 
 		if (item.mesh) {
 			n_item.shader = item.mesh.shader;
-			n_item.attributes = item.mesh.attributes;
 			n_item.vertexIndices = item.mesh.vertexIndices;
-			n_item.textures = item.mesh.textures;
-			n_item.updateShaderUniforms(item.mesh.uniforms);
+			n_item.changeAttributes(item.mesh.attributes);
+			n_item.changeUniforms(item.mesh.uniforms);
 		}
 		this.items.push(n_item);
 
@@ -52,6 +51,23 @@ class Scene {
 		this.functionsonupdate[name] = fun;
 	}
 
+	addLight(light) {
+		if (!(light instanceof Light)) {
+			console.warn('Scene: addLight: error');
+		}
+
+		var constructor = light.constructor;
+		switch(constructor) {
+			case DirectionalLight:
+			this.directionalLights.push(light);
+			break;
+
+			case PointLight:
+			this.pointLights.push(light);
+			break;
+		}
+	}
+
 	get cameras() {
 		return this.cameras_;
 	}
@@ -65,36 +81,16 @@ class Scene {
 		}
 	}
 
-	createDirectionLight(body = new Body) {
-		if (!(body instanceof Body)) {
-			console.warn('Scene: createDirectionLight: error');
-		}
-
-		this.directionalLight.push(body);
-
-		return body;
+	get directionalLights() {
+		return this.directionalLights_;
 	}
 
-	createPointLight(body = new Body) {
-		if (!(body instanceof Body)) {
-			console.warn('Scene: createPointLight: error');
-		}
-
-		this.pointLight.push(body);
-
-		return body;
-	}
-
-	get directionalLight() {
-		return this.directionalLight_;
-	}
-
-	set directionalLight(val) {
+	set directionalLights(val) {
 		if (val instanceof Array) {
-			this.directionalLight_ = val;
+			this.directionalLights_ = val;
 		}
 		else {
-			console.warn('Scene: directionalLight: error');
+			console.warn('Scene: directionalLights: error');
 		}
 	}
 
@@ -124,6 +120,14 @@ class Scene {
 		}
 	}
 
+	get lastShaderID() {
+		return this.lastShaderID_;
+	}
+
+	set lastShaderID(val) {
+		this.lastShaderID_ = val;
+	}
+
 	get name() {
 		return this.name_;
 	}
@@ -137,16 +141,16 @@ class Scene {
 		}
 	}
 
-	get pointLight() {
-		return this.pointLight_;
+	get pointLights() {
+		return this.pointLights_;
 	}
 
-	set pointLight(val) {
+	set pointLights(val) {
 		if (val instanceof Array) {
-			this.pointLight_ = val;
+			this.pointLights_ = val;
 		}
 		else {
-			console.warn('Scene: pointLight: error');
+			console.warn('Scene: pointLights: error');
 		}
 	}
 
@@ -171,19 +175,36 @@ class Scene {
 		delete this.functionsonupdate[name];
 	}
 
-	get sceneLights() {
-		var out = {};
-		var directionalLight = this.directionalLight;
-		var pointLight = this.pointLight;
-
-		out.directionalLight = [];
-		for (var light of directionalLight) {
-			out.directionalLight.push(light.rotation.euler);
+	removeLight(light) {
+		if (!(light instanceof Light)) {
+			console.warn('Scene: removeLight: error');
 		}
 
-		out.PointLight = [];
-		for (var light of pointLight) {
-			out.pointLight.push(pointLight.position);
+		var constructor = light.constructor;
+		switch(constructor) {
+			case DirectionalLight:
+			this.directionalLights.split(this.directionalLights.indexOf(light), 1);
+			break;
+
+			case PointLight:
+			this.pointLights.split(this.pointLights.indexOf(light), 1);
+			break;
+		}
+	}
+
+	get sceneLights() {
+		var out = {};
+		var directionalLights = this.directionalLights;
+		var pointLights = this.pointLights;
+
+		out.directionalLights = [];
+		for (var light of directionalLights) {
+			out.directionalLights.push(light.rotation.euler);
+		}
+
+		out.pointLights = [];
+		for (var light of pointLights) {
+			out.pointLights.push(pointLights.position);
 		}
 
 		return out;

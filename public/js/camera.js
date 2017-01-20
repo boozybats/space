@@ -22,6 +22,7 @@ class Camera {
 		this.projectionMatrix = projectionMatrix;
 		this.skyBoxColor = skyBoxColor;
 		this.skyBoxType = skyBoxType;
+		this.matrixStorage_ = [];
 	}
 
 	get body() {
@@ -43,6 +44,56 @@ class Camera {
 
 	set deepOffset(val) {
 		this.deepOffset_ = val;
+	}
+
+	get mvmatrix() {
+		var matS, matR, matT, matU, mvmatrix;
+		var body = this.body;
+
+		var storage = this.matrixStorage_;
+		var ie = 0;
+		var isBreaked = false;
+
+		do {
+			if (!storage[ie]) {
+				storage[ie] = {};
+			}
+			var cell = storage[ie];
+
+			if (cell.position === body.position &&
+				cell.rotation === body.rotation &&
+				cell.scale === body.scale) {
+				if (isBreaked) {
+					mvmatrix = Mat.multi(mvmatrix, cell.matrix);
+				}
+				else {
+					mvmatrix = cell.unity;
+				}
+			}
+			else {
+				isBreaked = true;
+
+				cell.position = body.position;
+				cell.rotation = body.rotation;
+				cell.scale = body.scale;
+
+				matS = Mat4.scale(body.scale);
+				matR = Mat4.rotate(body.rotation);
+				matT = Mat4.translate(body.position);
+
+				matU = Mat.multi(matS, matR, matT);
+				cell.matrix = matU;
+
+				mvmatrix = mvmatrix ? Mat.multi(mvmatrix, matU) : matU;
+				cell.unity = mvmatrix;
+			}
+
+			body = body.parent;
+			ie++;
+		}
+		while(body);
+
+		return mvmatrix;
 	}
 
 	get name() {

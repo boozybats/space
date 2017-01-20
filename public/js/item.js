@@ -49,20 +49,6 @@ class Item {
 		}
 	}
 
-	static image(src) {
-		var image = new Image();
-		image.onload = function() {
-			this.loaded = true;
-		}
-		image.onerror = function() {
-			this.loaded = false;
-		}
-		image.src = src;
-		image.constructor = Item.image;
-
-		return image;
-	}
-
 	get mesh() {
 		return this.mesh_;
 	}
@@ -160,22 +146,11 @@ class Item {
 		var distx = max.x - min.x,
 			disty = max.y - min.y;
 
-		for (var i = 0; i < indices.length; i += 3) {
-			var i0 = indices[i] * 3,
-				i1 = indices[i + 1] * 3,
-				i2 = indices[i + 2] * 3;
-			var v0 = [vertices[i0], vertices[i0 + 1], vertices[i0 + 2]],
-				v1 = [vertices[i1], vertices[i1 + 1], vertices[i1 + 2]],
-				v2 = [vertices[i2], vertices[i2 + 1], vertices[i2 + 2]];
+		for (var i = 0; i < vertices.length; i += 3) {
+			var x = (vertices[i] - min.x) / distx,
+				y = (vertices[i + 1] - min.y) / disty;
 
-			var x0 = (v0[0] - min.x) / distx,
-				y0 = (v0[1] - min.y) / disty;
-			var x1 = (v1[0] - min.x) / distx,
-				y1 = (v1[1] - min.y) / disty;
-			var x2 = (v2[0] - min.x) / distx,
-				y2 = (v2[1] - min.y) / disty;
-
-			out.push(x0, y0, x1, y1, x2, y2);
+			out.push(x, y);
 		}
 
 		return out;

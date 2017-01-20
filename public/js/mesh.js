@@ -4,14 +4,12 @@ class Mesh {
 		vertexIndices = [],
 		drawStyle = 'TRIANGLES',
 		attributes = {},
-		uniforms = {},
-		textures = {}
+		uniforms = {}
 	} = {}) {
 		this.attributes = attributes;
 		this.uniforms = uniforms;
 		this.shader = shader;
 		this.vertexIndices = vertexIndices;
-		this.textures = textures;
 		this.drawStyle = drawStyle;
 	}
 
@@ -52,14 +50,6 @@ class Mesh {
 		else {
 			console.warn('Mesh: shader: error');
 		}
-	}
-
-	get textures() {
-		return this.textures_;
-	}
-
-	set textures(val) {
-		this.textures_ = val;
 	}
 
 	get vertexIndices() {

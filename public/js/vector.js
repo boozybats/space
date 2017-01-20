@@ -4,14 +4,14 @@ class Vec {
 			var out;
 			switch (arr.length) {
 				case 4:
-				this.w_ = arr[3];
+				this.w_ = arr[3] || 0;
 
 				case 3:
-				this.z_ = arr[2];
+				this.z_ = arr[2] || 0;
 
 				case 2:
-				this.x_ = arr[0];
-				this.y_ = arr[1];
+				this.x_ = arr[0] || 0;
+				this.y_ = arr[1] || 0;
 			}
 			this.length_ = arr.length;
 		}

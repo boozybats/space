@@ -49,22 +49,23 @@ class Heaven extends Item {
 		}
 		VI.push(1);
 
-		var normalmap = Item.image('images/heaven_normalmap.jpg');
+		var normalmap = new Image();
+		normalmap.src = 'images/heaven_normalmap.jpg';
 		var a_Normal = Item.normals(a_Position, VI);
 		var a_UI = Item.UIs(a_Position, VI);
 
+		var im = new Image();
+		im.src = 'images/1.jpg';
 		this.mesh = new Mesh({
 			attributes: {
 				a_Position,
 				a_Normal,
 				a_UI
 			},
-			textures: {
-				u_NormalMap: normalmap
-			},
 			uniforms: {
 				u_Radius: radius,
-				u_Color: this.physic.color.normal.Vec
+				u_Color: this.physic.color.normal.Vec,
+				u_NormalMap: normalmap
 			},
 			vertexIndices: VI,
 			shader: shader

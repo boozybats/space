@@ -21,7 +21,9 @@ class WebGLRenderer {
 			}
 		}
 
-		if (!gl) {
+		if (gl) {
+		}
+		else {
 			console.warn('WebGLRenderer: error');
 		}
 	}
@@ -114,24 +116,22 @@ class WebGLRenderer {
 					console.warn(`Item '${item.name}' doesnt have a body`);
 				}
 				
-				var eyeposition = camera.body.position;
+				var eyematrix = camera.mvmatrix;
 				var mvmatrix = item.mvmatrix;
-
-				item.updateAttributes();
-				item.updateTextures();
-
 				var mvnmatrix = mvmatrix.normalize();
+				var lights = scene.sceneLights;
 
 				//update MVMatrix and MVPMatrix
-				item.updateShaderUniforms({
-					u_EyePosition: eyeposition,
+				item.changeUniforms({
+					u_MVMatrixEye: eyematrix,
 					u_MVMatrix: mvmatrix,
 					u_MVPMatrix: self.mvpmatrix,
-					u_MVNMatrix: mvnmatrix
+					u_MVNMatrix: mvnmatrix,
+					u_DirectionalLights: lights.directionalLights,
+					u_PointLights: lights.pointLights
 				});
 
-				//var lightsUniforms = scene.sceneLights;
-				//item.updateShaderUniforms(lightsUniforms);
+				item.update();
 
 				gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, item.VIOBuffer);
 				gl.drawElements(gl[item.drawStyle], item.VIOBuffer.length, gl.UNSIGNED_SHORT, 0);

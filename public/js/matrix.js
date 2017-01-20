@@ -433,6 +433,10 @@ class Mat {
 	Vec(vec, ...args) {
 		//transform matrix(x + 1) and vector(x) at vector(x)
 
+		function isNum(val) {
+			return typeof val === 'number';
+		}
+
 		var a = this.a,
 			b = this.b;
 
@@ -451,7 +455,7 @@ class Mat {
 				w = vec.w;
 			}
 
-			var res = isFinite(x) + isFinite(y) + isFinite(z) + isFinite(w);
+			var res = isNum(x) + isNum(y) + isNum(z) + isNum(w);
 			var out;
 			var oldvec = [x, y, z, w],
 				newvec = [
