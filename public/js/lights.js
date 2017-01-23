@@ -1,7 +1,7 @@
 class Light {
 	constructor({
-		body: new Body
-	}) {
+		body = new Body
+	} = {}) {
 		this.body = body;
 	}
 
@@ -19,20 +19,22 @@ class Light {
 	}
 }
 
-class DirectionalLight {
+class DirectionalLight extends Light {
 	constructor({
-		body: new Body
+		body = new Body
 	} = {}) {
 		super({
-			body: body
+			body
 		});
 	}
 }
 
-class PointLight {
+class PointLight extends Light {
 	constructor({
-		body: body
+		body = new Body
 	} = {}) {
-		super(body);
+		super({
+			body
+		});
 	}
 }

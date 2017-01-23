@@ -101,6 +101,11 @@ class Euler {
 		return out;
 	}
 
+	Vec() {
+		var out = new Vec3(this.x, this.y, this.z);
+		return out;
+	}
+
 	get x() {
 		return this.x_;
 	}

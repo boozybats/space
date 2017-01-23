@@ -1,121 +1,52 @@
 // SHADERS
-	var lambertianShader = new Shader(
-		`attribute vec3 a_Position;
-		attribute vec3 a_Normal;
-		attribute vec2 a_UI;
+var heavenShader = new Shader(
+	`precision mediump float;
 
-		uniform mat4 u_MVMatrixEye;
-		uniform mat4 u_MVMatrix;
-		uniform mat4 u_MVPMatrix;
-		uniform mat3 u_MVNMatrix;
+	attribute vec3 a_Position;
+	attribute vec3 a_Normal;
+	attribute vec2 a_UI;
 
-		void main(void) {
-			vec4 position = u_MVMatrix * vec4(a_Position, 1.0);
-			gl_Position = u_MVPMatrix * position;
-		}`,
+	uniform mat4 u_MVMatrixEye;
+	uniform mat4 u_MVMatrix;
+	uniform mat4 u_MVPMatrix;
+	uniform mat3 u_MVNMatrix;
+	uniform vec3 u_PointLights[8];
 
-		`precision highp float;
+	varying vec4 v_EyeVec;
+	varying vec3 v_Normal;
+	varying vec3 v_LightDirection;
+	varying vec2 v_UI;
 
-		uniform vec4 u_Color;
+	void main(void) {
+		v_UI = a_UI;
+		v_Normal = u_MVMatrix * a_Normal;
 
-		void main(void) {
-			gl_FragColor = u_Color;
-		}`
-	);
+		vec4 position4 = u_MVMatrix * vec4(a_Position, 1.0);
+		vec3 position3 = vec3(position4);
 
-	var heavenShader = new Shader(
-		`attribute vec3 a_Position;
-		attribute vec3 a_Normal;
-		attribute vec2 a_UI;
+		v_LightDirection = u_PointLights[0] - position3;
+		v_EyeVec = -position3;
 
-		uniform mat4 u_MVMatrixEye;
-		uniform mat4 u_MVMatrix;
-		uniform mat4 u_MVPMatrix;
-		uniform mat3 u_MVNMatrix;
+		gl_Position = u_MVPMatrix * position4;
+	}`,
 
-		varying vec2 v_UI;
-		varying float v_Distance;
+	`precision mediump float;
 
-		void main(void) {
-			v_UI = a_UI;
+	uniform vec4 u_Color;
+	uniform sampler2D u_NormalMap;
 
-			vec4 position = u_MVMatrix * vec4(a_Position, 1.0);
+	const vec4 ambientColor = vec4(1.0, 1.0, 1.0, 1.0);
+	const vec4 specularColor = vec(0.0, 0.0, 0.0, 0.0);
+	const float shininess = 0.9;
 
-			v_Distance = sqrt(pow(a_Position.x, 2.0) + pow(a_Position.y, 2.0) + pow(a_Position.z, 2.0));
-			gl_Position = u_MVPMatrix * position;
-		}`,
+	varying vec2 v_UI;
 
-		`precision highp float;
+	void main(void) {
+		vec4 color = texture2D(u_NormalMap, v_UI);
 
-		uniform vec4 u_Color;
-		uniform float u_Radius;
-		uniform sampler2D u_NormalMap;
-
-		varying vec2 v_UI;
-		varying float v_Distance;
-
-		const float thickness = 0.035;
-
-		void main(void) {
-			float difference = u_Radius - v_Distance;
-			vec4 color;
-			if (difference < u_Radius * thickness) {
-				color = vec4(1.0, 1.0, 1.0, 1.0);
-			}
-			else {
-				color = texture2D(u_NormalMap, v_UI);
-			}
-
-			gl_FragColor = color;
-		}`
-	);
-
-	var heavenShader2 = new Shader(
-		`attribute vec3 a_Position;
-		attribute vec3 a_Normal;
-		attribute vec2 a_UI;
-
-		uniform mat4 u_MVMatrixEye;
-		uniform mat4 u_MVMatrix;
-		uniform mat4 u_MVPMatrix;
-		uniform mat3 u_MVNMatrix;
-
-		varying vec2 v_UI;
-		varying float v_Distance;
-
-		void main(void) {
-			v_UI = a_UI;
-
-			vec4 position = u_MVMatrix * vec4(a_Position, 1.0);
-
-			v_Distance = sqrt(pow(a_Position.x, 2.0) + pow(a_Position.y, 2.0) + pow(a_Position.z, 2.0));
-			gl_Position = u_MVPMatrix * position;
-		}`,
-
-		`precision highp float;
-
-		uniform vec4 u_Color;
-		uniform float u_Radius;
-		uniform sampler2D u_IM;
-
-		varying vec2 v_UI;
-		varying float v_Distance;
-
-		const float thickness = 0.035;
-
-		void main(void) {
-			float difference = u_Radius - v_Distance;
-			vec4 color;
-			if (difference < u_Radius * thickness) {
-				color = vec4(1.0, 1.0, 1.0, 1.0);
-			}
-			else {
-				color = texture2D(u_IM, v_UI);
-			}
-
-			gl_FragColor = color;
-		}`
-	);
+		gl_FragColor = color;
+	}`
+);
 // \SHADERS
 
 // GAMEPLAY
@@ -139,6 +70,11 @@ function gameplay(images) {
 		rotation: Quaternion.Euler(0, 0, 90)
 	});
 	scene.appendCamera(camera);
+	scene.addLight(new PointLight({
+		body: new Body({
+			position: new Vec3(0, 0, -500)
+		})
+	}));
 
 	project.start();
 

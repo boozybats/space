@@ -4,7 +4,7 @@ class Heaven extends Item {
 		body = new Body,
 		physic = new Physic({
 			matter: {
-				Fe: 50 * Math.pow(10, 5)
+				Si: 50 * Math.pow(10, 5)
 			}
 		}),
 		shader
@@ -51,11 +51,10 @@ class Heaven extends Item {
 
 		var normalmap = new Image();
 		normalmap.src = 'images/heaven_normalmap.jpg';
+
 		var a_Normal = Item.normals(a_Position, VI);
 		var a_UI = Item.UIs(a_Position, VI);
-
-		var im = new Image();
-		im.src = 'images/1.jpg';
+		
 		this.mesh = new Mesh({
 			attributes: {
 				a_Position,
@@ -63,7 +62,6 @@ class Heaven extends Item {
 				a_UI
 			},
 			uniforms: {
-				u_Radius: radius,
 				u_Color: this.physic.color.normal.Vec,
 				u_NormalMap: normalmap
 			},

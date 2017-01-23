@@ -82,10 +82,25 @@ class Program {
 	constructor(program) {
 		this.program = program;
 
+		this.attributesDefines = {};
 		this.attributesStorage = {};
+		this.uniformsDefines = {};
 		this.uniformsStorage = {};
 		this.texturesCount = -1;
 		this.id = GUID();
+	}
+
+	get attributesDefines() {
+		return this.attributesDefines_;
+	}
+
+	set attributesDefines(val) {
+		if (typeof val === 'object') {
+			this.attributesDefines_ = val;
+		}
+		else {
+			console.warn('Shader: attributesDefines: error');
+		}
 	}
 
 	get attributesStorage() {
@@ -104,6 +119,19 @@ class Program {
 
 	set program(val) {
 		this.program_ = val;
+	}
+
+	get uniformsDefines() {
+		return this.uniformsDefines_;
+	}
+
+	set uniformsDefines(val) {
+		if (typeof val === 'object') {
+			this.uniformsDefines_ = val;
+		}
+		else {
+			console.warn('Shader: uniformsDefines: error');
+		}
 	}
 
 	get uniformsStorage() {

@@ -199,12 +199,12 @@ class Scene {
 
 		out.directionalLights = [];
 		for (var light of directionalLights) {
-			out.directionalLights.push(light.rotation.euler);
+			out.directionalLights.push(light.body.rotation.euler);
 		}
 
 		out.pointLights = [];
 		for (var light of pointLights) {
-			out.pointLights.push(pointLights.position);
+			out.pointLights.push(light.body.position);
 		}
 
 		return out;

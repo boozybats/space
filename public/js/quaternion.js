@@ -104,6 +104,11 @@ class Quaternion {
 		return out;
 	}
 
+	Vec() {
+		var out = new Vec4(this.x, this.y, this.z, this.w);
+		return out;
+	}
+
 	get x() {
 		return this.x_;
 	}
