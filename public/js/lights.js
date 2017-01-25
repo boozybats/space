@@ -21,10 +21,14 @@ class Light {
 
 class DirectionalLight extends Light {
 	constructor({
-		body = new Body
+		body = new Body,
+		intensity,
+		diffuse
 	} = {}) {
 		super({
-			body
+			body,
+			intensity,
+			diffuse
 		});
 	}
 }

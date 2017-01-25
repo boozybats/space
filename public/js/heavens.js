@@ -53,7 +53,7 @@ class Heaven extends Item {
 		normalmap.src = 'images/heaven_normalmap.jpg';
 
 		var a_Normal = Item.normals(a_Position, VI);
-		var a_UI = Item.UIs(a_Position, VI);
+		var a_UI = Item.UIs(a_Position);
 		
 		this.mesh = new Mesh({
 			attributes: {
