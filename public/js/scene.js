@@ -15,6 +15,7 @@ class Scene {
 		}
 
 		this.cameras.push(camera);
+		camera.scene = this;
 	}
 
 	appendItem(item) {

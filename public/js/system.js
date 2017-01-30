@@ -4,16 +4,19 @@ const RESOLUTION_HEIGHT = screen.height;
 
 var canvas;
 var Mouse = {
-	w: 30,
+	w: 45,
 	h: 45,
-	x: RESOLUTION_WIDTH / 2,
-	y: RESOLUTION_HEIGHT / 2,
+	position: {},
+	position_: {
+		x: RESOLUTION_WIDTH / 2,
+		y: RESOLUTION_HEIGHT / 2
+	},
 	forceback: false,
-	keepchase: false
+	keepchase: false,
+	object: undefined
 };
 
 Loader.images({
-	mouse: 'images/mouse.png',
 	transparent: 'images/transparent.jpg'
 }, images => {
 	window.requestAnimationFrame = window.requestAnimationFrame ||
@@ -49,19 +52,22 @@ Loader.images({
 
 	var mousehidden = false;
 	canvasdom.addEventListener('mousemove', event => {
+		var posx = Mouse.position.x,
+			posy = Mouse.position.y;
+
 		if (isLocked()) {
 			var x = event.movementX;
 			var y = event.movementY;
 
-			Mouse.x += x;
-			Mouse.y += y;
+			posx += x;
+			posy += y;
 		}
 		else if (Mouse.keepchase) {
 			var x = event.layerX / csswidth * RESOLUTION_WIDTH;
 			var y = event.layerY / cssheight * RESOLUTION_HEIGHT;
 
-			Mouse.x = x;
-			Mouse.y = y;
+			posx = x;
+			posy = y;
 
 			if (!mousehidden) {
 				mousehidden = true;
@@ -75,19 +81,24 @@ Loader.images({
 			}
 		}
 
-		if (Mouse.x < 0) {
-			Mouse.x = 0;
+		if (posx < 0) {
+			posx = 0;
 		}
-		else if (Mouse.x > RESOLUTION_WIDTH) {
-			Mouse.x = RESOLUTION_WIDTH;
+		else if (posx > RESOLUTION_WIDTH) {
+			posx = RESOLUTION_WIDTH;
 		}
 
-		if (Mouse.y < 0) {
-			Mouse.y = 0;
+		if (posy < 0) {
+			posy = 0;
 		}
-		else if (Mouse.y > RESOLUTION_HEIGHT) {
-			Mouse.y = RESOLUTION_HEIGHT;
+		else if (posy > RESOLUTION_HEIGHT) {
+			posy = RESOLUTION_HEIGHT;
 		}
+
+		Mouse.position = {
+			x: posx,
+			y: posy
+		};
 	});
 	// \POINTER LOCK IDENTIFICATION
 	// \CANVAS APPEND
@@ -122,6 +133,13 @@ Loader.images({
 	})();
 	window.onresize = onresize;
 	// \AUTORESIZE
+
+	// MOUSE
+	Mouse.object = new MouseItem({
+		texture: images.mouse,
+		storage: Mouse
+	});
+	// \MOUSE
 
 	gameplay(images);
 });

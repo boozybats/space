@@ -219,7 +219,7 @@ class CloneItem {
 		var shader = this.shader;
 		var program = this.program;
 
-		var old_uniforms = this.uniforms;
+		var defines = shader.uniformsDefines;
 
 		if (this.scene.lastShaderID != shader.id) {
 			this.scene.lastShaderID = shader.id;
@@ -229,9 +229,11 @@ class CloneItem {
 		//define type of uniform, uniform can have next types:
 		//Mat, Vec, float
 
-		var index;
-		if (!defined) {
+		var index = defines[name];
+		if (typeof index === 'undefined' && !defined) {
 			index = gl.getUniformLocation(program, name);
+			defines[name] = index;
+
 			if (!index) {
 				//console.warn(`Shader doesnt contain '${name}' uniform or this is unusable`);
 			}
@@ -390,6 +392,10 @@ class CloneItem {
 		return VIOBuffer;
 	}
 
+	mouseControl(sensivity) {
+
+	}
+
 	get mvmatrix() {
 		var matS, matR, matT, matU, mvmatrix;
 		var body = this.body;
@@ -481,6 +487,19 @@ class CloneItem {
 		}
 	}
 
+	rotate() {
+		var self = this;
+		;(function update() {
+			var rotation = self.body.rotation;
+			self.body.rotation = Quaternion.Euler(
+				rotation.euler.x,
+				rotation.euler.y,
+				rotation.euler.z + 0.2
+			);
+			setTimeout(update, FPS);
+		})();
+	}
+
 	get scene() {
 		return this.scene_;
 	}
@@ -553,7 +572,6 @@ class CloneItem {
 
 		var gl = this.project.webGLRenderer.webGL;
 		var attributes = this.attributes;
-		var storage = this.shader.attributesStorage;
 
 		var shader = this.shader;
 		var program = this.program;
@@ -569,15 +587,11 @@ class CloneItem {
 
 				var [buffer, index, size, data] = [...attribute];
 
-				if (!compare(data, storage[i])) {
-					storage[i] = data;
-
-					if (index >= 0) {
-						gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
-						gl.vertexAttribPointer(index, size, gl.FLOAT, false, 0, 0);
-						gl.enableVertexAttribArray(index);
-						gl.bindBuffer(gl.ARRAY_BUFFER, null);
-					}
+				if (index >= 0) {
+					gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
+					gl.vertexAttribPointer(index, size, gl.FLOAT, false, 0, 0);
+					gl.enableVertexAttribArray(index);
+					gl.bindBuffer(gl.ARRAY_BUFFER, null);
 				}
 			}
 		}
@@ -589,10 +603,11 @@ class CloneItem {
 
 		var gl = this.project.webGLRenderer.webGL;
 		var uniforms = this.uniforms;
-		var storage = this.shader.uniformsStorage;
 
 		var shader = this.shader;
 		var program = this.program;
+
+		var storage = shader.uniformsStorage;
 
 		if (this.scene.lastShaderID != shader.id) {
 			this.scene.lastShaderID = shader.id;
@@ -691,21 +706,6 @@ function compare(item0, item1) {
 
 	if (type0 === type1) {
 		switch(type0) {
-			case Array:
-			if (item0.length != item1.length) {
-				out = false;
-				return out;
-			}
-			else {
-				for (var i = 0; i < item0.length; i++) {
-					if (item0[i] !== item1[i]) {
-						out = false;
-						return out;
-					}
-				}
-			}
-			break;
-
 			case Mat:
 			case Mat2:
 			case Mat3:
@@ -718,6 +718,21 @@ function compare(item0, item1) {
 			case Vec3:
 			case Vec4:
 			out = Vec.compare(item0, item1);
+			break;
+
+			case Array:
+			case Float32Array:
+			if (item0.length != item1.length) {
+				out = false;
+			}
+			else {
+				for (var i = 0; i < item0.length; i++) {
+					if (item0[i] !== item1[i]) {
+						out = false;
+						break;
+					}
+				}
+			}
 			break;
 
 			default:

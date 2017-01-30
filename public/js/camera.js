@@ -29,6 +29,28 @@ class Camera {
 		return this.body_;
 	}
 
+	bindMouse(item) {
+		var clone = item.instance(this.scene);
+		var storage = item.storage;
+
+		storage.__defineGetter__('position', function() {
+			return storage.position_;
+		});
+		storage.__defineSetter__('position', function(val) {
+			storage.position_ = val;
+			var x = (val.x + storage.w * 0.5) / RESOLUTION_WIDTH * 2 - 1;
+			var y = -(val.y + storage.h * 0.5) / RESOLUTION_HEIGHT * 2 + 1;
+			var position = new Vec3(
+				x,
+				y,
+				0
+			);
+			clone.body.position = position;
+		});
+
+		storage.position = storage.position;
+	}
+
 	set body(val) {
 		if (val instanceof Body) {
 			this.body_ = val;
@@ -46,6 +68,10 @@ class Camera {
 		this.deepOffset_ = val;
 	}
 
+	follow(body) {
+		this.body.parent = body;
+	}
+
 	get mvmatrix() {
 		var matS, matR, matT, matU, mvmatrix;
 		var body = this.body;
@@ -60,9 +86,7 @@ class Camera {
 			}
 			var cell = storage[ie];
 
-			if (cell.position === body.position &&
-				cell.rotation === body.rotation &&
-				cell.scale === body.scale) {
+			if (Body.compare(body, cell, false)) {
 				if (isBreaked) {
 					mvmatrix = Mat.multi(mvmatrix, cell.matrix);
 				}
@@ -122,6 +146,19 @@ class Camera {
 		}
 	}
 
+	get scene() {
+		return this.scene_;
+	}
+
+	set scene(val) {
+		if (!val || val instanceof Scene) {
+			this.scene_ = val;
+		}
+		else {
+			console.warn('Camera: scene: error');
+		}
+	}
+
 	get skyBoxColor() {
 		return this.skyBoxColor_;
 	}
@@ -146,5 +183,9 @@ class Camera {
 		else {
 			console.warn('Camera: skyBoxType: error');
 		}
+	}
+
+	unfollow(item) {
+		this.body.parent = undefined;
 	}
 }

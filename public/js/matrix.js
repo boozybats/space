@@ -271,7 +271,7 @@ class Mat {
 				return out;
 			}
 			else {
-				console.warn('Mat4: normalize: error');
+				// console.warn('Mat: normalize: error');
 			}
 			break;
 		}

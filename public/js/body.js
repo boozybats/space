@@ -26,6 +26,25 @@ class Body {
 		}
 	}
 
+	static compare(body0, body1, strict = true) {
+		var out = true;
+
+		if (typeof body0 === 'undefined' || typeof body1 === 'undefined') {
+			out = false;
+		}
+		else {
+			if (!Vec.compare(body0.position, body1.position) ||
+				!Quaternion.compare(body0.rotation, body1.rotation) ||
+				!Vec.compare(body0.scale, body1.scale) ||
+				(strict && (body0.parent !== body1.parent ||
+				body0.children !== body1.children))) {
+				out = false;
+			}
+		}
+
+		return out;
+	}
+
 	get parent() {
 		return this.parent_;
 	}

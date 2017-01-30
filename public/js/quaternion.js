@@ -8,6 +8,24 @@ class Quaternion {
 		this.euler = Euler.Quaternion(x, y, z, w);
 	}
 
+	static compare(quat0, quat1) {
+		var out = true;
+
+		if (typeof quat0 === 'undefined' || typeof quat1 === 'undefined') {
+			out = false;
+		}
+		else {
+			if (quat0.x !== quat1.x ||
+				quat0.y !== quat1.y ||
+				quat0.z !== quat1.z ||
+				quat0.w !== quat1.w) {
+				out = false;
+			}
+		}
+
+		return out;
+	}
+
 	static dif(quat1, quat2) {
 		var euler1 = quat1.euler,
 			euler2 = quat2.euler;
