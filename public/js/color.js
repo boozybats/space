@@ -9,7 +9,7 @@ class Color {
 		this.length = arr.length;
 	}
 
-	get Array() {
+	get array() {
 		var out = [];
 		for (var i = 0; i < this.length; i++) {
 			out.push(this[i]);

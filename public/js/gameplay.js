@@ -10,7 +10,7 @@ function gameplay(images) {
 	var gl = webGLRenderer.webGL;
 
 	var sceneName = 'main';
-	var scene = project.createNewScene(sceneName);
+	var scene = project.createScene(sceneName);
 	project.selectScene(sceneName);
 
 	var camera = new Camera;
@@ -18,19 +18,22 @@ function gameplay(images) {
 		position: new Vec3(0, 0, -500)
 	});
 	scene.appendCamera(camera);
+	
 	scene.addLight(new PointLight({
 		body: new Body({
 			position: new Vec3(300, 300, -400)
 		})
 	}));
-	camera.bindMouse(Mouse.object);
 
 	project.start();
+
+	cursor = new Cursor();
+	camera.bindMouse(cursor);
 
 	var me = new Heaven({
 		shader: Heaven.shader
 	});
-	me = me.instance(scene);
+	me.instance(scene);
 	me.rotate();
 	me.mouseControl(1);
 

@@ -226,16 +226,15 @@ class Heaven extends Item {
 				vec4 speculerLight;
 				float shininess;
 
-				vec4 ambientLight = vec4(0.0, 0.0, 0.0, 0.0);
-
-				vec4 combination = vec4(0.0, 0.0, 0.0, 0.0);
+				vec4 ambientLight = vec4(0.0, 0.0, 0.0, 1.0);
+				vec4 combination = vec4(0.0);
 
 				if (lamberFactor > 0.0) {
 					diffuseMaterial = texture2D(u_NormalMap, v_UI);
 					diffuseLight = u_DiffuseColor;
 
-					specularMaterial = vec4(1.0, 1.0, 1.0, 1.0);
-					speculerLight = vec4(1.0, 1.0, 1.0, 1.0);
+					specularMaterial = vec4(1.0);
+					speculerLight = vec4(1.0);
 					shininess = pow(max(dot(halfVec, normal), 0.0), 2.0);
 
 					combination = (diffuseMaterial * diffuseLight * lamberFactor) + (specularMaterial * speculerLight * shininess);

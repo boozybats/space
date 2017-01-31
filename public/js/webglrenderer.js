@@ -33,7 +33,7 @@ class WebGLRenderer {
 
 		switch(skyBoxType) {
 			case 'fill':
-			gl.clearColor(...skyBoxColor.Array);
+			gl.clearColor(...skyBoxColor.array);
 			break;
 
 			case 'transparent':
@@ -49,18 +49,20 @@ class WebGLRenderer {
 		deltaTime = 0
 	} = {}) {
 		var project = this.project;
-		var redraws = project.redraws;
+		var layers = project.layers;
 		var scene = project.currentScene;
 		var items = scene.items;
 		var cameras = scene.cameras;
 
 		var self = this;
-		for (var r = redraws.length - 1; r >= 0; r--) {
-		//for (var r = 0; r < redraws.length; r++) {
-			(arr => {
-				for (var camera of cameras) {  //for every camera draw new field
-					self.clearScene(camera.skyBoxType, camera.skyBoxColor);
+		for (var i = layers.length - 1; i >= 0; i--) {
+		//for (var i = 0; i < layers.length; i++) {
+			self.clearScene(scene.skyBoxType, scene.skyBoxColor);
+			var layer = layers[i];
 
+			(arr => {
+				//for every camera draw new field
+				for (var camera of cameras) {
 					//project matrix from camera
 					self.mvpmatrix = Mat.multi(
 						Mat4.translate(camera.body.position.inverse()),
@@ -70,20 +72,18 @@ class WebGLRenderer {
 						camera.projectionMatrix
 					);
 
-					for (var item of arr) {
+					for (var j = arr.length - 1; j >= 0; j--) {
+						var item = arr[j];
+
 						//check to access item at frame
-						if (item.unavailableFrames && item.unavailableFrames.indexOf(r) == -1) {
+						if (item.unavailableFrames && item.unavailableFrames.indexOf(i) == -1) {
 							continue;
 						}
 
-						redraws[r][0](item, camera);  //call every redraw function
+						layer({item, camera});  //call every redraw function
 					}
 				}
 			})(items);
-
-			if (redraws[r][1]) {
-				redraws[r][1]();
-			}
 		}
 	}
 
@@ -107,11 +107,13 @@ class WebGLRenderer {
 		var gl = this.webGL;
 
 		var self = this;
-		project.addRedrawFunction(0, function(item, camera) {
+		project.addLayer(({
+			item,
+			camera
+		}) => {
 			var scene = project.currentScene;
-			var shader = item.shader;
 
-			if (shader) {
+			if (item.mesh) {
 				if (!(item.body instanceof Body)) {
 					console.warn(`Item '${item.name}' doesnt have a body`);
 				}

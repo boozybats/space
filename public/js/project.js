@@ -3,27 +3,20 @@ class Project {
 		transparentImage
 	}) {
 		this.scenes = [];
-		this.redraws = [];
+		this.layers = [];
 		this.transparentImage = transparentImage;
 	}
 
-	addRedrawFunction(index, fun, callback) {
-		if (typeof index != 'number') {
-			console.warn('Project: addRedrawFunction: index isn\'t a number');
-		}
-		else if (typeof fun != "function") {
-			console.warn('Project: addRedrawFunction: fun isn\'t a function');
-		}
-		else if (callback && typeof callback != "function") {
-			console.warn('Project: addRedrawFunction: callback isn\'t a function');
+	addLayer(fun, index) {
+		if (typeof fun !== 'function') {
+			console.warn('Project: addLayer: error');
 		}
 
-		var functionsArray = [fun, callback];
-		if (index) {
-			this.redraws[index] = functionsArray;
+		if (typeof index === 'number') {
+			this.layers[index] = fun;
 		}
 		else {
-			this.redraws.push(functionsArray);
+			this.layers.push(fun);
 		}
 	}
 
@@ -49,12 +42,15 @@ class Project {
 		}
 	}
 
-	createNewScene(name) {
+	createScene(name) {
 		if (typeof name !== "string") {
 			console.warn('Project: createNewScene: error');
 		}
 
-		var scene = new Scene(name, this);
+		var scene = new Scene({
+			name,
+			project: this
+		});
 		this.scenes.push(scene);
 
 		return scene;
@@ -89,16 +85,16 @@ class Project {
 		this.webGLRenderer.setup();
 	}
 
-	get redraws() {
-		return this.redraws_;
+	get layers() {
+		return this.layers_;
 	}
 
-	set redraws(val) {
+	set layers(val) {
 		if (val instanceof Array) {
-			this.redraws_ = val;
+			this.layers_ = val;
 		}
 		else {
-			console.warn('Project: redraws: error');
+			console.warn('Project: layers: error');
 		}
 	}
 

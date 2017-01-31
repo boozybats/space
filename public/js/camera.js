@@ -12,16 +12,13 @@ class Camera {
 			DEFAULT_NEARFIELD,
 			DEFAULT_FARFIELD,
 			DEFAULT_FOV
-		),
-		skyBoxColor = new Color(0, 0, 0, 255),
-		skyBoxType = 'fill'
+		)
 	} = {}) {
 		this.name = name,
 		this.body = body;
 		this.deepOffset = deepOffset;
 		this.projectionMatrix = projectionMatrix;
-		this.skyBoxColor = skyBoxColor;
-		this.skyBoxType = skyBoxType;
+		
 		this.matrixStorage_ = [];
 	}
 
@@ -30,25 +27,7 @@ class Camera {
 	}
 
 	bindMouse(item) {
-		var clone = item.instance(this.scene);
-		var storage = item.storage;
-
-		storage.__defineGetter__('position', function() {
-			return storage.position_;
-		});
-		storage.__defineSetter__('position', function(val) {
-			storage.position_ = val;
-			var x = (val.x + storage.w * 0.5) / RESOLUTION_WIDTH * 2 - 1;
-			var y = -(val.y + storage.h * 0.5) / RESOLUTION_HEIGHT * 2 + 1;
-			var position = new Vec3(
-				x,
-				y,
-				0
-			);
-			clone.body.position = position;
-		});
-
-		storage.position = storage.position;
+		item.instance(this.scene);
 	}
 
 	set body(val) {
@@ -156,32 +135,6 @@ class Camera {
 		}
 		else {
 			console.warn('Camera: scene: error');
-		}
-	}
-
-	get skyBoxColor() {
-		return this.skyBoxColor_;
-	}
-
-	set skyBoxColor(val) {
-		if (val instanceof Color) {
-			this.skyBoxColor_ = val;
-		}
-		else {
-			console.warn('Camera: skyBox: error');
-		}
-	}
-
-	get skyBoxType() {
-		return this.skyBoxType_;
-	}
-
-	set skyBoxType(val) {
-		if (typeof val === 'string') {
-			this.skyBoxType_ = val;
-		}
-		else {
-			console.warn('Camera: skyBoxType: error');
 		}
 	}
 

@@ -1,12 +1,19 @@
 class Scene {
-	constructor(name, project) {
+	constructor({
+		name,
+		project,
+		skyBoxColor = new Color(0, 0, 0, 255),
+		skyBoxType = 'fill'
+	}) {
 		this.name = name;
 		this.project = project;
+		this.skyBoxColor = skyBoxColor;
+		this.skyBoxType = skyBoxType;
+		
 		this.cameras = [];
 		this.directionalLights = [];
 		this.pointLights = [];
 		this.items = [];
-		this.functionsonupdate = {};
 	}
 
 	appendCamera(camera) {
@@ -22,34 +29,8 @@ class Scene {
 		if (!(item instanceof Item)) {
 			console.warn('Scene: appendItem: error');
 		}
-
-		var renderer = this.project.webGLRenderer;
-
-		var n_item = new CloneItem(this, item);
-		n_item.drawStyle = item.mesh.drawStyle;
-
-		if (item.mesh) {
-			n_item.shader = item.mesh.shader;
-			n_item.vertexIndices = item.mesh.vertexIndices;
-			n_item.changeAttributes(item.mesh.attributes);
-			n_item.changeUniforms(item.mesh.uniforms);
-		}
-		this.items.push(n_item);
-
-		return n_item;
-	}
-
-	addFunctionOnUpdate(name, fun) {
-		if (typeof name !== "string") {
-			console.warn('Scene: appendFunctionOnUpdate: name isn\'t a string');
-		}
-		else if (typeof fun != "function") {
-			console.warn('Scene: appendFunctionOnUpdate: fun isn\'t a function');
-		}
-
-		//appendes the function which complete on requestFrame update
-
-		this.functionsonupdate[name] = fun;
+		
+		this.items.push(item);
 	}
 
 	addLight(light) {
@@ -92,19 +73,6 @@ class Scene {
 		}
 		else {
 			console.warn('Scene: directionalLights: error');
-		}
-	}
-
-	get functionsonupdate() {
-		return this.functionsonupdate_;
-	}
-
-	set functionsonupdate(val) {
-		if (typeof val === 'object') {
-			this.functionsonupdate_ = val;
-		}
-		else {
-			console.warn('Scene: functionsonupdate: error');
 		}
 	}
 
@@ -168,14 +136,6 @@ class Scene {
 		}
 	}
 
-	removeFunctionOnUpdate(name) {
-		if (typeof name !== 'string') {
-			console.warn("Scene: removeFunctionOnUpdate: error");
-		}
-
-		delete this.functionsonupdate[name];
-	}
-
 	removeLight(light) {
 		if (!(light instanceof Light)) {
 			console.warn('Scene: removeLight: error');
@@ -209,5 +169,31 @@ class Scene {
 		}
 
 		return out;
+	}
+
+	get skyBoxColor() {
+		return this.skyBoxColor_;
+	}
+
+	set skyBoxColor(val) {
+		if (val instanceof Color) {
+			this.skyBoxColor_ = val;
+		}
+		else {
+			console.warn('Camera: skyBox: error');
+		}
+	}
+
+	get skyBoxType() {
+		return this.skyBoxType_;
+	}
+
+	set skyBoxType(val) {
+		if (typeof val === 'string') {
+			this.skyBoxType_ = val;
+		}
+		else {
+			console.warn('Camera: skyBoxType: error');
+		}
 	}
 }

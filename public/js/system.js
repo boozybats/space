@@ -3,18 +3,7 @@ const RESOLUTION_WIDTH = screen.width;
 const RESOLUTION_HEIGHT = screen.height;
 
 var canvas;
-var Mouse = {
-	w: 45,
-	h: 45,
-	position: {},
-	position_: {
-		x: RESOLUTION_WIDTH / 2,
-		y: RESOLUTION_HEIGHT / 2
-	},
-	forceback: false,
-	keepchase: false,
-	object: undefined
-};
+var cursor;
 
 Loader.images({
 	transparent: 'images/transparent.jpg'
@@ -50,10 +39,10 @@ Loader.images({
 		}
 	});
 
-	var mousehidden = false;
+	var cursorhidden = false;
 	canvasdom.addEventListener('mousemove', event => {
-		var posx = Mouse.position.x,
-			posy = Mouse.position.y;
+		var posx = cursor.position.x,
+			posy = cursor.position.y;
 
 		if (isLocked()) {
 			var x = event.movementX;
@@ -62,21 +51,21 @@ Loader.images({
 			posx += x;
 			posy += y;
 		}
-		else if (Mouse.keepchase) {
+		else if (cursor.keepchase) {
 			var x = event.layerX / csswidth * RESOLUTION_WIDTH;
 			var y = event.layerY / cssheight * RESOLUTION_HEIGHT;
 
 			posx = x;
 			posy = y;
 
-			if (!mousehidden) {
-				mousehidden = true;
+			if (!cursorhidden) {
+				cursorhidden = true;
 				canvasdom.style.cursor = 'none';
 			}
 		}
 		else {
-			if (mousehidden) {
-				mousehidden = false;
+			if (cursorhidden) {
+				cursorhidden = false;
 				canvasdom.style.cursor = 'default';
 			}
 		}
@@ -94,11 +83,12 @@ Loader.images({
 		else if (posy > RESOLUTION_HEIGHT) {
 			posy = RESOLUTION_HEIGHT;
 		}
-
-		Mouse.position = {
-			x: posx,
-			y: posy
-		};
+		
+		cursor.position = new Vec3(
+			posx,
+			posy,
+			0
+		);
 	});
 	// \POINTER LOCK IDENTIFICATION
 	// \CANVAS APPEND
@@ -107,7 +97,7 @@ Loader.images({
 	var cssheight, csswidth;
 	var onresize;
 	;(onresize = function() {
-		var  ratio = RESOLUTION_WIDTH / RESOLUTION_HEIGHT
+		var ratio = RESOLUTION_WIDTH / RESOLUTION_HEIGHT
 
 		var win = {
 			w: window.innerWidth,
@@ -133,13 +123,6 @@ Loader.images({
 	})();
 	window.onresize = onresize;
 	// \AUTORESIZE
-
-	// MOUSE
-	Mouse.object = new MouseItem({
-		texture: images.mouse,
-		storage: Mouse
-	});
-	// \MOUSE
 
 	gameplay(images);
 });
