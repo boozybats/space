@@ -1,8 +1,12 @@
-class Light {
+class Light extends Item {
 	constructor({
+		name = 'light',
 		body = new Body
 	} = {}) {
-		this.body = body;
+		super({
+			name,
+			body
+		});
 	}
 
 	get body() {
@@ -21,24 +25,30 @@ class Light {
 
 class DirectionalLight extends Light {
 	constructor({
-		body = new Body,
-		intensity,
-		diffuse
+		name = 'directionallight',
+		body = new Body
 	} = {}) {
 		super({
-			body,
-			intensity,
-			diffuse
+			name,
+			body
 		});
 	}
 }
 
 class PointLight extends Light {
 	constructor({
+		name = 'pointlight',
 		body = new Body
 	} = {}) {
 		super({
+			name,
 			body
 		});
+	}
+
+	get position() {
+		var vec = this.mvmatrix.Vec(0, 0, 0);
+
+		return vec;
 	}
 }

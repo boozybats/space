@@ -1,5 +1,7 @@
-// GAMEPLAY
 function gameplay(images) {
+	canvas.appendTo(document.body);
+	window.onresize();
+
 	var project = new Project({
 		transparentImage: images.transparent
 	});
@@ -14,29 +16,25 @@ function gameplay(images) {
 	project.selectScene(sceneName);
 
 	var camera = new Camera;
-	camera.body = new Body({
-		position: new Vec3(0, 0, -500)
-	});
+	camera.body.position = new Vec3(0, 0, -5);
 	scene.appendCamera(camera);
-	
-	scene.addLight(new PointLight({
+
+	var light = new PointLight({
 		body: new Body({
-			position: new Vec3(300, 300, -400)
+			parent: camera.body
 		})
-	}));
+	});
+	scene.addLight(light);
 
 	project.start();
 
 	cursor = new Cursor();
-	camera.bindMouse(cursor);
+	camera.bindUI(cursor);
 
-	var me = new Heaven({
-		shader: Heaven.shader
+	var me = new Sphere({
+		precision: 3
 	});
+	me.rotate(new Vec3(0.1, 0.2, 0.3));
 	me.instance(scene);
-	me.rotate();
-	me.mouseControl(1);
-
-	camera.follow(me.body);
+	me.mouseControl = cursor;
 }
-// \GAMEPLAY

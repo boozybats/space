@@ -63,9 +63,11 @@ class WebGLRenderer {
 			(arr => {
 				//for every camera draw new field
 				for (var camera of cameras) {
-					//project matrix from camera
+					var mvmatrix = camera.mvmatrix;
+					var vec = mvmatrix.Vec(new Vec3);
+
 					self.mvpmatrix = Mat.multi(
-						Mat4.translate(camera.body.position.inverse()),
+						Mat4.translate(vec.inverse()),
 						Mat4.translate(new Vec3(0, 0, -camera.deepOffset)),
 						Mat4.rotate(camera.body.rotation.inverse()),
 						Mat4.translate(new Vec3(0, 0, camera.deepOffset)),
@@ -80,7 +82,7 @@ class WebGLRenderer {
 							continue;
 						}
 
-						layer({item, camera});  //call every redraw function
+						layer({item, camera, deltaTime});
 					}
 				}
 			})(items);
@@ -109,7 +111,8 @@ class WebGLRenderer {
 		var self = this;
 		project.addLayer(({
 			item,
-			camera
+			camera,
+			deltaTime
 		}) => {
 			var scene = project.currentScene;
 
@@ -137,6 +140,14 @@ class WebGLRenderer {
 
 				gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, item.VIOBuffer);
 				gl.drawElements(gl[item.drawStyle], item.VIOBuffer.length, gl.UNSIGNED_SHORT, 0);
+			}
+
+			if (item.physic) {
+				item.physic.onupdate({deltaTime});
+			}
+
+			if (typeof item.onupdate === 'function') {
+				item.onupdate({deltaTime});
 			}
 		});
 	}

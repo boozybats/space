@@ -50,7 +50,7 @@ class Color {
 		return out;
 	}
 
-	get normal() {
+	normalize() {
 		var out = [];
 		for (var i = 0; i < this.length; i++) {
 			if (i <= 2) {

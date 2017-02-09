@@ -17,6 +17,26 @@ class Vec {
 		}
 	}
 
+	get array() {
+		var out = [this.x, this.y];
+
+		if (typeof this.w !== 'undefined') {
+			out.push(this.z, this.w);
+		}
+		else if (typeof this.z !== 'undefined') {
+			out.push(this.z);
+		}
+
+		return out;
+	}
+
+	static avg(...vectors) {
+		var sum = Vec.sum(...vectors);
+		var out = sum.multi(1 / vectors.length);
+
+		return out;
+	}
+
 	static compare(vec0, vec1) {
 		var out = true;
 
@@ -28,11 +48,11 @@ class Vec {
 				length1 = vec1.length;
 
 			if (length0 == length1) {
-				for (var i = 0; i < length0; i++) {
-					if (vec0[i] !== vec1[i]) {
-						out = false;
-						break;
-					}
+				if (vec0.x !== vec1.x ||
+					vec0.y !== vec1.y ||
+					vec0.z !== vec1.z ||
+					vec0.w !== vec1.w) {
+					out = false;
 				}
 			}
 			else {
@@ -86,11 +106,11 @@ class Vec {
 		var vec2 = vectors[1];
 
 		var out = vec1.x * vec2.x + vec1.y * vec2.y;
-		if (vec1.w && vec2.w) {
+		if (typeof vec1.w !== 'undefined' && typeof vec2.w !== 'undefined') {
 			out += vec1.z * vec2.z;
 			out += vec1.w * vec2.w;
 		}
-		else if (vec1.z && vec2.z) {
+		else if (typeof vec1.z !== 'undefined' && typeof vec2.z !== 'undefined') {
 			out += vec1.z * vec2.z;
 		}
 
@@ -116,31 +136,16 @@ class Vec {
 		return out;
 	}
 
-	inline() {
-		//transform vector in array [vec.x, vec.y, ...]
-
-		var out = [this.x, this.y];
-
-		if (isFinite(this.w)) {
-			out.push(this.z, this.w);
-		}
-		else if (isFinite(this.z)) {
-			out.push(this.z);
-		}
-
-		return out;
-	}
-
 	inverse() {
 		var x = -this.x,
 			y = -this.y,
 			z, w;
 
-		if (this.w) {
+		if (typeof this.w !== 'undefined') {
 			z = -this.z;
 			w = -this.w;
 		}
-		else if (this.z) {
+		else if (typeof this.z !== 'undefined') {
 			z = -this.z;
 		}
 
@@ -157,14 +162,27 @@ class Vec {
 		//convert vector to module vector
 
 		var length = Math.pow(this.x, 2) + Math.pow(this.y, 2);
-		if (this.w) {
+		if (typeof this.w !== 'undefined') {
 			length += Math.pow(this.z, 2) + Math.pow(this.w, 2);
 		}
-		else if (this.z) {
+		else if (typeof this.z !== 'undefined') {
 			length += Math.pow(this.z, 2);
 		}
 
 		return Math.sqrt(length);
+	}
+
+	multi(num) {
+		var Type = this.constructor;
+
+		var out = new Type(
+			this.x * num,
+			this.y * num,
+			(this.z || 0) * num,
+			(this.w || 0) * num
+		);
+
+		return out;
 	}
 
 	static multi(...vectors) {
@@ -194,10 +212,10 @@ class Vec {
 			w = this.w || 0;
 		var length = Math.sqrt(x * x + y * y + z * z + w * w);
 
-		var x = this.x / length,
-			y = this.y / length,
-			z = this.z / length,
-			w = this.w / length;
+		var x = (this.x / length) || 0,
+			y = (this.y / length) || 0,
+			z = (this.z / length) || 0,
+			w = (this.w / length) || 0;
 
 		var Type = this.constructor;
 		var out = new Type(x, y, z, w);

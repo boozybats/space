@@ -26,7 +26,7 @@ class Camera {
 		return this.body_;
 	}
 
-	bindMouse(item) {
+	bindUI(item) {
 		item.instance(this.scene);
 	}
 
@@ -47,8 +47,9 @@ class Camera {
 		this.deepOffset_ = val;
 	}
 
-	follow(body) {
-		this.body.parent = body;
+	follow(item) {
+		this.body.parent = item.body;
+		var self = this;
 	}
 
 	get mvmatrix() {

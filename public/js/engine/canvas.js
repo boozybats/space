@@ -1,7 +1,7 @@
 class Canvas {
 	constructor(width, height) {
 		var canvas = document.createElement('canvas');
-		canvas.innerText = 'Your browser doesn\'t support canvas element, please use another or update';  //if browser doesn't support canvas
+		canvas.innerText = '';  //if browser doesn't support canvas
 
 		this.canvas = canvas;
 		this.width = width;

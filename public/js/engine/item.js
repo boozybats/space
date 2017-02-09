@@ -184,6 +184,10 @@ class Item {
 		var buffer = gl.createBuffer();
 		var size = data.size;
 
+		if (!size) {
+			console.warn(`Doesnt selected size for attribute '${name}'`)
+		}
+
 		gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
 		gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(data), gl.STATIC_DRAW);
 
@@ -267,7 +271,7 @@ class Item {
 			}
 
 			out = {
-				data: new Float32Array(data.inline()),
+				data: new Float32Array(data.array),
 				index,
 				type: 'mat',
 				method
@@ -289,7 +293,17 @@ class Item {
 			}
 
 			out = {
-				data: new Float32Array(data.inline()),
+				data: new Float32Array(data.array),
+				index,
+				type: 'vec',
+				method
+			};
+		}
+		else if (data instanceof Color) {
+			method = 'uniform4f';
+
+			out = {
+				data: new Float32Array(data.normalize().array),
 				index,
 				type: 'vec',
 				method
@@ -432,10 +446,6 @@ class Item {
 		}
 	}
 
-	mouseControl(sensivity) {
-
-	}
-
 	get mvmatrix() {
 		var matS, matR, matT, matU, mvmatrix;
 		var body = this.body;
@@ -450,9 +460,7 @@ class Item {
 			}
 			var cell = storage[ie];
 
-			if (cell.position === body.position &&
-				cell.rotation === body.rotation &&
-				cell.scale === body.scale) {
+			if (Body.compare(body, cell, false)) {
 				if (isBreaked) {
 					mvmatrix = Mat.multi(mvmatrix, cell.matrix);
 				}
@@ -499,6 +507,72 @@ class Item {
 		}
 	}
 
+	static normals(vertices, indices) {
+		var out = [];
+		out.size = 3;
+
+		var dependencies = {};
+
+		for (var i = 0; i < indices.length; i += 3) {
+			var i0 = indices[i] * 3,
+				i1 = indices[i + 1] * 3,
+				i2 = indices[i + 2] * 3;
+			var v0 = [vertices[i0], vertices[i0 + 1], vertices[i0 + 2]],
+				v1 = [vertices[i1], vertices[i1 + 1], vertices[i1 + 2]],
+				v2 = [vertices[i2], vertices[i2 + 1], vertices[i2 + 2]];
+			var x = ((v0[1] - v1[1]) * (v0[2] - v2[2])) - ((v0[2] - v1[2]) * (v0[1] - v2[1])),
+				y = ((v0[2] - v1[2]) * (v0[0] - v2[0])) - ((v0[0] - v1[0]) * (v0[2] - v2[2])),
+				z = ((v0[0] - v1[0]) * (v0[1] - v2[1])) - ((v0[1] - v1[1]) * (v0[0] - v2[0]));
+			var length = Math.sqrt((x * x) + (y * y) + (z * z));
+			x = x / length;
+			y = y / length;
+			z = z / length;
+
+			i0 /= 3;
+			i1 /= 3;
+			i2 /= 3;
+
+			if (!dependencies[i0]) {
+				dependencies[i0] = [[x, y, z]];
+			}
+			else {
+				dependencies[i0].push([x, y, z]);
+			}
+
+			if (!dependencies[i1]) {
+				dependencies[i1] = [[x, y, z]];
+			}
+			else {
+				dependencies[i1].push([x, y, z]);
+			}
+
+			if (!dependencies[i2]) {
+				dependencies[i2] = [[x, y, z]];
+			}
+			else {
+				dependencies[i2].push([x, y, z]);
+			}
+		}
+
+		for (var i = 0; i < vertices.length / 3; i++) {
+			var vec = dependencies[i];
+
+			var x, y, z, count = 0;
+			for (var arr of vec) {
+				x = arr[0];
+				y = arr[1];
+				z = arr[2];
+				count++;
+			}
+
+			var vec = new Vec3(x, y, z).normalize();
+
+			out.push(vec.x, vec.y, vec.z);
+		}
+
+		return out;
+	}
+
 	get project() {
 		return this.project_;
 	}
@@ -519,6 +593,9 @@ class Item {
 	set physic(val) {
 		if (!val || val instanceof Physic) {
 			this.physic_ = val;
+			if (val) {
+				this.physic.body = this.body;
+			}
 		}
 		else {
 			console.warn('Item: physic: error');
@@ -544,17 +621,21 @@ class Item {
 		}
 	}
 
-	rotate() {
-		var self = this;
-		;(function update() {
-			var rotation = self.body.rotation;
-			self.body.rotation = Quaternion.Euler(
-				rotation.euler.x,
-				rotation.euler.y,
-				rotation.euler.z + 0.2
-			);
-			setTimeout(update, FPS);
-		})();
+	rotate(vec) {
+		clearTimeout(this.rotateTimer);
+
+		if (vec) {
+			var self = this;
+			;(function update() {
+				var rotation = self.body.rotation;
+				self.body.rotation = Quaternion.Euler(
+					rotation.euler.x + vec.x,
+					rotation.euler.y + vec.y,
+					rotation.euler.z + vec.z
+				);
+				self.rotateTimer = setTimeout(update, FPS);
+			})();
+		}
 	}
 
 	get scene() {

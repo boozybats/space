@@ -1,36 +1,16 @@
-class Cursor extends Item {
-	constructor({} = {}) {
+class UI extends Item {
+	constructor({
+		width = 0,
+		height = 0,
+		texture
+	} = {}) {
 		super();
-		this.width = 30;
-		this.height = 30;
-		this.forceback = false;
-		this.keepchase = false;
 
-		this.position = new Vec3(
-			RESOLUTION_WIDTH / 2,
-			RESOLUTION_HEIGHT / 2,
-			0
-		);
-		this.body.scale = new Vec3(
-			1 * (this.width / RESOLUTION_WIDTH),
-			1 * (this.height / RESOLUTION_HEIGHT),
-			1
-		);
+		this.width = width;
+		this.height = height;
+		this.position = new Vec3;
 
-		this.initializeMesh();
-	}
-
-	get forceback() {
-		return this.forceback_;
-	}
-
-	set forceback(val) {
-		if (typeof val === 'boolean') {
-			this.forceback_ = val;
-		}
-		else {
-			console.warn('Cursor: forceback: error');
-		}
+		this.initializeMesh(texture);
 	}
 
 	get height() {
@@ -40,18 +20,19 @@ class Cursor extends Item {
 	set height(val) {
 		if (typeof val === 'number') {
 			this.height_ = val;
+			this.scale();
 		}
 		else {
-			console.warn('Mouse: height: error');
+			console.warn('UI: height: error');
 		}
 	}
 
-	initializeMesh() {
+	initializeMesh(texture) {
 		var vertices = [
-			0, -2, 0,
-			0, 0, 0,
-			2, 0, 0,
-			2, -2, 0
+			-1, -1, 1,
+			-1, 1, 1,
+			1, 1, 1,
+			1, -1, 1
 		];
 		vertices.size = 3;
 
@@ -65,9 +46,6 @@ class Cursor extends Item {
 
 		var VI = [0, 1, 2, 2, 3, 0];
 
-		var texture = new Image();
-		texture.src = 'images/cursor.jpg';
-
 		this.mesh = new Mesh({
 			attributes: {
 				a_Position: vertices,
@@ -79,19 +57,6 @@ class Cursor extends Item {
 			vertexIndices: VI,
 			shader: Cursor.shader
 		});
-	}
-
-	get keepchase() {
-		return this.keepchase_;
-	}
-
-	set keepchase(val) {
-		if (typeof val === 'boolean') {
-			this.keepchase_ = val;
-		}
-		else {
-			console.warn('Cursor: keepchase: error');
-		}
 	}
 
 	get position() {
@@ -109,6 +74,14 @@ class Cursor extends Item {
 		else {
 			console.warn('Cursor: position: error');
 		}
+	}
+
+	scale() {
+		this.body.scale = new Vec3(
+			1 * (this.width / RESOLUTION_WIDTH),
+			1 * (this.height / RESOLUTION_HEIGHT),
+			1
+		);
 	}
 
 	static get shader() {
@@ -137,9 +110,6 @@ class Cursor extends Item {
 			void main(void) {
 				vec4 texel = texture2D(u_Texture, v_UI);
 
-				if (texel.r == 0.0 && texel.b == 0.0 && texel.g == 1.0) {
-					texel = vec4(0.0);
-				}
 				gl_FragColor = texel;
 			}`
 		);
@@ -154,9 +124,10 @@ class Cursor extends Item {
 	set width(val) {
 		if (typeof val === 'number') {
 			this.width_ = val;
+			this.scale();
 		}
 		else {
-			console.warn('Mouse: width: error');
+			console.warn('UI: width: error');
 		}
 	}
 }

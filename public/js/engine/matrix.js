@@ -24,6 +24,22 @@ class Mat {
 		return this.a_;
 	}
 
+	get array() {
+		//transform matrix format into array
+
+		var out = [];
+		var a = this.a,
+			b = this.b;
+
+		for (var i = 0; i < a; i++) {
+			for (var j = 0; j < b; j++) {
+				out[i * a + j] = this[i][j];
+			}
+		}
+
+		return out;
+	}
+
 	get b() {
 		return this.b_;
 	}
@@ -108,7 +124,7 @@ class Mat {
 				var arr = [];
 
 				for (var i = 0; i < a; i++) {
-					arr.push(this[0][i] * Mat.det(Mat.slice(this, 0, i)));
+					arr.push(this[0][i] * this.slice(0, i).det());
 				}
 
 				for (var i = 0; i < arr.length; i++) {
@@ -152,45 +168,46 @@ class Mat {
 		}
 	}
 
-	inline() {
-		//transform matrix format into array
-
-		var out = [];
-		var a = this.a,
-			b = this.b;
-
-		for (var i = 0; i < a; i++) {
-			for (var j = 0; j < b; j++) {
-				out[i * a + j] = this[i][j];
-			}
-		}
-
-		return out;
-	}
-
 	inverse() {
-		var out;
+		var out = this;
 		var a = this.a,
 			b = this.b;
 
 		if (a == b) {
 			var det = this.det();
-			if (!det) return this;
 
-			var sub = [];
-			for (var i = 0; i < a; i++) {
-				for (var j = 0; j < b; j++) {
-					sub.push(this.sub(j, i));
+			if (det != 0) {
+				var sub = [];
+				for (var i = 0; i < a; i++) {
+					for (var j = 0; j < b; j++) {
+						sub.push(this.sub(j, i));
+					}
 				}
-			}
 
-			out = new Mat(a, b, sub);
-			out = Mat.multi(out, 1 / det);
+				out = new Mat(a, b, sub);
+				out = out.multi(1 / det);
+			}
 
 			return out;
 		}
 		else {
 			console.warn('Mat: inverse: error');
+		}
+	}
+
+	multi(num) {
+		if (typeof num === 'number') {
+			var a = this.a,
+				b = this.b;
+			var out = new Mat(a, b);
+
+			for (var i = 0; i < a; i++) {
+				for (var j = 0; j < b; j++) {
+					out[i][j] = this[i][j] * num;
+				}
+			}
+
+			return out;
 		}
 	}
 
@@ -228,53 +245,13 @@ class Mat {
 	}
 
 	normalize() {
-		//normalize a matrix 4x4 in matrix 3x3
+		var out = this;
+		var a = this.a,
+			b = this.b;
 
-		var a = this.a;
+		out = out.transpose().inverse().slice(a - 1, b - 1);
 
-		switch (a) {
-			case 4:
-			var out = new Mat3;
-			var a00 = this[0][0], a01 = this[0][1], a02 = this[0][2], a03 = this[0][3],
-				a10 = this[1][0], a11 = this[1][1], a12 = this[1][2], a13 = this[1][3],
-				a20 = this[2][0], a21 = this[2][1], a22 = this[2][2], a23 = this[2][3],
-				a30 = this[3][0], a31 = this[3][1], a32 = this[3][2], a33 = this[3][3];
-			var b00 = a00 * a11 - a01 * a10,
-				b01 = a00 * a12 - a02 * a10,
-				b02 = a00 * a13 - a03 * a10,
-				b03 = a01 * a12 - a02 * a11,
-				b04 = a01 * a13 - a03 * a11,
-				b05 = a02 * a13 - a03 * a12,
-				b06 = a20 * a31 - a21 * a30,
-				b07 = a20 * a32 - a22 * a30,
-				b08 = a20 * a33 - a23 * a30,
-				b09 = a21 * a32 - a22 * a31,
-				b10 = a21 * a33 - a23 * a31,
-				b11 = a22 * a33 - a23 * a32,
-				det = b00 * b11 - b01 * b10 + b02 * b09 + b03 * b08 - b04 * b07 + b05 * b06;
-
-			if (det) {
-				det = 1.0 / det;
-
-				out[0][0] = (a11 * b11 - a12 * b10 + a13 * b09) * det;
-				out[0][1] = (a12 * b08 - a10 * b11 - a13 * b07) * det;
-				out[0][2] = (a10 * b10 - a11 * b08 + a13 * b06) * det;
-
-				out[1][0] = (a02 * b10 - a01 * b11 - a03 * b09) * det;
-				out[1][1] = (a00 * b11 - a02 * b08 + a03 * b07) * det;
-				out[1][2] = (a01 * b08 - a00 * b10 - a03 * b06) * det;
-
-				out[2][0] = (a31 * b05 - a32 * b04 + a33 * b03) * det;
-				out[2][1] = (a32 * b02 - a30 * b05 - a33 * b01) * det;
-				out[2][2] = (a30 * b04 - a31 * b02 + a33 * b00) * det;
-
-				return out;
-			}
-			else {
-				// console.warn('Mat: normalize: error');
-			}
-			break;
-		}
+		return out;
 	}
 
 	slice(x, y) {
@@ -414,7 +391,7 @@ class Mat {
 		return narr;
 	}
 
-	transport() {
+	transpose() {
 		//reverse matrix
 
 		var a = this.a,

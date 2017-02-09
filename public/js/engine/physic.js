@@ -132,8 +132,28 @@ class Physic {
 		this.initialize(options);
 	}
 
+	get body() {
+		return this.body_;
+	}
+
+	set body(val) {
+		if (val instanceof Body) {
+			this.body_ = val;
+		}
+		else {
+			console.warn('Physic: body: error');
+		}
+	}
+
 	get diameter() {
 		return this.diameter_;
+	}
+
+	set diameter(val) {
+		if (typeof val === 'number') {
+			this.diameter_ = val;
+			this.maxspeed = val * 0.1;
+		}
 	}
 
 	get color() {
@@ -166,8 +186,10 @@ class Physic {
 
 	initialize(options) {
 		this.init_matter(options.matter);
+		this.velocity = new Vec3;
 		this.pure_volume_ = this.matter.volume;
-		this.diameter_ = this.Diameter();
+		this.diameter = this.Diameter();
+		this.mass = this.MassTotal();
 	}
 
 	init_matter(options) {
@@ -186,8 +208,13 @@ class Physic {
 	}
 
 	get mass() {
-		var out = this.MassTotal();
-		return out;
+		return this.mass_;
+	}
+
+	set mass(val) {
+		if (typeof val === 'number') {
+			this.mass_ = val;
+		}
 	}
 
 	Mass(R) {
@@ -224,6 +251,13 @@ class Physic {
 		return out;
 	}
 
+	onupdate({
+		deltaTime
+	}) {
+		var velocity = this.velocity.multi(deltaTime);
+		this.body.position = Vec.sum(this.body.position, velocity);
+	}
+
 	Pressure(R) {
 		var out = 0;
 
@@ -238,10 +272,33 @@ class Physic {
 		return out;
 	}
 
+	get maxspeed() {
+		return this.maxspeed_;  //in second
+	}
+
+	set maxspeed(val) {
+		if (typeof val === 'number') {
+			this.maxspeed_ = val;
+		}
+	}
+
 	Temperature(R) {
 		var out = 0;
 		out = this.Pressure(R) * this.VolumeTotal(R) / PRESSURE_TEMPERATURE_CONST;
 		return out;
+	}
+
+	get velocity() {
+		return this.velocity_;
+	}
+
+	set velocity(val) {
+		if (val instanceof Vec) {
+			this.velocity_ = val;
+		}
+		else {
+			console.warn('Physic: velocity: error');
+		}
 	}
 
 	get volume() {

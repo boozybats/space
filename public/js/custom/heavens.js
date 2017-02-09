@@ -58,6 +58,27 @@ class Heaven extends Item {
 		});
 	}
 
+	get mouseControl() {
+		return this.mouseControl_;
+	}
+
+	set mouseControl(val) {
+		if (typeof val === 'boolean' || val instanceof Cursor) {
+			this.mouseControl_ = val;
+		}
+		else {
+			console.warn('Heaven: mouseControl: error');
+		}
+	}
+
+	onupdate() {
+		if (this.mouseControl) {
+			var cursorvec = this.mouseControl.body.position.normalize();
+			var maxspeed = this.physic.maxspeed;
+			this.physic.velocity = cursorvec.multi(maxspeed);
+		}
+	}
+
 	normals() {
 		var out = [];
 		out.size = 3;
@@ -161,47 +182,35 @@ class Heaven extends Item {
 
 	static get shader() {
 		var out = new Shader(
-			`precision mediump float;
+			`#define MAX_POINTLIGHTS 16
 
 			attribute vec3 a_Position;
 			attribute vec3 a_Normal;
 			attribute vec3 a_Tangent;
+			attribute vec3 a_Bitangent;
 			attribute vec2 a_UI;
-
-			const int MAX_POINTLIGHTS = 16;
 
 			uniform mat4 u_MVMatrix;
 			uniform mat4 u_MVPMatrix;
 			uniform mat3 u_MVNMatrix;
 			uniform vec3 u_PointLights[MAX_POINTLIGHTS];
 
-			varying vec3 lightVec;
-			varying vec3 halfVec;
+			varying vec3 v_LightVecTang;
 			varying vec2 v_UI;
 
 			void main(void) {
+				vec4 position4 = u_MVMatrix * vec4(a_Position, 1.0);
+				vec3 position3 = position4.xyz / position4.w;
 				v_UI = a_UI;
 
 				vec3 n = normalize(u_MVNMatrix * a_Normal);
 				vec3 t = normalize(u_MVNMatrix * a_Tangent);
 				vec3 b = cross(n, t);
 
-				vec4 position4 = u_MVMatrix * vec4(a_Position, 1.0);
-				vec3 position3 = position4.xyz / position4.w;
-				vec3 lightDir = normalize(u_PointLights[0] - position3);
+				mat3 tbn = mat3(t, b, n);
 
-				vec3 vec;
-				vec.x = dot(lightDir, t);
-				vec.y = dot(lightDir, b);
-				vec.z = dot(lightDir, n);
-				lightVec = normalize(vec);
-
-				vec3 nposition = normalize(position3);
-				vec3 halfVector = normalize(nposition + lightDir);
-				vec.x = dot(halfVector, t);
-				vec.y = dot(halfVector, b);
-				vec.z = dot(halfVector, n);
-				halfVec = vec;
+				vec3 lightVec = normalize(u_PointLights[0] - position3);
+				v_LightVecTang = normalize(tbn * lightVec);
 
 				gl_Position = u_MVPMatrix * position4;
 			}`,
@@ -209,39 +218,16 @@ class Heaven extends Item {
 			`precision mediump float;
 
 			uniform vec4 u_DiffuseColor;
-			uniform sampler2D u_NormalMap;
+			uniform sampler2D u_NormalMap; 
 
-			varying vec3 lightVec;
-			varying vec3 halfVec;
+			varying vec3 v_LightVecTang;
 			varying vec2 v_UI;
 
 			void main(void) {
-				vec3 normal = normalize(texture2D(u_NormalMap, v_UI).rgb * 2.0 - 1.0);
+				vec3 normal = normalize(texture2D(u_NormalMap, v_UI).xyz * 2.0 - 1.0);
+				float a = dot(normal, v_LightVecTang);
 
-				float lamberFactor = max(dot(lightVec, normal), 0.0);
-				vec4 diffuseMaterial;
-				vec4 diffuseLight;
-
-				vec4 specularMaterial;
-				vec4 speculerLight;
-				float shininess;
-
-				vec4 ambientLight = vec4(0.0, 0.0, 0.0, 1.0);
-				vec4 combination = vec4(0.0);
-
-				if (lamberFactor > 0.0) {
-					diffuseMaterial = texture2D(u_NormalMap, v_UI);
-					diffuseLight = u_DiffuseColor;
-
-					specularMaterial = vec4(1.0);
-					speculerLight = vec4(1.0);
-					shininess = pow(max(dot(halfVec, normal), 0.0), 2.0);
-
-					combination = (diffuseMaterial * diffuseLight * lamberFactor) + (specularMaterial * speculerLight * shininess);
-				}
-
-				vec4 color = combination + ambientLight;
-				gl_FragColor = color;
+				gl_FragColor = vec4(1.0);
 			}`
 		);
 

@@ -8,14 +8,15 @@ var cursor;
 Loader.images({
 	transparent: 'images/transparent.jpg'
 }, images => {
+	// REQUEST ANIMATION FRAME
 	window.requestAnimationFrame = window.requestAnimationFrame ||
 		window.mozRequestAnimationFrame ||
 		window.msRequestAnimationFrame ||
 		window.webkitRequestAnimationFrame;
+	// \REQUEST ANIMATION FRAME
 
 	// CANVAS APPEND
 	canvas = new Canvas(RESOLUTION_WIDTH, RESOLUTION_HEIGHT);
-	canvas.appendTo(document.body);
 	var canvasdom = canvas.canvas;
 
 	// POINTER LOCK IDENTIFICATION
@@ -95,32 +96,34 @@ Loader.images({
 
 	// AUTORESIZE
 	var cssheight, csswidth;
-	var onresize;
-	;(onresize = function() {
-		var ratio = RESOLUTION_WIDTH / RESOLUTION_HEIGHT
+	function onresize() {
+		var parent = canvasdom.parentNode;
+		if (parent) {
+			var ratio = RESOLUTION_WIDTH / RESOLUTION_HEIGHT
 
-		var win = {
-			w: window.innerWidth,
-			h: window.innerHeight
-		};
+			var win = {
+				w: parent.offsetWidth,
+				h: parent.offsetHeight
+			};
 
-		if (win.w / ratio > win.h) {
-			canvasdom.style.height = '100%';
-			var height = cssheight = canvasdom.offsetHeight;
-			var width = csswidth = height * ratio;
-			canvasdom.style.width = width + 'px';
-			canvasdom.style.marginLeft = (win.w - width) / 2 + 'px';
-			canvasdom.style.marginTop = 0;
+			if (win.w / ratio > win.h) {
+				canvasdom.style.height = '100%';
+				var height = cssheight = canvasdom.offsetHeight;
+				var width = csswidth = height * ratio;
+				canvasdom.style.width = width + 'px';
+				canvasdom.style.marginLeft = (win.w - width) / 2 + 'px';
+				canvasdom.style.marginTop = 0;
+			}
+			else {
+				canvasdom.style.width = '100%';
+				var width = csswidth = canvasdom.offsetWidth;
+				var height = cssheight = width / ratio;
+				canvasdom.style.height = height + 'px';
+				canvasdom.style.marginLeft = 0;
+				canvasdom.style.marginTop = (win.h - height) / 2 + 'px';
+			}
 		}
-		else {
-			canvasdom.style.width = '100%';
-			var width = csswidth = canvasdom.offsetWidth;
-			var height = cssheight = width / ratio;
-			canvasdom.style.height = height + 'px';
-			canvasdom.style.marginLeft = 0;
-			canvasdom.style.marginTop = (win.h - height) / 2 + 'px';
-		}
-	})();
+	}
 	window.onresize = onresize;
 	// \AUTORESIZE
 
