@@ -1,11 +1,17 @@
 class Icosahedron extends Item {
 	constructor({
 		name = 'icosahedron',
-		body = new Body
+		body = new Body,
+		mesh,
+		collider,
+		physic
 	} = {}) {
 		super({
-			name: name,
-			body: body
+			name,
+			body,
+			mesh,
+			collider,
+			physic,
 		});
 
 		var mesh = this.initializeMesh();
@@ -131,11 +137,17 @@ class Sphere extends Icosahedron {
 	constructor({
 		name = 'sphere',
 		body = new Body,
+		mesh,
+		collider,
+		physic,
 		precision = 3
 	}) {
 		super({
 			name,
-			body
+			body,
+			mesh,
+			collider,
+			physic,
 		});
 
 		var data = {

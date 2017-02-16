@@ -5,7 +5,7 @@
 
 	//constants
 	const _listener = 8888;
-	console.log(`Server listener: ${_listener}`);
+	console.log(`Server listener - ${_listener}`);
 
 	function onRequest(request, response) {
 		page_.redirect(request, response);

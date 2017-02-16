@@ -152,7 +152,7 @@ class Physic {
 	set diameter(val) {
 		if (typeof val === 'number') {
 			this.diameter_ = val;
-			this.maxspeed = val * 0.1;
+			this.maxspeed = val * 0.02;
 		}
 	}
 
@@ -251,6 +251,16 @@ class Physic {
 		return out;
 	}
 
+	get maxspeed() {
+		return this.maxspeed_;  //in second
+	}
+
+	set maxspeed(val) {
+		if (typeof val === 'number') {
+			this.maxspeed_ = val;
+		}
+	}
+
 	onupdate({
 		deltaTime
 	}) {
@@ -270,16 +280,6 @@ class Physic {
 		});
 
 		return out;
-	}
-
-	get maxspeed() {
-		return this.maxspeed_;  //in second
-	}
-
-	set maxspeed(val) {
-		if (typeof val === 'number') {
-			this.maxspeed_ = val;
-		}
 	}
 
 	Temperature(R) {

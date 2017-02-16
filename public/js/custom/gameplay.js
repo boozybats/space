@@ -15,8 +15,9 @@ function gameplay(images) {
 	var scene = project.createScene(sceneName);
 	project.selectScene(sceneName);
 
+	project.start();
+
 	var camera = new Camera;
-	camera.body.position = new Vec3(0, 0, -5);
 	scene.appendCamera(camera);
 
 	var light = new PointLight({
@@ -26,15 +27,14 @@ function gameplay(images) {
 	});
 	scene.addLight(light);
 
-	project.start();
+	var facebox = new FaceBox;
+	facebox.instance(scene);
 
-	cursor = new Cursor();
-	camera.bindUI(cursor);
-
-	var me = new Sphere({
-		precision: 3
-	});
-	me.rotate(new Vec3(0.1, 0.2, 0.3));
+	var me = new Heaven;
+	me.bindCamera(camera);
+	me.rotate(new Vec3(0.3, 0.2, 0.1));
 	me.instance(scene);
+
+	cursor = new Cursor;
 	me.mouseControl = cursor;
 }

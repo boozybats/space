@@ -1,4 +1,4 @@
-class Heaven extends Item {
+class Heaven extends Sphere {
 	constructor({
 		name = 'asteroid',
 		body = new Body,
@@ -7,17 +7,21 @@ class Heaven extends Item {
 				Fe: 50 * Math.pow(10, 5)
 			}
 		}),
-		shader
+		mesh,
+		collider
 	} = {}) {
 		super({
-			name: name,
-			body: body,
-			physic: physic
+			name,
+			body,
+			physic,
+			mesh,
+			collider,
+			precision: 1
 		});
+	}
 
-		this.vertexCount_ = 360;
-
-		this.initializeMesh(shader);
+	bindCamera(camera) {
+		this.camera_ = camera;
 	}
 
 	get core() {
@@ -30,40 +34,12 @@ class Heaven extends Item {
 		return out;
 	}
 
-	initializeMesh(shader) {
-		var arr = this.verticesAndVI();
-		var vertices = arr[0];
-		var VI = arr[1];
-
-		var a_Normal = this.normals();
-		var a_Tangent = this.tangents();
-		var a_UI = this.UIs(vertices);
-
-		var normalmap = new Image();
-		normalmap.src = 'images/heaven_normalmap.jpg';
-
-		this.mesh = new Mesh({
-			attributes: {
-				a_Position: vertices,
-				a_Normal,
-				a_Tangent,
-				a_UI
-			},
-			uniforms: {
-				u_DiffuseColor: this.physic.color.normal.Vec,
-				u_NormalMap: normalmap
-			},
-			vertexIndices: VI,
-			shader: shader
-		});
-	}
-
 	get mouseControl() {
 		return this.mouseControl_;
 	}
 
 	set mouseControl(val) {
-		if (typeof val === 'boolean' || val instanceof Cursor) {
+		if (!val || val instanceof Cursor) {
 			this.mouseControl_ = val;
 		}
 		else {
@@ -73,111 +49,31 @@ class Heaven extends Item {
 
 	onupdate() {
 		if (this.mouseControl) {
-			var cursorvec = this.mouseControl.body.position.normalize();
+			var mouse = this.mouseControl;
+
+			var vec = mouse.axis;
 			var maxspeed = this.physic.maxspeed;
-			this.physic.velocity = cursorvec.multi(maxspeed);
-		}
-	}
 
-	normals() {
-		var out = [];
-		out.size = 3;
+			var dir = Vec.sum(this.physic.velocity, vec.multi(maxspeed));
 
-		for (var i = 0; i < this.vertexCount_ + 1; i++) {
-			var normal = [0, 0, -1];
-			out.push(...normal);
-		}
-
-		return out;
-	}
-
-	tangents() {
-		var out = [];
-		out.size = 3;
-
-		var vec = new Vec3(1, 0, 0);
-		var normal = vec.normalize();
-
-		for (var i = 0; i < this.vertexCount_ + 1; i++) {
-			out.push(normal.x, normal.y, normal.z);
-		}
-
-		return out;
-	}
-
-	UIs(vertices) {
-		//only if vertices.size == 3
-		var out = [];
-		out.size = 2;
-
-		var min = {};
-		var max = {};
-
-		for (var i = 0; i < vertices.length; i += 3) {
-			var x = vertices[i],
-				y = vertices[i + 1];
-
-			if (typeof min.x === 'undefined') {
-				min.x = x;
-				min.y = y;
-				max.x = x;
-				max.y = y;
+			var length = dir.L;
+			if (length > maxspeed) {
+				dir = dir.normalize().multi(maxspeed);
 			}
 
-			min.x = Math.min(min.x, x);
-			min.y = Math.min(min.y, y);
-			max.x = Math.max(max.x, x);
-			max.y = Math.max(max.y, y);
+			this.physic.velocity = dir;
+
+			mouse.onupdate();
 		}
 
-		var distx = max.x - min.x,
-			disty = max.y - min.y;
+		if (this.camera_) {
+			var cam = this.camera_.body;
+			var body = this.body;
 
-		for (var i = 0; i < vertices.length; i += 3) {
-			var x = (vertices[i] - min.x) / distx,
-				y = (vertices[i + 1] - min.y) / disty;
+			var z = body.scale.z * -5;
 
-			out.push(x, y);
+			cam.position = new Vec3(body.position.xy, z);
 		}
-
-		return out;
-	}
-
-	vertex(index, radius = this.physic.diameter / 2) {
-		var out;
-
-		var radius = radius;
-		var interval = 360 / this.vertexCount_;
-		var deg = index * interval;
-
-		var rad = Math.DTR(deg);
-		var x = Math.cos(rad) * radius,
-			y = Math.sin(rad) * radius;
-
-		out = [x, y, 0];
-
-		return out;
-	}
-
-	verticesAndVI() {
-		var vertices = [0, 0, 0];
-		vertices.size = 3;
-		var VI = [];
-		var radius = this.physic.diameter / 2;
-
-		for (var i = 0; i < this.vertexCount_; i++) {
-			var index = i + 1;
-			if (i == 0) {
-				VI.push(index, 0);
-			}
-			else {
-				VI.push(index, index, 0);
-			}
-			vertices.push(...this.vertex(i, radius));
-		}
-		VI.push(1);
-
-		return [vertices, VI];
 	}
 
 	static get shader() {

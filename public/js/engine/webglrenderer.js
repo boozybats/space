@@ -46,6 +46,7 @@ class WebGLRenderer {
 	}
 
 	drawScene({
+		currentTime = 0,
 		deltaTime = 0
 	} = {}) {
 		var project = this.project;
@@ -82,7 +83,12 @@ class WebGLRenderer {
 							continue;
 						}
 
-						layer({item, camera, deltaTime});
+						layer({
+							item,
+							camera,
+							currentTime,
+							deltaTime
+						});
 					}
 				}
 			})(items);
@@ -112,7 +118,8 @@ class WebGLRenderer {
 		project.addLayer(({
 			item,
 			camera,
-			deltaTime
+			deltaTime,
+			currentTime
 		}) => {
 			var scene = project.currentScene;
 
@@ -147,7 +154,10 @@ class WebGLRenderer {
 			}
 
 			if (typeof item.onupdate === 'function') {
-				item.onupdate({deltaTime});
+				item.onupdate({
+					currentTime,
+					deltaTime
+				});
 			}
 		});
 	}

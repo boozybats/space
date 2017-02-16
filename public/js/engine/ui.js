@@ -1,10 +1,13 @@
 class UI extends Item {
 	constructor({
-		width = 0,
-		height = 0,
+		name = 'ui',
+		width = RESOLUTION_WIDTH,
+		height = RESOLUTION_HEIGHT,
 		texture
 	} = {}) {
-		super();
+		super({
+			name
+		});
 
 		this.width = width;
 		this.height = height;
@@ -29,10 +32,10 @@ class UI extends Item {
 
 	initializeMesh(texture) {
 		var vertices = [
-			-1, -1, 1,
-			-1, 1, 1,
-			1, 1, 1,
-			1, -1, 1
+			-1, -1, 0,
+			-1, 1, 0,
+			1, 1, 0,
+			1, -1, 0
 		];
 		vertices.size = 3;
 
@@ -86,9 +89,7 @@ class UI extends Item {
 
 	static get shader() {
 		var out = new Shader(
-			`precision highp float;
-
-			attribute vec3 a_Position;
+			`attribute vec3 a_Position;
 			attribute vec2 a_UI;
 
 			uniform mat4 u_MVMatrix;

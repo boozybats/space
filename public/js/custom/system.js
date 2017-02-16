@@ -1,6 +1,8 @@
 const FPS = 1000 / 60;
 const RESOLUTION_WIDTH = screen.width;
 const RESOLUTION_HEIGHT = screen.height;
+const RESOLUTION_MAX = Math.max(RESOLUTION_WIDTH, RESOLUTION_HEIGHT);
+const RESOLUTION_MIN = Math.min(RESOLUTION_WIDTH, RESOLUTION_HEIGHT);
 
 var canvas;
 var cursor;
@@ -40,56 +42,13 @@ Loader.images({
 		}
 	});
 
-	var cursorhidden = false;
 	canvasdom.addEventListener('mousemove', event => {
-		var posx = cursor.position.x,
-			posy = cursor.position.y;
-
 		if (isLocked()) {
-			var x = event.movementX;
-			var y = event.movementY;
-
-			posx += x;
-			posy += y;
+			cursor.axis = new Vec2(
+				event.movementX / RESOLUTION_WIDTH,
+				-event.movementY / RESOLUTION_HEIGHT
+			);
 		}
-		else if (cursor.keepchase) {
-			var x = event.layerX / csswidth * RESOLUTION_WIDTH;
-			var y = event.layerY / cssheight * RESOLUTION_HEIGHT;
-
-			posx = x;
-			posy = y;
-
-			if (!cursorhidden) {
-				cursorhidden = true;
-				canvasdom.style.cursor = 'none';
-			}
-		}
-		else {
-			if (cursorhidden) {
-				cursorhidden = false;
-				canvasdom.style.cursor = 'default';
-			}
-		}
-
-		if (posx < 0) {
-			posx = 0;
-		}
-		else if (posx > RESOLUTION_WIDTH) {
-			posx = RESOLUTION_WIDTH;
-		}
-
-		if (posy < 0) {
-			posy = 0;
-		}
-		else if (posy > RESOLUTION_HEIGHT) {
-			posy = RESOLUTION_HEIGHT;
-		}
-		
-		cursor.position = new Vec3(
-			posx,
-			posy,
-			0
-		);
 	});
 	// \POINTER LOCK IDENTIFICATION
 	// \CANVAS APPEND

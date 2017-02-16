@@ -17,6 +17,14 @@ class Vec {
 		}
 	}
 
+	static angle(vec1, vec2) {
+		//calculate angle between 2 vectors
+	
+		var out = Math.acos(Vec.cos(vec1, vec2));
+	
+		return out;
+	}
+
 	get array() {
 		var out = [this.x, this.y];
 
@@ -63,19 +71,10 @@ class Vec {
 		return out;
 	}
 
-	static corner(vec1, vec2) {
-		//calculate corner between 2 vectors
-	
-		var out = Vec.vecmulti(vec1, vec2) / (vec1.module() * vec2.module());
-		out = Math.RTD(Math.acos(out));
-	
-		return out;
-	}
-
 	static cos(vec1, vec2) {
 		//calculate cosinus between 2 vectors
 
-		var out = Vec.vecmulti(vec1, vec2) / (vec1.module() * vec2.module());
+		var out = (vec1.x * vec2.x + vec1.y * vec2.y) / (vec1.module() * vec2.module());
 
 		return out;
 	}
@@ -150,6 +149,12 @@ class Vec {
 		}
 
 		var out = new this.constructor(x, y, z, w);
+
+		return out;
+	}
+
+	get L() {
+		var out = Math.sqrt(Math.pow(this.x, 2) + Math.pow(this.y, 2) + Math.pow(this.z || 0, 2) + Math.pow(this.w || 0, 2));
 
 		return out;
 	}
@@ -251,10 +256,6 @@ class Vec {
 		return out;
 	}
 
-	get w() {
-		return this.w_;
-	}
-
 	get x() {
 		return this.x_;
 	}
@@ -267,27 +268,391 @@ class Vec {
 		return this.z_;
 	}
 
-	get right() {
+	get xy() {
+		var out = new Vec2(this.x_, this.y_);
+
+		return out;
+	}
+
+	get xz() {
+		var out = new Vec2(this.x_, this.z_);
+		
+		return out;
+	}
+
+	get xw() {
+		var out = new Vec2(this.x_, this.w_);
+		
+		return out;
+	}
+
+	get yx() {
+		var out = new Vec2(this.y_, this.x_);
+		
+		return out;
+	}
+
+	get yz() {
+		var out = new Vec2(this.y_, this.z_);
+		
+		return out;
+	}
+
+	get yw() {
+		var out = new Vec2(this.y_, this.w_);
+		
+		return out;
+	}
+
+	get zx() {
+		var out = new Vec2(this.z_, this.x_);
+		
+		return out;
+	}
+
+	get zy() {
+		var out = new Vec2(this.z_, this.y_);
+		
+		return out;
+	}
+
+	get zw() {
+		var out = new Vec2(this.z_, this.w_);
+		
+		return out;
+	}
+
+	get wx() {
+		var out = new Vec2(this.w_, this.x_);
+		
+		return out;
+	}
+
+	get wy() {
+		var out = new Vec2(this.w_, this.y_);
+		
+		return out;
+	}
+
+	get wz() {
+		var out = new Vec2(this.w_, this.z_);
+		
+		return out;
+	}
+
+	get xyz() {
+		var out = new Vec3(this.x_, this.y_, this.z_);
+		
+		return out;
+	}
+
+	get xyw() {
+		var out = new Vec3(this.x_, this.y_, this.w_);
+		
+		return out;
+	}
+
+	get xzw() {
+		var out = new Vec3(this.x_, this.z_, this.w_);
+		
+		return out;
+	}
+
+	get xwz() {
+		var out = new Vec3(this.x_, this.w_, this.z_);
+		
+		return out;
+	}
+
+	get xzy() {
+		var out = new Vec3(this.x_, this.z_, this.y_);
+		
+		return out;
+	}
+
+	get xwy() {
+		var out = new Vec3(this.x_, this.w_, this.y_);
+		
+		return out;
+	}
+
+	get yzw() {
+		var out = new Vec3(this.y_, this.z_, this.w_);
+		
+		return out;
+	}
+
+	get ywz() {
+		var out = new Vec3(this.y_, this.w_, this.z_);
+		
+		return out;
+	}
+
+	get yxz() {
+		var out = new Vec3(this.y_, this.x_, this.z_);
+		
+		return out;
+	}
+
+	get yxw() {
+		var out = new Vec3(this.y_, this.x_, this.w_);
+		
+		return out;
+	}
+
+	get yzx() {
+		var out = new Vec3(this.y_, this.z_, this.x_);
+		
+		return out;
+	}
+
+	get ywx() {
+		var out = new Vec3(this.y_, this.w_, this.x_);
+		
+		return out;
+	}
+
+	get zwx() {
+		var out = new Vec3(this.z_, this.w_, this.x_);
+		
+		return out;
+	}
+
+	get zwy() {
+		var out = new Vec3(this.z_, this.w_, this.y_);
+		
+		return out;
+	}
+
+	get zxw() {
+		var out = new Vec3(this.z_, this.x_, this.w_);
+		
+		return out;
+	}
+
+	get zxy() {
+		var out = new Vec3(this.z_, this.x_, this.y_);
+		
+		return out;
+	}
+
+	get zyw() {
+		var out = new Vec3(this.z_, this.y_, this.w_);
+		
+		return out;
+	}
+
+	get zyx() {
+		var out = new Vec3(this.z_, this.y_, this.x_);
+		
+		return out;
+	}
+
+	get wxy() {
+		var out = new Vec3(this.w_, this.x_, this.y_);
+		
+		return out;
+	}
+
+	get wxz() {
+		var out = new Vec3(this.w_, this.x_, this.z_);
+		
+		return out;
+	}
+
+	get wyx() {
+		var out = new Vec3(this.w_, this.y_, this.x_);
+		
+		return out;
+	}
+
+	get wyz() {
+		var out = new Vec3(this.w_, this.y_, this.z_);
+		
+		return out;
+	}
+
+	get wzx() {
+		var out = new Vec3(this.w_, this.z_, this.x_);
+		
+		return out;
+	}
+
+	get wzy() {
+		var out = new Vec3(this.w_, this.z_, this.y_);
+		
+		return out;
+	}
+
+	get xyzw() {
+		var out = new Vec4(this.x_, this.y_, this.z_, this.w_);
+		
+		return out;
+	}
+
+	get xywz() {
+		var out = new Vec4(this.x_, this.y_, this.w_, this.z_);
+		
+		return out;
+	}
+
+	get xzyw() {
+		var out = new Vec4(this.x_, this.z_, this.y_, this.w_);
+		
+		return out;
+	}
+
+	get xwyz() {
+		var out = new Vec4(this.x_, this.w_, this.y_, this.z_);
+		
+		return out;
+	}
+
+	get xzwy() {
+		var out = new Vec4(this.x_, this.z_, this.w_, this.y_);
+		
+		return out;
+	}
+
+	get xwzy() {
+		var out = new Vec4(this.x_, this.w_, this.z_, this.y_);
+		
+		return out;
+	}
+
+	get yxzw() {
+		var out = new Vec4(this.y_, this.x_, this.z_, this.w_);
+		
+		return out;
+	}
+
+	get yxwz() {
+		var out = new Vec4(this.y_, this.x_, this.w_, this.z_);
+		
+		return out;
+	}
+
+	get yzxw() {
+		var out = new Vec4(this.y_, this.z_, this.x_, this.w_);
+		
+		return out;
+	}
+
+	get ywxz() {
+		var out = new Vec4(this.y_, this.w_, this.x_, this.z_);
+		
+		return out;
+	}
+
+	get yzwx() {
+		var out = new Vec4(this.y_, this.z_, this.w_, this.x_);
+		
+		return out;
+	}
+
+	get yzxw() {
+		var out = new Vec4(this.y_, this.z_, this.x_, this.w_);
+		
+		return out;
+	}
+
+	get zxyw() {
+		var out = new Vec4(this.z_, this.x_, this.y_, this.w_);
+		
+		return out;
+	}
+
+	get zxwy() {
+		var out = new Vec4(this.z_, this.x_, this.w_, this.y_);
+		
+		return out;
+	}
+
+	get zyxw() {
+		var out = new Vec4(this.z_, this.y_, this.x_, this.w_);
+		
+		return out;
+	}
+
+	get zwxy() {
+		var out = new Vec4(this.z_, this.w_, this.x_, this.y_);
+		
+		return out;
+	}
+
+	get zywx() {
+		var out = new Vec4(this.z_, this.y_, this.w_, this.x_);
+		
+		return out;
+	}
+
+	get zwyx() {
+		var out = new Vec4(this.z_, this.w_, this.y_, this.x_);
+		
+		return out;
+	}
+
+	get wxyz() {
+		var out = new Vec4(this.w_, this.x_, this.y_, this.z_);
+		
+		return out;
+	}
+
+	get wxzy() {
+		var out = new Vec4(this.w_, this.x_, this.z_, this.y_);
+		
+		return out;
+	}
+
+	get wyxz() {
+		var out = new Vec4(this.w_, this.y_, this.x_, this.z_);
+		
+		return out;
+	}
+
+	get wzxy() {
+		var out = new Vec4(this.w_, this.z_, this.x_, this.y_);
+		
+		return out;
+	}
+
+	get wyzx() {
+		var out = new Vec4(this.w_, this.y_, this.z_, this.x_);
+		
+		return out;
+	}
+
+	get wzyx() {
+		var out = new Vec4(this.w_, this.z_, this.y_, this.x_);
+		
+		return out;
+	}
+
+	get w() {
+		return this.w_;
+	}
+
+	static get right() {
 		return [1, 0, 0];
 	}
 
-	get left() {
+	static get left() {
 		return [-1, 0, 0];
 	}
 
-	get up() {
+	static get up() {
 		return [0, 1, 0];
 	}
 
-	get down() {
+	static get down() {
 		return [0, -1, 0];
 	}
 
-	get front() {
+	static get front() {
 		return [0, 0, 1];
 	}
 
-	get back() {
+	static get back() {
 		return [0, 0, -1];
 	}
 }

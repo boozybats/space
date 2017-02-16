@@ -138,7 +138,10 @@ class Project {
 				}
 			}
 
-			webglrenderer.drawScene({deltaTime});
+			webglrenderer.drawScene({
+				currentTime,
+				deltaTime
+			});
 			requestAnimationFrame(update, canvas);
 		})();
 	}

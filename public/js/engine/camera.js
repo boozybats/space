@@ -26,10 +26,6 @@ class Camera {
 		return this.body_;
 	}
 
-	bindUI(item) {
-		item.instance(this.scene);
-	}
-
 	set body(val) {
 		if (val instanceof Body) {
 			this.body_ = val;
