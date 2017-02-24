@@ -128,8 +128,15 @@ class Phys {
 };
 
 class Physic {
-	constructor(options = {}) {
-		this.initialize(options);
+	constructor({
+		matter,
+		velocity = new Vec3
+	} = {}) {
+		this.init_matter(matter);
+		this.velocity = velocity;
+		this.pure_volume_ = this.matter.volume;
+		this.diameter = this.Diameter();
+		this.mass = this.MassTotal();
 	}
 
 	get body() {
@@ -182,14 +189,6 @@ class Physic {
 		});
 
 		return out;
-	}
-
-	initialize(options) {
-		this.init_matter(options.matter);
-		this.velocity = new Vec3;
-		this.pure_volume_ = this.matter.volume;
-		this.diameter = this.Diameter();
-		this.mass = this.MassTotal();
 	}
 
 	init_matter(options) {

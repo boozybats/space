@@ -14,7 +14,7 @@ class Icosahedron extends Item {
 			physic,
 		});
 
-		var mesh = this.initializeMesh();
+		var mesh = icosahedronMesh;
 
 		this.mesh = new Mesh({
 			attributes: {
@@ -29,7 +29,7 @@ class Icosahedron extends Item {
 		});
 	}
 
-	initializeMesh() {
+	static mesh() {
 		// 20 sides, 30 edges, 12 vertices
 
 		var indices = [0, 1, 2, 0, 2, 3, 0, 3, 4, 0, 4, 5, 0, 5, 1,
@@ -150,34 +150,22 @@ class Sphere extends Icosahedron {
 			physic,
 		});
 
-		var data = {
-			vertices: this.mesh.attributes.a_Position,
-			normals: this.mesh.attributes.a_Normal,
-			indices: this.mesh.vertexIndices
-		};
-
-		for (var i = 0; i < precision; i++) {
-			data = this.initializeSphereMesh({
-				vertices: data.vertices,
-				normals: data.normals,
-				indices: data.indices
-			});
-		}
+		var mesh = sphereMesh[precision];
 
 		this.mesh = new Mesh({
 			attributes: {
-				a_Position: data.vertices,
-				a_Normal: data.normals
+				a_Position: mesh.vertices,
+				a_Normal: mesh.normals
 			},
 			uniforms: {
 				u_DiffuseColor: new Color(50, 255, 255, 1),
 			},
-			vertexIndices: data.indices,
+			vertexIndices: mesh.indices,
 			shader: Icosahedron.shader
 		});
 	}
 
-	initializeSphereMesh({
+	static mesh({
 		vertices,
 		normals,
 		indices
@@ -220,9 +208,9 @@ class Sphere extends Icosahedron {
 				c = Vec.avg(v2, v0);
 
 			// how much distance need to full radius (R = 1)
-			var ad = 1 - Math.sqrt(Math.pow(a.x, 2) + Math.pow(a.y, 2) + Math.pow(a.z, 2)),
-				bd = 1 - Math.sqrt(Math.pow(b.x, 2) + Math.pow(b.y, 2) + Math.pow(b.z, 2)),
-				cd = 1 - Math.sqrt(Math.pow(c.x, 2) + Math.pow(c.y, 2) + Math.pow(c.z, 2));
+			var ad = 1 - a.length,
+				bd = 1 - b.length,
+				cd = 1 - c.length;
 
 			// normalization to recovery radius
 			var an = a.normalize(),
@@ -259,3 +247,49 @@ class Sphere extends Icosahedron {
 		return out;
 	}
 }
+
+var icosahedronMesh,
+	sphereMesh;
+
+class Cube {
+	constructor({
+		name = 'cube',
+		body = new Body,
+		mesh,
+		collider,
+		physic
+	} = {}) {
+		super({
+			name,
+			body,
+			mesh,
+			collider,
+			physic,
+		});
+
+		var vertices = [
+			-1, -1, -1, -1, 1, -1
+		];
+
+		this.mesh = new Mesh({
+			attributes: {
+				a_Position: ,
+				a_Normal: mesh.normals
+			},
+			uniforms: {
+				u_DiffuseColor: new Color(50, 50, 255, 1),
+			},
+			vertexIndices: mesh.indices,
+			shader: Icosahedron.shader
+		});
+	}
+}
+
+;(function() {
+	icosahedronMesh = Icosahedron.mesh();
+	sphereMesh = [];
+	sphereMesh[0] = icosahedronMesh;
+	for (var i = 1; i < 4; i++) {
+		sphereMesh[i] = Sphere.mesh(sphereMesh[i - 1]);
+	}
+})();

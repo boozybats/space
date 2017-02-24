@@ -1,5 +1,8 @@
 class WebGLRenderer {
-	constructor(project) {
+	constructor({
+		project,
+		antialiasing = 'MSAA'
+	} = {}) {
 		var gl;
 		var canvas = project.canvas.canvas;
 		var methods = ['webgl', 'experimental-webgl', 'webkit-3d', 'moz-webgl'];
@@ -14,6 +17,7 @@ class WebGLRenderer {
 
 			if (gl) {
 				this.project = project;
+				this.canvas = canvas;
 				this.viewportWidth = canvas.width,
 				this.viewportHeight = canvas.height;
 				this.webGL = gl;
@@ -25,6 +29,24 @@ class WebGLRenderer {
 		}
 		else {
 			console.warn('WebGLRenderer: error');
+		}
+
+		this.antialiasing_ = antialiasing;
+	}
+
+	antialiasing() {
+		switch (this.antialiasing_) {
+			case 'MSAA':
+			break;
+
+			case 'FXAAx2':
+			break;
+
+			case 'FXAAx4':
+			break;
+
+			case 'SSAA':
+			break;
 		}
 	}
 
@@ -65,9 +87,9 @@ class WebGLRenderer {
 				//for every camera draw new field
 				for (var camera of cameras) {
 					var mvmatrix = camera.mvmatrix;
-					var vec = mvmatrix.Vec(new Vec3);
+					var vec = amc('*', new Vec4(0,0,0,1), mvmatrix).HTC();
 
-					self.mvpmatrix = Mat.multi(
+					self.mvpmatrix = amc('*',
 						Mat4.translate(vec.inverse()),
 						Mat4.translate(new Vec3(0, 0, -camera.deepOffset)),
 						Mat4.rotate(camera.body.rotation.inverse()),
@@ -159,6 +181,8 @@ class WebGLRenderer {
 					deltaTime
 				});
 			}
+
+			this.antialiasing();
 		});
 	}
 

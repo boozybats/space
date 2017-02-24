@@ -81,7 +81,9 @@ class Project {
 			console.warn('Project: initializeWebGLRenderer: error');
 		}
 
-		this.webGLRenderer = new WebGLRenderer(this);
+		this.webGLRenderer = new WebGLRenderer({
+			project: this
+		});
 		this.webGLRenderer.setup();
 	}
 

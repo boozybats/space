@@ -14,9 +14,6 @@ class Mat {
 				this.a_ = a;
 				this.b_ = b;
 			}
-			else {
-				console.warn('Mat: error');
-			}
 		}
 	}
 
@@ -33,7 +30,7 @@ class Mat {
 
 		for (var i = 0; i < a; i++) {
 			for (var j = 0; j < b; j++) {
-				out[i * a + j] = this[i][j];
+				out.push(this[i][j]);
 			}
 		}
 
@@ -219,14 +216,15 @@ class Mat {
 
 		var a = mat1.a,
 			b = mat1.b,
-			b1 = mat2.a,
-			c = mat2.b;
-		var out = new Mat(a, c);
+			c = mat2.a,
+			b1 = mat2.b;
 
-		if (b == b1) {
+		if (b == c) {
+			var out = new Mat(a, b1);
+
 			for (var i = 0; i < a; i++) {
 				for (var k = 0; k < c; k++) {
-					for (var j = 0; j < b; j++) {
+					for (var j = 0; j < b1; j++) {
 						out[i][j] += mat1[i][k] * mat2[k][j];
 					}
 				}
@@ -337,6 +335,22 @@ class Mat {
 		}
 	}
 
+	sum(num) {
+		if (typeof num === 'number') {
+			var a = this.a,
+				b = this.b;
+			var out = new Mat(a, b);
+
+			for (var i = 0; i < a; i++) {
+				for (var j = 0; j < b; j++) {
+					out[i][j] = this[i][j] + num;
+				}
+			}
+
+			return out;
+		}
+	}
+
 	static sum(...matrixes) {
 		var mat1 = matrixes[0],
 			mat2 = matrixes[1];
@@ -366,31 +380,6 @@ class Mat {
 		}
 	}
 
-	transform(arr) {
-		//vectorize array by matrix
-
-		var num = this.a - 1;
-		var narr = [];
-
-		for (var i = 0, length = arr.length / num; i < length; i++) {
-			var vecarr = [];
-			for (var z = 0; z < num; z++) {
-				vecarr.push(arr[i * num + z]);
-			}
-
-			var vec = new Vec(...vecarr);
-			vec = this.Vec(vec);
-
-			for (z in vec) {
-				if (z.length == 1) {
-					narr.push(vec[z]);
-				}
-			}
-		}
-
-		return narr;
-	}
-
 	transpose() {
 		//reverse matrix
 
@@ -406,62 +395,6 @@ class Mat {
 
 		return out;
 	}
-
-	Vec(vec, ...args) {
-		//transform matrix(x + 1) and vector(x) at vector(x)
-
-		function isNum(val) {
-			return typeof val === 'number';
-		}
-
-		var a = this.a,
-			b = this.b;
-
-		if (a == b) {
-			var x, y, z, w;
-			if (typeof vec === 'number') {
-				x = vec,
-				y = args[0],
-				z = args[1],
-				w = args[2];
-			}
-			else {
-				x = vec.x,
-				y = vec.y,
-				z = vec.z,
-				w = vec.w;
-			}
-
-			var res = isNum(x) + isNum(y) + isNum(z) + isNum(w);
-			var out;
-			var oldvec = [x, y, z, w],
-				newvec = [
-					this[res][0],
-					this[res][1],
-					this[res][2],
-					this[res][3]
-				];
-
-			if (a == res + 1) {
-				for (var i = 0; i < res; i++) {
-					for (var j = 0; j < res; j++) {
-						newvec[i] += oldvec[j] * this[i][j];
-					}
-				}
-
-				var Type = res == 2 ? Vec2 : Vec3;
-
-				out = new Type(newvec[0], newvec[1], newvec[2], newvec[3]);
-				return out;
-			}
-			else {
-				console.warn('Mat: vec: error');
-			}
-		}
-		else {
-			console.warn('Mat: vec: error');
-		}
-	}
 }
 
 class Mat2 extends Mat {
@@ -472,11 +405,11 @@ class Mat2 extends Mat {
 		for (var i = 0; i < 2; i++) {
 			this[i] = [];
 			for (var j = 0; j < 2; j++) {
-				if (arr && isFinite(arr[i * 2 + j])) {
+				if (arr && isNum(arr[i * 2 + j])) {
 					this[i][j] = arr[i * 2 + j];
 				}
 				else {
-					this[i][j] = isFinite(filler) ? filler : (i == j ? 1 : 0);
+					this[i][j] = isNum(filler) ? filler : (i == j ? 1 : 0);
 				}
 			}
 		}
@@ -493,11 +426,11 @@ class Mat3 extends Mat {
 		for (var i = 0; i < 3; i++) {
 			this[i] = [];
 			for (var j = 0; j < 3; j++) {
-				if (arr && isFinite(arr[i * 3 + j])) {
+				if (arr && isNum(arr[i * 3 + j])) {
 					this[i][j] = arr[i * 3 + j];
 				}
 				else {
-					this[i][j] = isFinite(filler) ? filler : (i == j ? 1 : 0);
+					this[i][j] = isNum(filler) ? filler : (i == j ? 1 : 0);
 				}
 			}
 		}
@@ -536,11 +469,11 @@ class Mat4 extends Mat {
 		for (var i = 0; i < 4; i++) {
 			this[i] = [];
 			for (var j = 0; j < 4; j++) {
-				if (arr && isFinite(arr[i * 4 + j])) {
+				if (arr && isNum(arr[i * 4 + j])) {
 					this[i][j] = arr[i * 4 + j];
 				}
 				else {
-					this[i][j] = isFinite(filler) ? filler : (i == j ? 1 : 0);
+					this[i][j] = isNum(filler) ? filler : (i == j ? 1 : 0);
 				}
 			}
 		}
@@ -551,11 +484,11 @@ class Mat4 extends Mat {
 	static orthogonal(near, far) {
 		var d = far - near;
 		var out = new Mat4([
-				d, 0, 0, 0,
-				0, d, 0, 0,
-				0, 0, 1, 0,
-				0, 0, 0, 1
-			]);
+			d, 0, 0, 0,
+			0, d, 0, 0,
+			0, 0, 1, 0,
+			0, 0, 0, 1
+		]);
 
 		return out;
 	}
@@ -568,8 +501,8 @@ class Mat4 extends Mat {
 		var out = new Mat4([
 			x, 0, 0, 0,
 			0, y, 0, 0,
-			0, 0, far / (far - near), d,
-			0, 0, -(far * near) / (far - near), 0
+			0, 0, (far + near) / (far - near), d,
+			0, 0, -2 * (far * near) / (far - near), 0
 		]);
 
 		return out;
@@ -620,4 +553,8 @@ class Mat4 extends Mat {
 
 		return out;
 	}
+}
+
+function isNum(a) {
+	return typeof a === 'number';
 }

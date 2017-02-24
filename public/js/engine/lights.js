@@ -47,7 +47,7 @@ class PointLight extends Light {
 	}
 
 	get position() {
-		var vec = this.mvmatrix.Vec(0, 0, 0);
+		var vec = amc('*', new Vec4(0,0,0,1), this.mvmatrix).HTC();
 
 		return vec;
 	}

@@ -136,6 +136,17 @@ class Scene {
 		}
 	}
 
+	removeItem(item) {
+		if (!(item instanceof Item)) {
+			console.warn('Scene: removeItem: error');
+		}
+
+		var index = this.items.indexOf(item);
+		if (index >= 0) {
+			this.items.splice(index, 1);
+		}
+	}
+
 	removeLight(light) {
 		if (!(light instanceof Light)) {
 			console.warn('Scene: removeLight: error');

@@ -26,15 +26,27 @@ function gameplay(images) {
 		})
 	});
 	scene.addLight(light);
+	
+	cursor = new Cursor;
 
 	var facebox = new FaceBox;
 	facebox.instance(scene);
 
-	var me = new Heaven;
+	var me = new Heaven({
+		physic: new Physic({
+			matter: {
+				Fe: 50 * Math.pow(10, 6)
+			}
+		})
+	});
 	me.bindCamera(camera);
 	me.rotate(new Vec3(0.3, 0.2, 0.1));
 	me.instance(scene);
 
-	cursor = new Cursor;
+	facebox.private.env_heaven = me.public;
+
 	me.mouseControl = cursor;
+
+	// var spawner = new Spawner;
+	// spawner.start(scene);
 }

@@ -13,7 +13,7 @@ class Vec {
 				this.x_ = arr[0] || 0;
 				this.y_ = arr[1] || 0;
 			}
-			this.length_ = arr.length;
+			this.size_ = arr.length;
 		}
 	}
 
@@ -52,8 +52,8 @@ class Vec {
 			out = false;
 		}
 		else {
-			var length0 = vec0.length,
-				length1 = vec1.length;
+			var length0 = vec0.size,
+				length1 = vec1.size;
 
 			if (length0 == length1) {
 				if (vec0.x !== vec1.x ||
@@ -74,7 +74,7 @@ class Vec {
 	static cos(vec1, vec2) {
 		//calculate cosinus between 2 vectors
 
-		var out = (vec1.x * vec2.x + vec1.y * vec2.y) / (vec1.module() * vec2.module());
+		var out = (vec1.x * vec2.x + vec1.y * vec2.y) / (vec1.length * vec2.length);
 
 		return out;
 	}
@@ -82,7 +82,7 @@ class Vec {
 	static dif(...vectors) {
 		var vec1 = vectors[0],
 			vec2 = vectors[1];
-		var Type = vec1.length >= vec2.length ? vec1.constructor : vec2.constructor;
+		var Type = vec1.size >= vec2.size ? vec1.constructor : vec2.constructor;
 
 		var out = new Type(
 			vec1.x - vec2.x,
@@ -99,8 +99,6 @@ class Vec {
 	}
 
 	static dot(...vectors) {
-		//multiply 2 vectors (not module)
-
 		var vec1 = vectors[0];
 		var vec2 = vectors[1];
 
@@ -135,6 +133,22 @@ class Vec {
 		return out;
 	}
 
+	HTC() {
+		var out;
+
+		switch (this.size) {
+			case 3:
+			out = amc('/', this.xyz, this.z);
+			break;
+
+			case 4:
+			out = amc('/', this.xyz, this.w);
+			break;
+		}
+
+		return out;
+	}
+
 	inverse() {
 		var x = -this.x,
 			y = -this.y,
@@ -153,28 +167,14 @@ class Vec {
 		return out;
 	}
 
-	get L() {
+	get length() {
 		var out = Math.sqrt(Math.pow(this.x, 2) + Math.pow(this.y, 2) + Math.pow(this.z || 0, 2) + Math.pow(this.w || 0, 2));
 
 		return out;
 	}
 
-	get length() {
-		return this.length_;
-	}
-
-	module() {
-		//convert vector to module vector
-
-		var length = Math.pow(this.x, 2) + Math.pow(this.y, 2);
-		if (typeof this.w !== 'undefined') {
-			length += Math.pow(this.z, 2) + Math.pow(this.w, 2);
-		}
-		else if (typeof this.z !== 'undefined') {
-			length += Math.pow(this.z, 2);
-		}
-
-		return Math.sqrt(length);
+	get size() {
+		return this.size_;
 	}
 
 	multi(num) {
@@ -193,7 +193,7 @@ class Vec {
 	static multi(...vectors) {
 		var vec1 = vectors[0],
 			vec2 = vectors[1];
-		var Type = vec1.length >= vec2.length ? vec1.constructor : vec2.constructor;
+		var Type = vec1.size >= vec2.size ? vec1.constructor : vec2.constructor;
 
 		var out = new Type(
 			vec1.x * vec2.x,
@@ -211,11 +211,7 @@ class Vec {
 	}
 
 	normalize() {
-		var x = this.x,
-			y = this.y,
-			z = this.z || 0,
-			w = this.w || 0;
-		var length = Math.sqrt(x * x + y * y + z * z + w * w);
+		var length = this.length;
 
 		var x = (this.x / length) || 0,
 			y = (this.y / length) || 0,
@@ -228,10 +224,23 @@ class Vec {
 		return out;
 	}
 
+	sum(num) {
+		var Type = this.constructor;
+
+		var out = new Type(
+			this.x + num,
+			this.y + num,
+			(this.z || 0) + num,
+			(this.w || 0) + num
+		);
+
+		return out;
+	}
+
 	static sum(...vectors) {
 		var vec1 = vectors[0],
 			vec2 = vectors[1];
-		var Type = vec1.length >= vec2.length ? vec1.constructor : vec2.constructor;
+		var Type = vec1.size >= vec2.size ? vec1.constructor : vec2.constructor;
 
 		var out = new Type(
 			vec1.x + vec2.x,
@@ -251,7 +260,7 @@ class Vec {
 	static vecmulti(vec1, vec2) {
 		//multiply 2 vectors by module
 
-		var out = vec1.module() * vec2.module() * Vec.cos(vec1, vec2);
+		var out = vec1.length * vec2.length * Vec.cos(vec1, vec2);
 
 		return out;
 	}
@@ -660,7 +669,8 @@ class Vec {
 class Vec2 extends Vec {
 	constructor(x = 0, y = 0) {
 		super();
-		if (x.constructor === Vec3 || x.constructor === Vec4) {
+
+		if ((x instanceof Vec && x.size == 3) || (x instanceof Vec && x.size == 4)) {
 			y = x.y,
 			x = x.x;
 		}
@@ -668,24 +678,25 @@ class Vec2 extends Vec {
 		this.x_ = x || 0;
 		this.y_ = y || 0;
 
-		this.length_ = 2;
+		this.size_ = 2;
 	}
 }
 
 class Vec3 extends Vec {
 	constructor(x = 0, y = 0, z = 0) {
 		super();
-		if (!z && x && x.constructor === Vec2) {
+
+		if (!z && x instanceof Vec && x.size == 2) {
 			z = y,
 			y = x.y,
 			x = x.x;
 		}
-		else if (!z && y && y.constructor === Vec2) {
+		else if (!z && y instanceof Vec && y.size == 2) {
 			x = x;
 			z = y.y,
 			y = y.x;
 		}
-		else if (!y && x && x.constructor === Vec4) {
+		else if (!y && x instanceof Vec && x.size == 4) {
 			z = x.z,
 			y = x.y,
 			x = x.x;
@@ -695,44 +706,45 @@ class Vec3 extends Vec {
 		this.y_ = y;
 		this.z_ = z;
 
-		this.length_ = 3;
+		this.size_ = 3;
 	}
 }
 
 class Vec4 extends Vec {
 	constructor(x = 0, y = 0, z = 0, w = 0) {
 		super();
+
 		if (!z && x && x.constructor == Vec2 && y && y.constructor == Vec2) {
 			w = y.y,
 			z = y.x,
 			y = x.y,
 			x = x.x;
 		}
-		else if (!w && x && x.constructor === Vec2) {
+		else if (!w && x instanceof Vec && x.size == 2) {
 			w = z,
 			z = y,
 			y = x.y,
 			x = x.x;
 		}
-		else if (!w && y && y.constructor === Vec2) {
+		else if (!w && y instanceof Vec && y.size == 2) {
 			w = z,
 			x = x,
 			z = y.y,
 			y = y.x;
 		}
-		else if (!w && z && z.constructor === Vec2) {
+		else if (!w && z instanceof Vec && z.size == 2) {
 			x = x,
 			y = y,
 			w = z.y,
 			z = z.x;
 		}
-		else if (!z && x && x.constructor === Vec3) {
+		else if (!z && x instanceof Vec && x.size == 3) {
 			w = y,
 			z = x.z,
 			y = x.y,
 			x = x.x;
 		}
-		else if (!z && y && y.constructor === Vec3) {
+		else if (!z && y instanceof Vec && y.size == 3) {
 			x = x,
 			w = y.z,
 			z = y.y,
@@ -744,6 +756,6 @@ class Vec4 extends Vec {
 		this.z_ = z;
 		this.w_ = w;
 
-		this.length_ = 4;
+		this.size_ = 4;
 	}
 }

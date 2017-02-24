@@ -18,6 +18,8 @@ class Item {
 		this.uniforms = {};
 
 		this.matrixStorage_ = [];
+		this.public_ = {};
+		this.private_ = {};
 	}
 
 	allCollision(items) {
@@ -120,6 +122,10 @@ class Item {
 		else {
 			return false;
 		}
+	}
+
+	destroy() {
+		this.scene.removeItem(this);
 	}
 
 	distance(item) {
@@ -278,7 +284,7 @@ class Item {
 			};
 		}
 		else if (data instanceof Vec) {
-			switch(data.length) {
+			switch(data.size) {
 				case 2:
 				method = 'uniform2f';
 				break;
@@ -573,19 +579,6 @@ class Item {
 		return out;
 	}
 
-	get project() {
-		return this.project_;
-	}
-
-	set project(val) {
-		if (val instanceof Project) {
-			this.project_ = val;
-		}
-		else {
-			console.warn('Item: project: error');
-		}
-	}
-
 	get physic() {
 		return this.physic_;
 	}
@@ -600,6 +593,10 @@ class Item {
 		else {
 			console.warn('Item: physic: error');
 		}
+	}
+
+	get private() {
+		return this.private_;
 	}
 
 	get program() {
@@ -619,6 +616,23 @@ class Item {
 		else {
 			console.warn('Item: project: error');
 		}
+	}
+
+	get project() {
+		return this.project_;
+	}
+
+	set project(val) {
+		if (val instanceof Project) {
+			this.project_ = val;
+		}
+		else {
+			console.warn('Item: project: error');
+		}
+	}
+
+	get public() {
+		return this.public_;
 	}
 
 	rotate(vec) {
@@ -692,6 +706,7 @@ class Item {
 	}
 
 	update() {
+		var gl = this.webGL;
 		var shader = this.shader;
 		var program = this.program;
 

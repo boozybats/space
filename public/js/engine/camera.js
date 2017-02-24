@@ -1,6 +1,6 @@
 const DEFAULT_NEARFIELD  = 0.9999;
 const DEFAULT_FARFIELD   = 10000;
-const DEFAULT_FOV        = 90;
+const DEFAULT_FOV        = 120;
 
 class Camera {
 	constructor({

@@ -51,19 +51,18 @@ class Heaven extends Sphere {
 		if (this.mouseControl) {
 			var mouse = this.mouseControl;
 
-			var vec = mouse.axis;
+			var vec = mouse.position;
 			var maxspeed = this.physic.maxspeed;
 
-			var dir = Vec.sum(this.physic.velocity, vec.multi(maxspeed));
+			var dir = amc('*', vec, maxspeed);
 
-			var length = dir.L;
+			var length = dir.length;
 			if (length > maxspeed) {
-				dir = dir.normalize().multi(maxspeed);
+				dir = amc('*', vec.normalize(), maxspeed);
 			}
 
-			this.physic.velocity = dir;
-
-			mouse.onupdate();
+			this.public.velocity = this.physic.velocity = dir;
+			this.public.maxspeed = maxspeed;
 		}
 
 		if (this.camera_) {
