@@ -51,13 +51,6 @@ var PeriodicTable = {
 		boiling: 90,
 		color: new Color(10, 110, 255, 0.1)
 	},
-	O2: {
-		M: 31.998,
-		p: 1141,
-		melting: 54,
-		boiling: 90,
-		color: new Color(10, 110, 255, 0.1)
-	},
 	S: {
 		M: 32.06,
 		p: 2070,
@@ -132,11 +125,8 @@ class Physic {
 		matter,
 		velocity = new Vec3
 	} = {}) {
-		this.init_matter(matter);
 		this.velocity = velocity;
-		this.pure_volume_ = this.matter.volume;
-		this.diameter = this.Diameter();
-		this.mass = this.MassTotal();
+		this.init_matter(matter);
 	}
 
 	get body() {
@@ -152,6 +142,10 @@ class Physic {
 		}
 	}
 
+	get color() {
+		return this.matter.color_;
+	}
+
 	get diameter() {
 		return this.diameter_;
 	}
@@ -159,18 +153,14 @@ class Physic {
 	set diameter(val) {
 		if (typeof val === 'number') {
 			this.diameter_ = val;
-			this.maxspeed = val * 0.02;
+			this.maxspeed = val * 0.4;
 		}
-	}
-
-	get color() {
-		return this.matter.color_;
 	}
 
 	Diameter() {
 		var out = 0;
 
-		this.matter.each_layer(function(layer) {
+		this.matter.each_layer(layer => {
 			out += layer.height;
 		});
 		out *= 2;
@@ -181,7 +171,7 @@ class Physic {
 	Density(R) {
 		var out = 0;
 
-		this.matter.each_layer(function(layer, radius) {
+		this.matter.each_layer((layer, radius) => {
 			if (radius >= R) {
 				out = layer.density;
 				return false;
@@ -191,10 +181,12 @@ class Physic {
 		return out;
 	}
 
-	init_matter(options) {
-		this.matter = new Matter({
-			matter: options
-		});
+	init_matter(matter) {
+		this.matter = new Matter(matter);
+
+		this.pure_volume_ = this.matter.volume;
+		this.diameter = this.Diameter();
+		this.mass = this.MassTotal();
 	}
 
 	get last_layer() {
@@ -220,7 +212,7 @@ class Physic {
 		var out = 0;
 
 		var self = this;
-		this.matter.each_layer(function(layer, radius) {
+		this.matter.each_layer((layer, radius) => {
 			if (radius >= R) {
 				var m0 = (radius - R) / layer.height * layer.mass;
 				var sibling = self.matter.nextSibling(layer);
@@ -236,7 +228,7 @@ class Physic {
 	MassTotal(R = Infinity) {
 		var out = 0;
 
-		this.matter.each_layer(function(layer, radius) {
+		this.matter.each_layer((layer, radius) => {
 			if (radius >= R) {
 				var approx = (R - layer.radius) / layer.height * layer.mass;
 				out += approx;
@@ -271,7 +263,7 @@ class Physic {
 		var out = 0;
 
 		var self = this;
-		this.matter.each_layer(function(layer, radius) {
+		this.matter.each_layer((layer, radius) => {
 			if (radius >= R) {
 				out = G * (self.MassTotal(R) * self.Density(R) / Math.pow(R, 2));
 				return false;
@@ -307,7 +299,7 @@ class Physic {
 	VolumeTotal(R = Infinity) {
 		var out = 0;
 
-		this.matter.each_layer(function(layer, radius) {
+		this.matter.each_layer((layer, radius) => {
 			out += layer.volume;
 			if (radius >= R) {
 				return false;
@@ -319,8 +311,21 @@ class Physic {
 }
 
 class Matter {
-	constructor(options = {}) {
-		this.initialize(options);
+	constructor(matter) {
+		this.volume_ = 0;
+		this.layers_ = [];
+		this.substances_ = [];
+		this.substances_obj_ = matter;
+
+		if (matter) {
+			for (var i in matter) {
+				if (matter.hasOwnProperty(i)) {
+					this.add_substance(i, matter[i]);
+				}
+			}
+
+			this.update_layers();
+		}
 	}
 
 	add_substance(name, volume) {
@@ -337,6 +342,19 @@ class Matter {
 		}
 	}
 
+	compare(matter) {
+		var result = true;
+
+		var oldmatter = this.substances_obj_;
+		Object.keys(oldmatter).concat(Object.keys(matter)).forEach((a) => {
+			if (matter[a] !== oldmatter[a]) {
+				result = false;
+			}
+		});
+
+		return result;
+	}
+
 	each_layer(callback) {
 		var layers = this.layers_;
 		for (var layer of this.layers_) {
@@ -349,23 +367,6 @@ class Matter {
 		}
 	}
 
-	initialize(options) {
-		this.volume_ = 0;
-		this.layers_ = [];
-		this.substances_ = [];
-
-		this.init_substances(options.matter);
-		this.update_layers();
-	}
-
-	init_substances(options) {
-		for (var i in options) {
-			if (options.hasOwnProperty(i)) {
-				this.add_substance(i, options[i]);
-			}
-		}
-	}
-
 	get last_layer() {
 		var out = this.layers_[this.layers_.length - 1];
 
@@ -373,8 +374,7 @@ class Matter {
 	}
 
 	get layers() {
-		var out = this.layers_;
-		return out;
+		return this.layers_;
 	}
 
 	get layer_height() {

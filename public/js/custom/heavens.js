@@ -1,5 +1,6 @@
 class Heaven extends Sphere {
 	constructor({
+		id,
 		name = 'asteroid',
 		body = new Body,
 		physic = new Physic({
@@ -12,11 +13,23 @@ class Heaven extends Sphere {
 	} = {}) {
 		super({
 			name,
+			id,
 			body,
 			physic,
 			mesh,
 			collider,
-			precision: 1
+			precision: 3
+		});
+
+		this.mesh.shader = Heaven.shader;
+
+		var displacement = new Image();
+		displacement.src = 'images/d_heaven.jpg';
+		var normal = new Image();
+		normal.src = 'images/n_heaven.jpg';
+
+		this.changeUniforms({
+			u_Maps: [displacement, normal]
 		});
 	}
 
@@ -47,31 +60,103 @@ class Heaven extends Sphere {
 		}
 	}
 
-	onupdate() {
-		if (this.mouseControl) {
-			var mouse = this.mouseControl;
+	me() {
+		this.onupdate = function() {
+			var _private = this.private;
+			var _public  = this.public;
 
-			var vec = mouse.position;
-			var maxspeed = this.physic.maxspeed;
-
-			var dir = amc('*', vec, maxspeed);
-
-			var length = dir.length;
-			if (length > maxspeed) {
-				dir = amc('*', vec.normalize(), maxspeed);
+			var oldD = _private.D || 0;
+			var curD = this.physic.diameter;
+			if (oldD != curD) {
+				_private.D = curD;
+				_private.sizeint = (curD - oldD) / 20;
 			}
 
-			this.public.velocity = this.physic.velocity = dir;
-			this.public.maxspeed = maxspeed;
+			var sizeint = _private.sizeint;
+			if (sizeint) {
+				var body = this.body;
+				var scale = amc('+', this.body.scale, sizeint);
+				body.scale = scale;
+
+				if (sizeint > 0) {
+					if (body.scale.x >= curD || body.scale.y >= curD || body.scale.z >= curD) {
+						_private.sizeint = 0;
+					}
+				}
+				else {
+					if (body.scale.x <= curD || body.scale.y <= curD || body.scale.z <= curD) {
+						_private.sizeint = 0;
+					}
+				}
+			}
+
+			if (this.mouseControl) {
+				var mouse = this.mouseControl;
+
+				var vec = mouse.position;
+				var maxspeed = this.physic.maxspeed;
+
+				var dir = amc('*', vec, maxspeed);
+
+				var length = dir.length;
+				if (length > maxspeed) {
+					dir = amc('*', vec.normalize(), maxspeed);
+				}
+
+				_public.velocity = this.physic.velocity = dir;
+				_public.maxspeed = maxspeed;
+			}
+
+			if (this.camera_) {
+				var cam = this.camera_.body;
+				var body = this.body;
+
+				var z = body.scale.z * -12;
+
+				cam.position = new Vec3(body.position.xy, z);
+			}
+
+			var body = this.body;
+			var position = this.private.position;
+			var scale = this.private.scale;
+			if (!position || !amc('=', position, body.position) || !amc('=', scale, body.scale)) {
+				this.private.position = body.position;
+				this.private.scale = body.scale;
+
+				server.mydata({
+					body: body
+				});
+			}
+		}
+	}
+
+	onupdate() {
+		var _private = this.private;
+		var _public  = this.public;
+
+		var oldD = _private.D || 0;
+		var curD = this.physic.diameter;
+		if (oldD != curD) {
+			_private.D = curD;
+			_private.sizeint = (curD - oldD) / 20;
 		}
 
-		if (this.camera_) {
-			var cam = this.camera_.body;
+		var sizeint = _private.sizeint;
+		if (sizeint) {
 			var body = this.body;
+			var scale = amc('+', this.body.scale, sizeint);
+			body.scale = scale;
 
-			var z = body.scale.z * -5;
-
-			cam.position = new Vec3(body.position.xy, z);
+			if (sizeint > 0) {
+				if (body.scale.x >= curD || body.scale.y >= curD || body.scale.z >= curD) {
+					_private.sizeint = 0;
+				}
+			}
+			else {
+				if (body.scale.x <= curD || body.scale.y <= curD || body.scale.z <= curD) {
+					_private.sizeint = 0;
+				}
+			}
 		}
 	}
 
@@ -89,9 +174,12 @@ class Heaven extends Sphere {
 			uniform mat4 u_MVPMatrix;
 			uniform mat3 u_MVNMatrix;
 			uniform vec3 u_PointLights[MAX_POINTLIGHTS];
+			uniform sampler2D u_Maps[2];
 
 			varying vec3 v_LightVecTang;
 			varying vec2 v_UI;
+
+			const float DISHEI = 1.0;
 
 			void main(void) {
 				vec4 position4 = u_MVMatrix * vec4(a_Position, 1.0);
@@ -107,22 +195,24 @@ class Heaven extends Sphere {
 				vec3 lightVec = normalize(u_PointLights[0] - position3);
 				v_LightVecTang = normalize(tbn * lightVec);
 
-				gl_Position = u_MVPMatrix * position4;
+				float displace = texture2D(u_Maps[0], a_UI).x * DISHEI;
+
+				gl_Position = u_MVPMatrix * (position4);
 			}`,
 
 			`precision mediump float;
 
 			uniform vec4 u_DiffuseColor;
-			uniform sampler2D u_NormalMap; 
+			uniform sampler2D u_Maps[2];
 
 			varying vec3 v_LightVecTang;
 			varying vec2 v_UI;
 
 			void main(void) {
-				vec3 normal = normalize(texture2D(u_NormalMap, v_UI).xyz * 2.0 - 1.0);
+				vec3 normal = normalize(texture2D(u_Maps[1], v_UI).xyz * 2.0 - 1.0);
 				float a = dot(normal, v_LightVecTang);
 
-				gl_FragColor = vec4(1.0);
+				gl_FragColor = vec4(normal, 1.0);
 			}`
 		);
 

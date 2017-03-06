@@ -130,6 +130,34 @@ function amc(operand = '+', ...terms) {
 
 		break;
 
+		case '=':
+		if (term1 instanceof Mat && term2 instanceof Mat) {
+			out = Mat.compare(term1, term2);
+		}
+		else if (term1 instanceof Vec && term2 instanceof Vec) {
+			out = Vec.compare(term1, term2);
+		}
+		else if ((term1 instanceof Array && term2 instanceof Array) ||
+			(term1 instanceof Float32Array && term2 instanceof Float32Array)) {
+			if (term1.length !== term2.length) {
+				out = false;
+			}
+			else {
+				out = true;
+				for (var i = 0; i < term1.length; i++) {
+					if (term1[i] !== term2[i]) {
+						out = false;
+						break;
+					}
+				}
+			}
+		}
+		else {
+			out = term1 === term2;
+		}
+
+		break;
+
 		default:
 		console.warn('arifmetic error');
 	}

@@ -1,7 +1,17 @@
 class WebGLRenderer {
 	constructor({
 		project,
-		antialiasing = 'MSAA'
+		attributes = {
+			antialias: true,
+			alpha: true,
+			willReadFrequently: false,
+			storage: 'persistent',
+			depth: 16,
+			stencil: 8,
+			premultipliedAlpha: false,
+			preserveDrawingBuffer: true,
+			failIfMajorPerformanceCaveat: false
+		}
 	} = {}) {
 		var gl;
 		var canvas = project.canvas.canvas;
@@ -9,9 +19,17 @@ class WebGLRenderer {
 
 		for (var method of methods) {
 			try {
-				gl = canvas.getContext(method, {
-					preserveDrawingBuffer: true
-				});
+				gl = canvas.getContext(method, attributes);
+				if (!gl) {
+					delete attributes.failIfMajorPerformanceCaveat;
+					gl = canvas.getContext(method, attributes);
+					if (!gl) {
+						gl = canvas.getContext(method);
+						if (gl) {
+							console.warn('WebGLRenderer: wrong attributes');
+						}
+					}
+				}
 			}
 			catch(e) {}
 
@@ -28,25 +46,7 @@ class WebGLRenderer {
 		if (gl) {
 		}
 		else {
-			console.warn('WebGLRenderer: error');
-		}
-
-		this.antialiasing_ = antialiasing;
-	}
-
-	antialiasing() {
-		switch (this.antialiasing_) {
-			case 'MSAA':
-			break;
-
-			case 'FXAAx2':
-			break;
-
-			case 'FXAAx4':
-			break;
-
-			case 'SSAA':
-			break;
+			console.warn('WebGLRenderer: can\'t create webglrenderer context');
 		}
 	}
 
@@ -74,16 +74,19 @@ class WebGLRenderer {
 		var project = this.project;
 		var layers = project.layers;
 		var scene = project.currentScene;
-		var items = scene.items;
+
 		var cameras = scene.cameras;
+
+		var items = scene.items;
+		var systemitems = scene.systemitems;
 
 		var self = this;
 		for (var i = layers.length - 1; i >= 0; i--) {
-		//for (var i = 0; i < layers.length; i++) {
+		// for (var i = 0; i < layers.length; i++) {
 			self.clearScene(scene.skyBoxType, scene.skyBoxColor);
 			var layer = layers[i];
 
-			(arr => {
+			function draw(arr) {
 				//for every camera draw new field
 				for (var camera of cameras) {
 					var mvmatrix = camera.mvmatrix;
@@ -113,7 +116,10 @@ class WebGLRenderer {
 						});
 					}
 				}
-			})(items);
+			}
+
+			draw(items);
+			draw(systemitems);
 		}
 	}
 
@@ -150,14 +156,14 @@ class WebGLRenderer {
 					console.warn(`Item '${item.name}' doesnt have a body`);
 				}
 				
-				var eyematrix = camera.mvmatrix;
+				//var eyematrix = camera.mvmatrix;
 				var mvmatrix = item.mvmatrix;
 				var mvnmatrix = mvmatrix.normalize();
 				var lights = scene.sceneLights;
 
 				//update MVMatrix and MVPMatrix
 				item.changeUniforms({
-					u_MVMatrixEye: eyematrix,
+					//u_MVMatrixEye: eyematrix,
 					u_MVMatrix: mvmatrix,
 					u_MVPMatrix: self.mvpmatrix,
 					u_MVNMatrix: mvnmatrix,
@@ -181,8 +187,6 @@ class WebGLRenderer {
 					deltaTime
 				});
 			}
-
-			this.antialiasing();
 		});
 	}
 

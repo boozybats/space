@@ -9,11 +9,13 @@ class Scene {
 		this.project = project;
 		this.skyBoxColor = skyBoxColor;
 		this.skyBoxType = skyBoxType;
-		
+
+		this.callbacks = [];
 		this.cameras = [];
 		this.directionalLights = [];
 		this.pointLights = [];
 		this.items = [];
+		this.systemitems = [];
 	}
 
 	appendCamera(camera) {
@@ -31,6 +33,14 @@ class Scene {
 		}
 		
 		this.items.push(item);
+	}
+
+	appendSystemItem(item) {
+		if (!(item instanceof Item)) {
+			console.warn('Scene: appendItem: error');
+		}
+		
+		this.systemitems.push(item);
 	}
 
 	addLight(light) {
@@ -73,6 +83,16 @@ class Scene {
 		}
 		else {
 			console.warn('Scene: directionalLights: error');
+		}
+	}
+
+	findItem(id) {
+		var items = this.items;
+
+		for (var item of items) {
+			if (item.id === id) {
+				return item;
+			}
 		}
 	}
 
@@ -205,6 +225,19 @@ class Scene {
 		}
 		else {
 			console.warn('Camera: skyBoxType: error');
+		}
+	}
+
+	get systemitems() {
+		return this.systemitems_;
+	}
+
+	set systemitems(val) {
+		if (val instanceof Array) {
+			this.systemitems_ = val;
+		}
+		else {
+			console.warn('Scene: systemitems: error');
 		}
 	}
 }

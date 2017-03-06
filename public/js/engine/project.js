@@ -120,7 +120,7 @@ class Project {
 		var canvas = this.canvas.canvas;
 		var webglrenderer = this.webGLRenderer;
 
-		var functions = this.currentScene.functionsonupdate;
+		var callbacks = this.currentScene.callbacks;
 		var startTime = new Date().getTime() / 1000;
 
 		var self = this;
@@ -134,9 +134,9 @@ class Project {
 			var deltaTime = currentTime - startTime;
 			startTime = currentTime;
 
-			for (var i in functions) {
-				if (functions.hasOwnPropery(i)) {
-					functions[i]({deltaTime});
+			for (var callback of callbacks) {
+				if (typeof callback === 'function') {
+					callback({deltaTime});
 				}
 			}
 

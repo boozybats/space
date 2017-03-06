@@ -11,9 +11,11 @@ class FaceBox extends UI {
 		this.startTime_ = new Date().getTime() / 1000;
 
 		this.mesh.shader = FaceBox.shader;
-		this.mesh.uniforms['u_Mouse'] = new Vec2;
-		this.mesh.uniforms['u_Resolution'] = new Vec2(RESOLUTION_MIN, RESOLUTION_MIN);
-		this.mesh.uniforms['u_Maxspeed'] = 0;
+		this.changeUniforms({
+			u_Mouse: new Vec2,
+			u_Resolution: new Vec2(RESOLUTION_MIN, RESOLUTION_MIN),
+			u_Maxspeed: 0
+		});
 
 		this.body.position = new Vec3;
 	}
@@ -56,8 +58,8 @@ class FaceBox extends UI {
 
 			const float R = 0.65;
 			const float D = 0.05;
-			const float sqwidth = 0.008;
-			const float attenuation = 0.005;
+			const float sqwidth = 0.0055;
+			const float attenuation = 0.003;
 			const float minangle = 0.3490658503988659;
 
 			float angle(vec2 v0, vec2 v1) {
@@ -70,13 +72,11 @@ class FaceBox extends UI {
 				vec4 frag = vec4(0.0);
 
 				vec2 dir = normalize(u_Mouse);
-				float dirlength = sqrt(pow(dir.x, 2.0) + pow(dir.y, 2.0));
 
 				vec2 normal = normalize(position);
 				float an = angle(dir, normal);
 
-				vec2 sp = vec2(1.0, 0.0);
-				float sqan = angle(dir, sp);
+				float sqan = angle(dir, vec2(1.0, 0.0));
 				if (dir.y < 0.0) {
 					sqan = -sqan;
 				}

@@ -11,7 +11,7 @@ class Loader {
 		}
 
 		function onerror() {
-			console.warn('image "' + this.src + '" error');
+			console.warn(`image '${this.src}' error`);
 		}
 
 		for (let i in array) {

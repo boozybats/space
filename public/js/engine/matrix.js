@@ -493,16 +493,16 @@ class Mat4 extends Mat {
 		return out;
 	}
 
-	static perspective(ratio, near, far, fov) {
-		fov = Math.DTR(fov);
-		var y = Math.cos(fov / 2) / Math.sin(fov / 2);
+	static perspective(ratio, near, far, fovy) {
+		fovy = Math.DTR(fovy);
+		var y = 1 / Math.tan(fovy / 2);
 		var x = y / ratio;
 		var d = 1;
 		var out = new Mat4([
 			x, 0, 0, 0,
 			0, y, 0, 0,
 			0, 0, (far + near) / (far - near), d,
-			0, 0, -2 * (far * near) / (far - near), 0
+			0, 0, -2 * far * near / (far - near), 0
 		]);
 
 		return out;

@@ -1,5 +1,6 @@
 class Item {
 	constructor({
+		id,
 		name = 'empty',
 		body = new Body,
 		mesh,
@@ -7,6 +8,7 @@ class Item {
 		physic,
 		enabled = true
 	} = {}) {
+		this.id = id;
 		this.name = name;
 		this.body = body;
 		this.mesh = mesh;
@@ -20,6 +22,8 @@ class Item {
 		this.matrixStorage_ = [];
 		this.public_ = {};
 		this.private_ = {};
+
+		this.instanced_ = false;
 	}
 
 	allCollision(items) {
@@ -67,11 +71,20 @@ class Item {
 			if new - add
 			else - update */
 		if (typeof val === 'object') {
-			for (var i in val) {
-				if (val.hasOwnProperty(i)) {
-					var data = val[i];
-					var attribute = this.initializeAttribute(i, data);
-					this.attributes[i] = attribute;
+			if (this.instanced_) {
+				for (var i in val) {
+					if (val.hasOwnProperty(i)) {
+						var data = val[i];
+						var attribute = this.initializeAttribute(i, data);
+						this.attributes[i] = attribute;
+					}
+				}
+			}
+			else {
+				for (var i in val) {
+					if (val.hasOwnProperty(i)) {
+						this.mesh.attributes[i] = val;
+					}
 				}
 			}
 		}
@@ -81,13 +94,22 @@ class Item {
 	}
 
 	changeUniforms(val) {
-		if (typeof val === 'object') {			
-			for (var i in val) {
-				if (val.hasOwnProperty(i)) {
-					var data = val[i];
-					var uniform = this.initializeUniform(i, data);
-					if (uniform) {
-						this.uniforms[i] = uniform;
+		if (typeof val === 'object') {
+			if (this.instanced_) {
+				for (var i in val) {
+					if (val.hasOwnProperty(i)) {
+						var data = val[i];
+						var uniform = this.initializeUniform(i, data);
+						if (uniform) {
+							this.uniforms[i] = uniform;
+						}
+					}
+				}
+			}
+			else {
+				for (var i in val) {
+					if (val.hasOwnProperty(i)) {
+						this.mesh.uniforms[i] = val[i];
 					}
 				}
 			}
@@ -122,10 +144,6 @@ class Item {
 		else {
 			return false;
 		}
-	}
-
-	destroy() {
-		this.scene.removeItem(this);
 	}
 
 	distance(item) {
@@ -191,7 +209,7 @@ class Item {
 		var size = data.size;
 
 		if (!size) {
-			console.warn(`Doesnt selected size for attribute '${name}'`)
+			console.warn(`Not selected size for attribute '${name}'`)
 		}
 
 		gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
@@ -333,9 +351,14 @@ class Item {
 			gl.bindTexture(gl.TEXTURE_2D, null);
 
 			data.onload = function() {
-				gl.bindTexture(gl.TEXTURE_2D, buffer);
-				gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, this);
-				gl.bindTexture(gl.TEXTURE_2D, null);
+				if (this.width % 2 !== 0 || this.height % 2 !== 0) {
+					console.warn(`Image '${this.src}' size isnt a power of 2 number`);
+				}
+				else {
+					gl.bindTexture(gl.TEXTURE_2D, buffer);
+					gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, this);
+					gl.bindTexture(gl.TEXTURE_2D, null);
+				}
 			}
 			//update onload
 			data.src = data.src;
@@ -419,9 +442,17 @@ class Item {
 		return VIOBuffer;
 	}
 
-	instance(scene) {
+	instance(scene, system = false) {
 		if ((scene instanceof Scene)) {
-			scene.appendItem(this);
+			this.instanced_ = true;
+
+			if (system) {
+				scene.appendSystemItem(this);
+			}
+			else {
+				scene.appendItem(this);
+			}
+
 			this.scene = scene;
 			this.project = scene.project;
 			this.webGL = scene.project.webGLRenderer.webGL;
@@ -579,6 +610,32 @@ class Item {
 		return out;
 	}
 
+	get onremove() {
+		return this.onremove_;
+	}
+
+	set onremove(val) {
+		if (!val || typeof val === 'function') {
+			this.onremove_ = val;
+		}
+		else {
+			console.warn('Item: onremove: error');
+		}
+	}
+
+	get onupdate() {
+		return this.onupdate_;
+	}
+
+	set onupdate(val) {
+		if (!val || typeof val === 'function') {
+			this.onupdate_ = val;
+		}
+		else {
+			console.warn('Item: onupdate: error');
+		}
+	}
+
 	get physic() {
 		return this.physic_;
 	}
@@ -633,6 +690,13 @@ class Item {
 
 	get public() {
 		return this.public_;
+	}
+
+	remove() {
+		if (this.onremove) {
+			this.onremove();
+		}
+		this.scene.removeItem(this);
 	}
 
 	rotate(vec) {
@@ -776,7 +840,7 @@ class Item {
 				var method = uniform.method;
 
 				if (index) {
-					if (uniform.subtype == 'texture' || uniform.type == 'texture' || !compare(data, storage[i])) {
+					if (uniform.subtype == 'texture' || uniform.type == 'texture' || !amc('=', data, storage[i])) {
 						storage[i] = data;
 
 						switch (uniform.type) {

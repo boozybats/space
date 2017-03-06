@@ -160,18 +160,3 @@ class Program {
 		}
 	}
 }
-
-var guid = [];
-function GUID() {
-	function path() {
-		return (Math.random() * 8999 + 1000).toFixed(0);
-	}
-	var key = `${path()}-${path()}-${path()}`;
-	if (guid.indexOf(key) === -1) {
-		guid.push(key);
-		return key;
-	}
-	else {
-		return GUID();
-	}
-}

@@ -1,15 +1,15 @@
 class Icosahedron extends Item {
 	constructor({
+		id,
 		name = 'icosahedron',
 		body = new Body,
-		mesh,
 		collider,
 		physic
 	} = {}) {
 		super({
 			name,
+			id,
 			body,
-			mesh,
 			collider,
 			physic,
 		});
@@ -19,10 +19,8 @@ class Icosahedron extends Item {
 		this.mesh = new Mesh({
 			attributes: {
 				a_Position: mesh.vertices,
-				a_Normal: mesh.normals
-			},
-			uniforms: {
-				u_DiffuseColor: new Color(50, 50, 255, 1),
+				a_Normal: mesh.normals,
+				a_UI: mesh.uis
 			},
 			vertexIndices: mesh.indices,
 			shader: Icosahedron.shader
@@ -44,6 +42,15 @@ class Icosahedron extends Item {
 		var normals = [0, 1, 0];
 		normals.size = 3;
 
+		// uis
+		var uis = [0.5, 1];
+		uis.size = 2;
+
+		const n = 8;  //count of peaces
+		var arclen = 2 * Math.pi,
+			peawid = arclen / n;
+		// \uis
+
 		var y0 = 3 / (3 * 2),
 			y1 = 6 / (3 * 2);
 		// increase number if 5 vertices
@@ -62,31 +69,41 @@ class Icosahedron extends Item {
 					var rad = Math.DTR(degint * j);
 				}
 
+				var x = Math.cos(rad);
 				var y = 1 - (y0 + y1 * i);
+				var z = Math.sin(rad);
 
 				var vec = new Vec3(
-					Math.cos(rad),
+					x,
 					y,
-					Math.sin(rad)
+					z
 				);
 				var normal = vec.normalize();
+
+				var ui = [
+					Math.asin(x) / Math.PI + 0.5, // 0.5 + Math.atan2(z, x) / (2 * Math.PI),
+					Math.asin(y) / Math.PI + 0.5 // 0.5 + Math.asin(y) / Math.PI
+				];
 
 				var dis = 1 - Math.sqrt(Math.pow(vec.x, 2) + Math.pow(vec.y, 2) + Math.pow(vec.z, 2));
 				vec = Vec.sum(vec, normal.multi(dis));
 
 				vertices.push(...vec.array);
 				normals.push(...normal.array);
+				uis.push(...ui);
 			}
 		}
 
 		// 4th level
 		vertices.push(0, -1, 0);
 		normals.push(0, -1, 0);
+		uis.push(0.5, 0);
 
 		var out =  {
 			vertices,
 			indices,
-			normals
+			normals,
+			uis
 		};
 
 		return out;
@@ -104,16 +121,20 @@ class Icosahedron extends Item {
 			uniform mat3 u_MVNMatrix;
 			uniform vec3 u_PointLights[MAX_POINTLIGHTS];
 
-			varying float v_light;
+			varying float v_Light;
 
 			void main(void) {
 				vec4 position4 = u_MVMatrix * vec4(a_Position, 1.0);
 				vec3 position3 = position4.xyz / position4.w;
 
-				vec3 lightDir = normalize(u_PointLights[0] - position3);
-				vec3 normal = normalize(u_MVNMatrix * a_Normal);
+				float light = 0.0;
+				for (int i = 0; i < 1; i++) {
+					vec3 lightDir = normalize(u_PointLights[0] - position3);
+					vec3 normal = normalize(u_MVNMatrix * a_Normal);
 
-				v_light = max(dot(normal, lightDir), 0.0);
+					light += max(dot(normal, lightDir), 0.0);
+				}
+				v_Light = min(light, 1.0);
 
 				gl_Position = u_MVPMatrix * position4;
 			}`,
@@ -122,10 +143,10 @@ class Icosahedron extends Item {
 
 			uniform vec4 u_DiffuseColor;
 
-			varying float v_light;
+			varying float v_Light;
 
 			void main(void) {
-				gl_FragColor = vec4(u_DiffuseColor.rgb * v_light, u_DiffuseColor.a);
+				gl_FragColor = vec4(u_DiffuseColor.rgb * v_Light, u_DiffuseColor.a);
 			}`
 		);
 
@@ -133,21 +154,21 @@ class Icosahedron extends Item {
 	}
 }
 
-class Sphere extends Icosahedron {
+class Sphere extends Item {
 	constructor({
+		id,
 		name = 'sphere',
 		body = new Body,
-		mesh,
 		collider,
 		physic,
 		precision = 3
 	}) {
 		super({
 			name,
+			id,
 			body,
-			mesh,
 			collider,
-			physic,
+			physic
 		});
 
 		var mesh = sphereMesh[precision];
@@ -155,10 +176,8 @@ class Sphere extends Icosahedron {
 		this.mesh = new Mesh({
 			attributes: {
 				a_Position: mesh.vertices,
-				a_Normal: mesh.normals
-			},
-			uniforms: {
-				u_DiffuseColor: new Color(50, 255, 255, 1),
+				a_Normal: mesh.normals,
+				a_UI: mesh.uis
 			},
 			vertexIndices: mesh.indices,
 			shader: Icosahedron.shader
@@ -168,15 +187,20 @@ class Sphere extends Icosahedron {
 	static mesh({
 		vertices,
 		normals,
+		uis,
 		indices
 	} = {}) {
-		var [nvertices, nnormals, nindices] = [[], [], []];
+		var [nvertices, nnormals, nuis, nindices] = [[], [], [], []];
 		nvertices.size = 3;
 		nnormals.size = 3;
+		nuis.size = 2;
 
 		for (var i = 0; i < vertices.length; i++) {
 			nvertices.push(vertices[i]);
 			nnormals.push(normals[i]);
+		}
+		for (var i = 0; i < uis.length; i++) {
+			nuis.push(uis[i]);
 		}
 		for (var i = 0; i < indices.length; i++) {
 			nindices.push(indices[i]);
@@ -218,13 +242,45 @@ class Sphere extends Icosahedron {
 				cn = c.normalize();
 
 			// make right point for radius "R = 1"
-			a = Vec.sum(a, an.multi(ad));
-			b = Vec.sum(b, bn.multi(bd));
-			c = Vec.sum(c, cn.multi(cd));
+			a = amc('+', a, an.multi(ad));
+			b = amc('+', b, bn.multi(bd));
+			c = amc('+', c, cn.multi(cd));
+
+			var ui = [];
+			for (var j = 0; j < 3; j++) {
+				var x, y, z;
+
+				switch (j) {
+					case 0:
+					x = a.x,
+					y = a.y,
+					z = a.z;
+					break;
+
+					case 1:
+					x = b.x,
+					y = b.y,
+					z = b.z;
+					break;
+
+					case 2:
+					x = c.x,
+					y = c.y,
+					z = c.z;
+					break;
+				}
+
+				var arr = [
+					Math.asin(x) / Math.PI + 0.5, // 0.5 + Math.atan2(z, x) / (2 * Math.PI),
+					Math.asin(y) / Math.PI + 0.5 // 0.5 + Math.asin(y) / Math.PI
+				];
+				ui.push(...arr);
+			}
 
 			var length = nvertices.length / 3;
 			nvertices.push(...a.array, ...b.array, ...c.array);
 			nnormals.push(...an.array, ...bn.array, ...cn.array);
+			nuis.push(...ui);
 
 			a = length,
 			b = length + 1,
@@ -241,7 +297,8 @@ class Sphere extends Icosahedron {
 		var out = {
 			vertices: nvertices,
 			normals: nnormals,
-			indices: nindices
+			indices: nindices,
+			uis: nuis
 		};
 
 		return out;
@@ -251,37 +308,133 @@ class Sphere extends Icosahedron {
 var icosahedronMesh,
 	sphereMesh;
 
-class Cube {
+class Cube extends Item {
 	constructor({
 		name = 'cube',
 		body = new Body,
-		mesh,
 		collider,
 		physic
 	} = {}) {
 		super({
 			name,
 			body,
-			mesh,
 			collider,
 			physic,
 		});
 
-		var vertices = [
-			-1, -1, -1, -1, 1, -1
+		var indices = [
+			0, 1, 2, 2, 3, 0,
+			4, 5, 6, 6, 7, 4,
+			8, 9, 10, 10, 11, 8,
+			12, 13, 14, 14, 15, 12,
+			16, 17, 18, 18, 19, 16,
+			20, 21, 22, 22, 23, 20
 		];
+
+		var vertices = [
+			-1, -1, 1, -1, 1, 1,
+			1, 1, 1, 1, -1, 1,
+			-1, -1, -1, -1, 1, -1,
+			1, 1, -1, 1, -1, -1,
+			-1, -1, 1, -1, 1, 1,
+			-1, 1, -1, -1, -1, -1,
+			1, -1, 1, 1, 1, 1,
+			1, 1, -1, 1, -1, -1,
+			-1, -1, 1, -1, -1, -1,
+			1, -1, -1, 1, -1, 1,
+			-1, 1, 1, -1, 1, -1,
+			1, 1, -1, 1, 1, 1
+		];
+		vertices.size = 3;
+
+		var uvs = [
+			0.0, 0.0, 0.0, 1.0,
+			1.0, 1.0, 1.0, 0.0,
+			0.0, 0.0, 0.0, 1.0,
+			1.0, 1.0, 1.0, 0.0,
+			0.0, 0.0, 0.0, 1.0,
+			1.0, 1.0, 1.0, 0.0,
+			0.0, 0.0, 0.0, 1.0,
+			1.0, 1.0, 1.0, 0.0,
+			0.0, 0.0, 0.0, 1.0,
+			1.0, 1.0, 1.0, 0.0,
+			0.0, 0.0, 0.0, 1.0,
+			1.0, 1.0, 1.0, 0.0
+		];
+		uvs.size = 2;
+
+		var normals = [
+			0.0, 0.0, 1.0, 0.0, 0.0, 1.0,
+			0.0, 0.0, 1.0, 0.0, 0.0, 1.0,
+			0.0, 0.0, -1.0, 0.0, 0.0, -1.0,
+			0.0, 0.0, -1.0, 0.0, 0.0, -1.0,
+			-1.0, 0.0, 0.0, -1.0, 0.0, 0.0,
+			-1.0, 0.0, 0.0, -1.0, 0.0, 0.0,
+			1.0, 0.0, 0.0, 1.0, 0.0, 0.0,
+			1.0, 0.0, 0.0, 1.0, 0.0, 0.0,
+			0.0, -1.0, 0.0, 0.0, -1.0, 0.0,
+			0.0, -1.0, 0.0, 0.0, -1.0, 0.0,
+			0.0, 1.0, 0.0, 0.0, 1.0, 0.0,
+			0.0, 1.0, 0.0, 0.0, 1.0, 0.0
+		];
+		normals.size = 3;
 
 		this.mesh = new Mesh({
 			attributes: {
-				a_Position: ,
-				a_Normal: mesh.normals
+				a_Position: vertices,
+				a_Normal: normals,
+				a_UV: uvs
 			},
 			uniforms: {
 				u_DiffuseColor: new Color(50, 50, 255, 1),
 			},
-			vertexIndices: mesh.indices,
-			shader: Icosahedron.shader
+			vertexIndices: indices,
+			shader: Cube.shader
 		});
+	}
+
+	static get shader() {
+		var out = new Shader(
+			`#define MAX_POINTLIGHTS 16
+
+			attribute vec3 a_Position;
+			attribute vec3 a_Normal;
+
+			uniform mat4 u_MVMatrix;
+			uniform mat4 u_MVPMatrix;
+			uniform mat3 u_MVNMatrix;
+			uniform vec3 u_PointLights[MAX_POINTLIGHTS];
+
+			varying float v_Light;
+
+			void main(void) {
+				vec4 position4 = u_MVMatrix * vec4(a_Position, 1.0);
+				vec3 position3 = position4.xyz / position4.w;
+
+				float light = 0.0;
+				for (int i = 0; i < 1; i++) {
+					vec3 lightDir = normalize(u_PointLights[0] - position3);
+					vec3 normal = normalize(u_MVNMatrix * a_Normal);
+
+					light += max(dot(normal, lightDir), 0.0);
+				}
+				v_Light = min(light, 1.0);
+
+				gl_Position = u_MVPMatrix * position4;
+			}`,
+
+			`precision mediump float;
+
+			uniform vec4 u_DiffuseColor;
+
+			varying float v_Light;
+
+			void main(void) {
+				gl_FragColor = vec4(u_DiffuseColor.rgb * v_Light, u_DiffuseColor.a);
+			}`
+		);
+
+		return out;
 	}
 }
 
@@ -289,7 +442,7 @@ class Cube {
 	icosahedronMesh = Icosahedron.mesh();
 	sphereMesh = [];
 	sphereMesh[0] = icosahedronMesh;
-	for (var i = 1; i < 4; i++) {
+	for (var i = 1; i < 5; i++) {
 		sphereMesh[i] = Sphere.mesh(sphereMesh[i - 1]);
 	}
 })();

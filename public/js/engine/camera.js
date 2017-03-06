@@ -1,6 +1,8 @@
+const RESOLUTION_WIDTH = screen.width;
+const RESOLUTION_HEIGHT = screen.height;
 const DEFAULT_NEARFIELD  = 0.9999;
-const DEFAULT_FARFIELD   = 10000;
-const DEFAULT_FOV        = 120;
+const DEFAULT_FARFIELD   = 1000000;
+const DEFAULT_FOVY       = 55;
 
 class Camera {
 	constructor({
@@ -11,7 +13,7 @@ class Camera {
 			RESOLUTION_WIDTH / RESOLUTION_HEIGHT,
 			DEFAULT_NEARFIELD,
 			DEFAULT_FARFIELD,
-			DEFAULT_FOV
+			DEFAULT_FOVY
 		)
 	} = {}) {
 		this.name = name,
