@@ -1,4 +1,9 @@
-var server = {
+/**
+ * Simplify work with websockets to get/send server's data,
+ * always sends 'id' as a parametr if defined
+ * @type {Object}
+ */
+const server = {
 	id: null,
 	items: function(callback) {
 		this.send({
@@ -6,6 +11,7 @@ var server = {
 			handler: 'items'
 		});
 	},
+	// sends player's object's data to server
 	mydata: function({
 		body
 	}) {
@@ -19,6 +25,11 @@ var server = {
 			}
 		});
 	},
+	/**
+	 * read id from cookie or generate new on server also send
+	 * 'id' on server to track activity
+	 * Calls callback after successful request
+	 */
 	getid: function(callback) {
 		var id = cookie.read('id');
 		ws.send({
@@ -31,8 +42,21 @@ var server = {
 			}
 		});
 	},
+	// always adds "id" in data
 	send: function(params) {
-		params.id = server.id;
+		if (typeof params.data !== 'object') {
+			if (params.data) {
+				console.warn('Server: send: data always must be an object or undefined');
+			}
+
+			params.data = {
+				id: this.id
+			};
+		}
+		else {
+			params.data.id = this.id;
+		}
+
 		ws.send(params);
 	}
 };

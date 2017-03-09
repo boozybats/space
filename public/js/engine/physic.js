@@ -1,25 +1,12 @@
-/*
-	avg    - average
-	layer  - function for layer
-	pure   - without force
-*/
-
-/*
-	D  - diameter
-	h  - height
-	l  - distance
-	M  - molar mass
-	m  - mass
-	p  - density
-	P  - pascal
-	R  - radius
-	V  - volume
-*/
-
+// gravitational constant
 const G = 6.6738480 * Math.pow(10, -11);
+// how much layers must be in object
 const LAYERS_COUNT = 1000;
+// constant for determining temperature (taken from Earth)
 const PRESSURE_TEMPERATURE_CONST = 6669090909090;
+// minimal radius which from starts calculations
 const CORE_MIN_RADIUS = 25;
+// normal pressure for planets like Earth
 const NORMAL_PRESSURE = 101325;
 
 var PeriodicTable = {
@@ -68,11 +55,28 @@ var PeriodicTable = {
 };
 
 class Phys {
+	/**
+	 * Returns gravity power between 2 bodies
+	 *
+	 * @param {number} m0 Mass of first object
+	 * @param {number} m1 Mass of second object
+	 * @param {number} l Length (radius) between objects
+	 * @return {number} F
+	 */
 	static gravity(m0, m1, l) {
 		var out = G * ((m0 + m1) / Math.pow(l, 2));
 		return out;
 	}
 
+	/**
+	 * Returns layer height which volume starts on "V1"
+	 * and ends on "V0". "V1" isn't end volume because it
+	 * can be not selected
+	 *
+	 * @param {number} V0 End volume
+	 * @param {number} V1 Start volume
+	 * @return {number} R
+	 */
 	static layer_height(V0, V1 = 0) {
 		var V = V0 + V1;
 		var R = Math.pow(V / (4/3 * Math.PI), 1/3);
@@ -81,6 +85,14 @@ class Phys {
 		return out;
 	}
 
+	/**
+	 * Returns volume of layer which starts on "h" radius
+	 * and ends on "R" radius
+	 *
+	 * @param {number} h End radius
+	 * @param {number} R Start radius
+	 * @return {number} V
+	 */
 	static layer_volume(h, R = 0) {
 		var l = R + h;
 		var V = 4/3 * Math.PI * Math.pow(l, 3);
@@ -89,6 +101,14 @@ class Phys {
 		return out;
 	}
 
+	/**
+	 * Defines: decreasing or increasing function sended
+	 *
+	 * @param {Function} func Check function
+	 * @param {number} to End value to send as parameter
+	 * @param {number} precision How much times check the function
+	 * @return {string|number} 0 | +inf | -inf
+	 */
 	static inf_lim(func, to = 9999999, precision = 100) {
 		var x0 = 0;
 		var x1 = to;
@@ -120,6 +140,32 @@ class Phys {
 	}
 };
 
+/**
+ * Physic of object, generates diameter, pressure, temperature
+ * and e.t.c by matter. Contains info about velocity, acceleration,
+ * gravity power, ...
+ *
+ * D - diameter
+ * F - force
+ * h - height
+ * l - distance
+ * M - molar mass
+ * m - mass
+ * p - density
+ * P - pascal
+ * R - radius
+ * V - volume
+ *
+ * @constructor
+ * @this {Physic}
+ *  {Body} this.body
+ *  {Color} this.color
+ *  {number} this.diameter
+ *  {object} this.lastLayer
+ * @param {object} matter Object with substances and value is volume
+ * @param {Vec3} velocity Current speed direction vector for object
+*/
+
 class Physic {
 	constructor({
 		matter,
@@ -132,14 +178,12 @@ class Physic {
 	get body() {
 		return this.body_;
 	}
-
 	set body(val) {
-		if (val instanceof Body) {
-			this.body_ = val;
+		if (!(val instanceof Body)) {
+			throw new Error('Physic: body: must be a Body');
 		}
-		else {
-			console.warn('Physic: body: error');
-		}
+
+		this.body_ = val;
 	}
 
 	get color() {
@@ -149,7 +193,6 @@ class Physic {
 	get diameter() {
 		return this.diameter_;
 	}
-
 	set diameter(val) {
 		if (typeof val === 'number') {
 			this.diameter_ = val;
@@ -184,12 +227,12 @@ class Physic {
 	init_matter(matter) {
 		this.matter = new Matter(matter);
 
-		this.pure_volume_ = this.matter.volume;
+		/** private */ this.pure_volume = this.matter.volume;
 		this.diameter = this.Diameter();
 		this.mass = this.MassTotal();
 	}
 
-	get last_layer() {
+	get lastLayer() {
 		return this.matter.last_layer;
 	}
 
@@ -201,7 +244,6 @@ class Physic {
 	get mass() {
 		return this.mass_;
 	}
-
 	set mass(val) {
 		if (typeof val === 'number') {
 			this.mass_ = val;
@@ -243,9 +285,8 @@ class Physic {
 	}
 
 	get maxspeed() {
-		return this.maxspeed_;  //in second
+		return this.maxspeed_;  // in second
 	}
-
 	set maxspeed(val) {
 		if (typeof val === 'number') {
 			this.maxspeed_ = val;
@@ -282,18 +323,16 @@ class Physic {
 	get velocity() {
 		return this.velocity_;
 	}
-
 	set velocity(val) {
-		if (val instanceof Vec) {
-			this.velocity_ = val;
+		if (!(val instanceof Vec3)) {
+			throw new Error('Physic: velocity: must be a Vec3');
 		}
-		else {
-			console.warn('Physic: velocity: error');
-		}
+
+		this.velocity_ = val;
 	}
 
 	get volume() {
-		return this.pure_volume_;
+		return this.pure_volume;
 	}
 
 	VolumeTotal(R = Infinity) {

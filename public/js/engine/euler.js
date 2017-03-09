@@ -1,5 +1,20 @@
+/**
+ * Habitual kind of angles which value
+ * is degress between 0 and 360
+ *
+ * @constructor
+ * @this {Euler}
+ * @param {number} x, y, z degrees
+ */
+
 class Euler {
 	constructor(x = 0, y = 0, z = 0) {
+		if (typeof x !== 'number' ||
+			typeof y !== 'number' ||
+			typeof z !== 'number') {
+			throw new Error('Euler: xyz must be a numbers');
+		}
+
 		while(x >= 360) {
 			x -= 360;
 		}
@@ -24,31 +39,71 @@ class Euler {
 		this.z_ = z;
 	}
 
-	koeff(k = 1) {
-		var x = this.x * k,
-			y = this.y * k,
-			z = this.z * k;
+	array() {
+		var out = [this.x, this.y, this.z];
+
+		return out;
+	}
+
+	static compare(eul0, eul1) {
+		var out = true;
+
+		if (typeof eul0 === 'undefined' || typeof eul1 === 'undefined') {
+			out = false;
+		}
+		else {
+			if (eul0.x !== eul1.x ||
+				eul0.y !== eul1.y ||
+				eul0.z !== eul1.z) {
+				out = false;
+			}
+		}
+
+		return out;
+	}
+
+	multi(num) {
+		if (typeof num !== 'number') {
+			throw new Error('Euler: multi: must be a number');
+		}
+
+		var x = this.x * num,
+			y = this.y * num,
+			z = this.z * num;
 
 		var out = new Euler(x, y, z);
 
 		return out;
 	}
 
-	static Quaternion(quat = new Quaternion, ...args) {
-		//return euler by using quaternion as arguments
-
+	/**
+	 * Transforms quaternions to eulers,
+	 * function gets Quaternions or x, y, z and w numbers
+	 *
+	 * @param {Quaternion|number} x, y, z, w
+	 * @return {Euler}
+	 */
+	static Quaternion(...args) {
 		var x, y, z, w;
-		if (typeof quat === 'number') {
-			x = quat,
-			y = args[0],
-			z = args[1],
-			w = args[2];
-		}
-		else {
+		if (args[0] instanceof Quaternion) {
+			var quat = args[0];
+
 			x = quat.x,
 			y = quat.y,
 			z = quat.z,
 			w = quat.w;
+		}
+		else if (typeof args[0] === 'number' &&
+			typeof args[1] === 'number' &&
+			typeof args[2] === 'number' &&
+			typeof args[3] === 'number') {
+			x = args[0],
+			y = args[1],
+			z = args[2],
+			w = args[3];
+		}
+		else {
+			throw new Error('Euler: Quaternion: must be a Quaternion or xyzw numbers');
 		}
 
 		var m = [];
@@ -101,7 +156,7 @@ class Euler {
 		return out;
 	}
 
-	Vec() {
+	vec() {
 		var out = new Vec3(this.x, this.y, this.z);
 		return out;
 	}

@@ -1,3 +1,15 @@
+/**
+ * Creates mesh of icosahedron as item
+ *
+ * @constructor
+ * @this {Icosahedron}
+ * @param {number} id
+ * @param {string} name
+ * @param {Body} body
+ * @param {Collider} collider
+ * @param {Physic} physic
+ */
+
 class Icosahedron extends Item {
 	constructor({
 		id,
@@ -20,16 +32,18 @@ class Icosahedron extends Item {
 			attributes: {
 				a_Position: mesh.vertices,
 				a_Normal: mesh.normals,
-				a_UI: mesh.uis
+				a_UI: mesh.uis,
+				a_Tangent: mesh.tangents,
+				a_Bitangent: mesh.bitangents
 			},
 			vertexIndices: mesh.indices,
 			shader: Icosahedron.shader
 		});
 	}
 
+	// creates icosahedron in sphere with R = 1
 	static mesh() {
 		// 20 sides, 30 edges, 12 vertices
-
 		var indices = [0, 1, 2, 0, 2, 3, 0, 3, 4, 0, 4, 5, 0, 5, 1,
 			1, 6, 2, 2, 7, 3, 3, 8, 4, 4, 9, 5, 5, 10, 1,
 			6, 2, 7, 7, 3, 8, 8, 4, 9, 9, 5, 10, 10, 1, 6,
@@ -42,14 +56,8 @@ class Icosahedron extends Item {
 		var normals = [0, 1, 0];
 		normals.size = 3;
 
-		// uis
 		var uis = [0.5, 1];
 		uis.size = 2;
-
-		const n = 8;  //count of peaces
-		var arclen = 2 * Math.pi,
-			peawid = arclen / n;
-		// \uis
 
 		var y0 = 3 / (3 * 2),
 			y1 = 6 / (3 * 2);
@@ -88,8 +96,8 @@ class Icosahedron extends Item {
 				var dis = 1 - Math.sqrt(Math.pow(vec.x, 2) + Math.pow(vec.y, 2) + Math.pow(vec.z, 2));
 				vec = Vec.sum(vec, normal.multi(dis));
 
-				vertices.push(...vec.array);
-				normals.push(...normal.array);
+				vertices.push(...vec.array());
+				normals.push(...normal.array());
 				uis.push(...ui);
 			}
 		}
@@ -99,18 +107,29 @@ class Icosahedron extends Item {
 		normals.push(0, -1, 0);
 		uis.push(0.5, 0);
 
-		var out =  {
+		var out = {
 			vertices,
 			indices,
 			normals,
 			uis
 		};
 
+		var tb = TB(out);
+
+		var tg = tb.tangents;
+		tg.size = 3;
+
+		var btg = tb.bitangents;
+		btg.size = 3;
+
+		out.tangents = tg;
+		out.bitangents = btg;
+
 		return out;
 	}
 
 	static get shader() {
-		var out = new Shader(
+		var out = new ShaderTemplate(
 			`#define MAX_POINTLIGHTS 16
 
 			attribute vec3 a_Position;
@@ -154,6 +173,21 @@ class Icosahedron extends Item {
 	}
 }
 
+/**
+ * Creates mesh of sphere by icosachedron mesh - this
+ * is the on of the best ways to make sphere as item
+ *
+ * @constructor
+ * @this {Sphere}
+ * @param {number} id
+ * @param {string} name
+ * @param {Body} body
+ * @param {Collider} collider
+ * @param {Physic} physic
+ * @param {number} precision How much times sphere must be
+ *  updated by new vertices, must be between 0 to 4
+ */
+
 class Sphere extends Item {
 	constructor({
 		id,
@@ -164,8 +198,8 @@ class Sphere extends Item {
 		precision = 3
 	}) {
 		super({
-			name,
 			id,
+			name,
 			body,
 			collider,
 			physic
@@ -177,13 +211,24 @@ class Sphere extends Item {
 			attributes: {
 				a_Position: mesh.vertices,
 				a_Normal: mesh.normals,
-				a_UI: mesh.uis
+				a_UI: mesh.uis,
+				a_Tangent: mesh.tangents,
+				a_Bitangent: mesh.bitangents
 			},
 			vertexIndices: mesh.indices,
 			shader: Icosahedron.shader
 		});
 	}
 
+	/**
+	 * adds 4 new faces for every triangle for sphere
+	 * by equation R^2 = x^2 + y^2
+	 *
+	 * @param {number[]} vertices
+	 * @param {number[]} normals
+	 * @param {number[]} uis Texture coordinates
+	 * @param {number[]} indices Vertex-indices
+	 */
 	static mesh({
 		vertices,
 		normals,
@@ -232,9 +277,9 @@ class Sphere extends Item {
 				c = Vec.avg(v2, v0);
 
 			// how much distance need to full radius (R = 1)
-			var ad = 1 - a.length,
-				bd = 1 - b.length,
-				cd = 1 - c.length;
+			var ad = 1 - a.length(),
+				bd = 1 - b.length(),
+				cd = 1 - c.length();
 
 			// normalization to recovery radius
 			var an = a.normalize(),
@@ -242,9 +287,9 @@ class Sphere extends Item {
 				cn = c.normalize();
 
 			// make right point for radius "R = 1"
-			a = amc('+', a, an.multi(ad));
-			b = amc('+', b, bn.multi(bd));
-			c = amc('+', c, cn.multi(cd));
+			a = amc('+', a, amc('*', an, ad));
+			b = amc('+', b, amc('*', bn, bd));
+			c = amc('+', c, amc('*', cn, cd));
 
 			var ui = [];
 			for (var j = 0; j < 3; j++) {
@@ -278,8 +323,8 @@ class Sphere extends Item {
 			}
 
 			var length = nvertices.length / 3;
-			nvertices.push(...a.array, ...b.array, ...c.array);
-			nnormals.push(...an.array, ...bn.array, ...cn.array);
+			nvertices.push(...a.array(), ...b.array(), ...c.array());
+			nnormals.push(...an.array(), ...bn.array(), ...cn.array());
 			nuis.push(...ui);
 
 			a = length,
@@ -301,6 +346,17 @@ class Sphere extends Item {
 			uis: nuis
 		};
 
+		var tb = TB(out);
+
+		var tg = tb.tangents;
+		tg.size = 3;
+
+		var btg = tb.bitangents;
+		btg.size = 3;
+
+		out.tangents = tg;
+		out.bitangents = btg;
+
 		return out;
 	}
 }
@@ -308,14 +364,24 @@ class Sphere extends Item {
 var icosahedronMesh,
 	sphereMesh;
 
+/**
+ * @constructor
+ * @this {Cube}
+ * @param {string} name
+ * @param {Body} body
+ * @param {Collider} collider
+ * @param {Physic} physic
+ */
 class Cube extends Item {
 	constructor({
+		id,
 		name = 'cube',
 		body = new Body,
 		collider,
 		physic
 	} = {}) {
 		super({
+			id,
 			name,
 			body,
 			collider,
@@ -394,7 +460,7 @@ class Cube extends Item {
 	}
 
 	static get shader() {
-		var out = new Shader(
+		var out = new ShaderTemplate(
 			`#define MAX_POINTLIGHTS 16
 
 			attribute vec3 a_Position;
@@ -438,11 +504,333 @@ class Cube extends Item {
 	}
 }
 
+/**
+ * Initializes icosahedron ans sphere meshes (with precision
+ * from 1 to 4), it optimizes process because don't need to
+ * initialize new mesh then creating new item 
+ */
 ;(function() {
 	icosahedronMesh = Icosahedron.mesh();
+
 	sphereMesh = [];
 	sphereMesh[0] = icosahedronMesh;
 	for (var i = 1; i < 5; i++) {
 		sphereMesh[i] = Sphere.mesh(sphereMesh[i - 1]);
 	}
 })();
+
+/**
+ * Quad object to support user interface, fills sizes
+ * of window, can be scaled by width and height parameters
+ *
+ * @constructor
+ * @this {UI}
+ * @param {name} id
+ * @param {number} width
+ * @param {number} height
+ */
+
+class UI extends Item {
+	constructor({
+		id,
+		name = 'ui',
+		body = new Body,
+		collider,
+		physic,
+		width = RESOLUTION_WIDTH,
+		height = RESOLUTION_HEIGHT
+	} = {}) {
+		super({
+			id,
+			name,
+			body,
+			collider,
+			physic
+		});
+
+		this.width = width;
+		this.height = height;
+		this.position = new Vec3;
+
+		this.initializeMesh();
+	}
+
+	get name() {
+		return this.name_;
+	}
+	set name(val) {
+		if (typeof val !== 'string') {
+			throw new Error('UI: name: must be a string');
+		}
+
+		this.name_ = val;
+	}
+
+	get width() {
+		return this.width_;
+	}
+	set width(val) {
+		if (typeof val !== 'number') {
+			throw new Error('UI: width: must be a number');
+		}
+
+		this.width_ = val;
+		this.scale();
+	}
+
+	get height() {
+		return this.height_;
+	}
+	set height(val) {
+		if (typeof val !== 'number') {
+			throw new Error('UI: height: must be a number');
+		}
+
+		this.height_ = val;
+		this.scale();
+	}
+
+	initializeMesh() {
+		var vertices = [
+			-1, -1, 0,
+			-1, 1, 0,
+			1, 1, 0,
+			1, -1, 0
+		];
+		vertices.size = 3;
+
+		var UI = [
+			0, 0,
+			0, 1,
+			1, 1,
+			1, 0
+		];
+		UI.size = 2;
+
+		var VI = [0, 1, 2, 2, 3, 0];
+
+		this.mesh = new Mesh({
+			attributes: {
+				a_Position: vertices,
+				a_UI: UI
+			},
+			vertexIndices: VI,
+			shader: Cursor.shader
+		});
+	}
+
+	get position() {
+		return this.position_;
+	}
+	/**
+	 * Sets a position of object by screen size
+	 * @param {Vec} val
+	 */
+	set position(val) {
+		if (val instanceof Vec) {
+			var x = (val.x) / RESOLUTION_WIDTH * 2 - 1;
+			var y = -(val.y) / RESOLUTION_HEIGHT * 2 + 1;
+
+			this.body.position = new Vec3(x, y, 0);
+			this.position_ = val;
+		}
+		else {
+			console.warn('Cursor: position: error');
+		}
+	}
+
+	// sets scale of object by screen size
+	scale() {
+		this.body.scale = new Vec3(
+			1 * (this.width / RESOLUTION_WIDTH),
+			1 * (this.height / RESOLUTION_HEIGHT),
+			1
+		);
+	}
+
+	static get ShaderTemplate() {
+		var out = new Shader(
+			`attribute vec3 a_Position;
+			attribute vec2 a_UI;
+
+			uniform mat4 u_MVMatrix;
+
+			varying vec2 v_UI;
+
+			void main(void) {
+				v_UI = a_UI;
+
+				gl_Position = u_MVMatrix * vec4(a_Position, 1.0);
+			}`,
+
+			`precision highp float;
+
+			uniform sampler2D u_Texture;
+
+			varying vec2 v_UI;
+
+			void main(void) {
+				vec4 texel = texture2D(u_Texture, v_UI);
+
+				gl_FragColor = texel;
+			}`
+		);
+
+		return out;
+	}
+}
+
+/**
+ * Generates tangents and bitangents for mesh
+ *
+ * @param {number[]} indices
+ * @param {number[]} vertices
+ * @param {number[]} uis
+ * @param {number[]} normals
+ * @return {object} {Array tangents, Array bitangents}
+ */
+function TB({indices, vertices, uis, normals} = {}) {
+	var tangents = [],
+		bitangents = [];
+
+	for (var i = 0; i < indices.length; i += 3) {
+		var ind0 = indices[i],
+			ind1 = indices[i + 1],
+			ind2 = indices[i + 2];
+
+		var v0 = new Vec3(vertices[ind0 * 3], vertices[ind0 * 3 + 1], vertices[ind0 * 3 + 2]),
+			v1 = new Vec3(vertices[ind1 * 3], vertices[ind1 * 3 + 1], vertices[ind1 * 3 + 2]),
+			v2 = new Vec3(vertices[ind2 * 3], vertices[ind2 * 3 + 1], vertices[ind2 * 3 + 2]);
+		var s0 = uis[ind0 * 2],
+			t0 = uis[ind0 * 2 + 1],
+			s1 = uis[ind1 * 2],
+			t1 = uis[ind1 * 2 + 1],
+			s2 = uis[ind2 * 2],
+			t2 = uis[ind2 * 2 + 1];
+
+		var tb = calcBasis(v0, v1, v2, s0, t0, s1, t1, s2, t2);
+
+		if (tangents[ind0]) {
+			tangents[ind0].push(tb.tangent);
+			bitangents[ind0].push(tb.bitangent);
+		}
+		else {
+			tangents[ind0] = [tb.tangent];
+			bitangents[ind0] = [tb.bitangent];
+		}
+
+		if (tangents[ind1]) {
+			tangents[ind1].push(tb.tangent);
+			bitangents[ind1].push(tb.bitangent);
+		}
+		else {
+			tangents[ind1] = [tb.tangent];
+			bitangents[ind1] = [tb.bitangent];
+		}
+
+		if (tangents[ind2]) {
+			tangents[ind2].push(tb.tangent);
+			bitangents[ind2].push(tb.bitangent);
+		}
+		else {
+			tangents[ind2] = [tb.tangent];
+			bitangents[ind2] = [tb.bitangent];
+		}
+	}
+
+	var out = {
+		tangents: [],
+		bitangents: []
+	};
+
+	for (var i = 0; i < vertices.length / 3; i++) {
+		var tg = tangents[i];
+		var btg = bitangents[i];
+
+		var tr = new Vec3;
+		var br = new Vec3;
+		for (var j = 0; j < tg.length; j++) {
+			tr = amc('+', tr, tg[j]);
+			br = amc('+', br, btg[j]);
+		}
+
+		tr = amc('/', tr, tg.length);
+		br = amc('/', br, tg.length);
+
+		var normal = new Vec3(
+			normals[i * 3],
+			normals[i * 3 + 1],
+			normals[i * 3 + 2]
+		);
+		tr = ortogonalize(normal, tr);
+		br = ortogonalize(normal, br);
+
+		out.tangents.push(...tr.array());
+		out.bitangents.push(...br.array());
+	}
+
+	return out;
+	
+	function calcBasis(E, F, G, sE, tE, sF, tF, sG, tG) {
+		var P = amc('-', F, E),
+			Q = amc('-', G, E);
+		var s0 = sF - sE,
+			t0 = tF - tE,
+			s1 = sG - sE,
+			t1 = tG - tE;
+
+		var pqMatrix = new Mat(2, 3, [
+			P.x, P.y, P.z,
+			Q.x, Q.y, Q.z
+		]);
+
+		var temp = 1 / (s0 * t1 - s1 * t0);
+
+		var stMatrix = new Mat(2, 2, [
+			t1 * temp, -t0 * temp,
+			-s1 * temp, s0 * temp
+		]);
+
+		var tbMatrix = amc('*', stMatrix, pqMatrix);
+
+		var t = new Vec3(tbMatrix[0][0], tbMatrix[0][1], tbMatrix[0][2]).normalize(),
+			b = new Vec3(tbMatrix[1][0], tbMatrix[1][1], tbMatrix[1][2]).normalize();
+
+		var out = {
+			tangent: t,
+			bitangent: b
+		};
+
+		return out;
+	}
+
+	function getpoint(a, b, p) {
+		var c = amc('-', p, a),
+			V = amc('-', b, a);
+
+		var d = V.length;
+		V = V.normalize();
+
+		var t = Vec.dot(V, c);
+
+		if (t < 0) {
+			return a;
+		}
+		else if (t > d) {
+			return b;
+		}
+
+		V = amc('*', V, t);
+		var out = amc('+', a, V);
+
+		return out;
+	}
+
+	function ortogonalize(v0, v1) {
+		var proj = getpoint(v0, amc('*', v0, -1), v1);
+		var res = amc('-', v1, proj);
+		res.normalize();
+
+		return res;
+	}
+}

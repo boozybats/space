@@ -1,466 +1,419 @@
+/**
+ * Scene's item constructor. Creates new item which
+ * only in memory; sets body, mesh, physic, e.t.c. To
+ * make item appear in scene it must be instantiated
+ * by method "instance"
+ *
+ * @constructor
+ * @this {Item}
+ *  {Function} this.oninstance Callback that is called after instance
+ *  {Function} this.onupdate Callback that is called evey frame
+ * @param {bool} enabled Is item enabled on scene
+ * @param {number} id Not selfgenerated
+ * @param {string} name
+ * @param {Body} body
+ * @param {Mesh} mesh
+ * @param {Collider} collider
+ * @param {Physic} physic
+ */
+
 class Item {
 	constructor({
+		enabled = true,
 		id,
 		name = 'empty',
 		body = new Body,
 		mesh,
 		collider,
-		physic,
-		enabled = true
+		physic
 	} = {}) {
+		this.enabled = enabled;
 		this.id = id;
 		this.name = name;
 		this.body = body;
 		this.mesh = mesh;
 		this.collider = collider;
 		this.physic = physic;
-		this.enabled = enabled;
 
-		this.attributes = {};
-		this.uniforms = {};
+		/** @private */ this.isInstanced = false;
+		/** @private matrix memory */ this.matmem = [];
+		/** @private public variables */ this.public_ = {};
+		/** @private private variables */ this.private_ = {};
 
-		this.matrixStorage_ = [];
-		this.public_ = {};
-		this.private_ = {};
-
-		this.instanced_ = false;
-	}
-
-	allCollision(items) {
-		//check collision with every object
-
-		for (var item of items) {
-			if (this !== item) {
-				if (this.collision(item)) {
-					return item;
-				}
-			}
-		}
-
-		return false;
-	}
-
-	get attributes() {
-		return this.attributes_;
-	}
-
-	set attributes(val) {
-		if (typeof val === 'object') {
-			this.attributes_ = val;
-		}
-		else {
-			console.warn('Item: attributes: error');
-		}
-	}
-
-	get body() {
-		return this.body_;
-	}
-
-	set body(val) {
-		if (val instanceof Body) {
-			this.body_ = val;
-		}
-		else {
-			console.warn('Item: body: error');
-		}
-	}
-
-	changeAttributes(val) {
-		/* updates attributes:
-			if new - add
-			else - update */
-		if (typeof val === 'object') {
-			if (this.instanced_) {
-				for (var i in val) {
-					if (val.hasOwnProperty(i)) {
-						var data = val[i];
-						var attribute = this.initializeAttribute(i, data);
-						this.attributes[i] = attribute;
-					}
-				}
-			}
-			else {
-				for (var i in val) {
-					if (val.hasOwnProperty(i)) {
-						this.mesh.attributes[i] = val;
-					}
-				}
-			}
-		}
-		else {
-			console.warn('Item: changeAttributes: error');
-		}
-	}
-
-	changeUniforms(val) {
-		if (typeof val === 'object') {
-			if (this.instanced_) {
-				for (var i in val) {
-					if (val.hasOwnProperty(i)) {
-						var data = val[i];
-						var uniform = this.initializeUniform(i, data);
-						if (uniform) {
-							this.uniforms[i] = uniform;
-						}
-					}
-				}
-			}
-			else {
-				for (var i in val) {
-					if (val.hasOwnProperty(i)) {
-						this.mesh.uniforms[i] = val[i];
-					}
-				}
-			}
-		}
-		else {
-			console.warn('Item: changeUniforms: error');
-		}
-	}
-
-	get collider() {
-		return this.collider_;
-	}
-
-	set collider(val) {
-		if (!val || val instanceof Collider) {
-			this.collider_ = val;
-		}
-		else {
-			console.warn('Item: collider: error');
-		}
-	}
-
-	collision(item) {
-		if (!(item instanceof Item)) {
-			console.warn('Item: collision: error');
-		}
-
-		if (this.collider && item.collider) {
-			var result = SphereCollider.collision(this, element);
-			return result;
-		}
-		else {
-			return false;
-		}
-	}
-
-	distance(item) {
-		if (!(item instanceof Item)) {
-			console.warn('Item: distance: error');
-		}
-
-		var matrix0 = this.mvmatrix,
-			matrix1 = item.mvmatrix;
-
-		//centers
-		var c0 = matrix0.transform([0,0,0]),
-			c1 = matrix1.transform([0,0,0]);
-
-		var d = Math.sqrt(Math.pow(c1[0] - c0[0], 2) + Math.pow(c1[1] - c0[1], 2) + Math.pow(c1[2] - c0[2], 2));
-
-		return d;
-	}
-
-	get drawStyle() {
-		return this.drawStyle_;
-	}
-
-	set drawStyle(val) {
-		if (typeof val === 'string') {
-			this.drawStyle_ = val;
-		}
-		else {
-			console.warn('Item: drawStyle: error');
+		if (typeof this.oninstance === 'function') {
+			this.oninstance();
 		}
 	}
 
 	get enabled() {
 		return this.enabled_;
 	}
-
 	set enabled(val) {
-		if (typeof val === 'boolean') {
-			this.enabled_ = val;
+		if (typeof val !== 'boolean') {
+			throw new Error('Item: enabled: must be a bool');
+		}
+
+		this.enabled_ = val;
+	}
+
+	get id() {
+		return this.id_;
+	}
+	set id(val) {
+		if (val && typeof val !== 'number') {
+			throw new Error('Item: id: must be a number');
+		}
+
+		this.id_ = val;
+	}
+
+	get name() {
+		return this.name_;
+	}
+	set name(val) {
+		if (typeof val !== 'string') {
+			throw new Error('Item: name: must be a string');
+		}
+
+		this.name_ = val;
+	}
+
+	get body() {
+		return this.body_;
+	}
+	set body(val) {
+		if (val && !(val instanceof Body)) {
+			throw new Error('Item: body: must be a Body');
+		}
+
+		this.body_ = val;
+	}
+
+	get mesh() {
+		return this.mesh_;
+	}
+	set mesh(val) {
+		if (val && !(val instanceof Mesh)) {
+			throw new Error('Item: mesh: must be a Mesh');
+		}
+
+		this.mesh_ = val;
+	}
+
+	get collider() {
+		return this.collider_;
+	}
+	set collider(val) {
+		if (val && !(val instanceof Collider)) {
+			throw new Error('Item: collider: must be a Collider');
+		}
+
+		this.collider_ = val;
+	}
+
+	get physic() {
+		return this.physic_;
+	}
+	set physic(val) {
+		if (val && !(val instanceof Physic)) {
+			throw new Error('Item: physic: must be a Physic');
+		}
+
+		this.physic_ = val;
+	}
+
+	activeTexture(ind, buf) {
+		var gl = this.webGL;
+
+		gl.activeTexture(gl.TEXTURE0 + +ind);
+		gl.bindTexture(gl.TEXTURE_2D, buf);
+	}
+
+	/**
+	 * Creates WebGLBuffer by image and adds it to the
+	 * shader.textures; buffer takes index equal a length
+	 * of all images added in shader
+	 *
+	 * @param {Image} image
+	 * @return {number} index
+	 */
+	addTexture(image) {
+		var gl = this.webGL;
+		var shader = this.mesh.shader;
+		var ind = shader.texturesCount++;
+
+		// if image didn't load yet then temporarily replace it with system picture
+
+		var buffer = gl.createTexture();
+		gl.bindTexture(gl.TEXTURE_2D, buffer);
+		gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
+		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+		gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, this.project.transparentImage);
+		gl.bindTexture(gl.TEXTURE_2D, null);
+
+		image.onload = function() {
+			gl.bindTexture(gl.TEXTURE_2D, buffer);
+			gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, this);
+			gl.bindTexture(gl.TEXTURE_2D, null);
+		}
+		// update onload event (if it was yet)
+		image.src = image.src;
+
+		shader.textures[ind] = buffer;
+		return ind;
+	}
+
+	/**
+	 * Initializes new attributes and adds to mesh,
+	 * if attribute already exists then compare them
+	 * and update it or skip
+	 *
+	 * @param {Object} obj Object with attributes key-value
+	 *
+	 * example: {
+	 *  a_Position: ...,
+	 *  a_Normal: ...
+	 * }
+	 */
+	changeAttributes(obj = {}) {
+		var shader = this.mesh.shader;
+
+		// if item not instantiated yet then pass him in mesh
+		if (this.isInstanced) {
+			for (var i in obj) {
+				if (obj.hasOwnProperty(i)) {
+					var val = obj[i];
+
+					this.initializeAttribute(i, val, shader.attributes);
+				}
+			}
 		}
 		else {
-			console.warn('Item: enabled: error');
+			if (this.mesh) {
+				for (var i in obj) {
+					if (obj.hasOwnProperty(i)) {
+						var val = obj[i];
+
+						this.mesh.attributes[i] = val;
+					}
+				}
+			}
 		}
 	}
 
-	initializeAttribute(name, data) {
-		var out;
+	/**
+	 * Initializes new uniforms and adds to mesh,
+	 * if uniform already exists then compare them
+	 * and update it or skip
+	 *
+	 * @param {Object} obj Object with uniforms key-value
+	 *
+	 * example: {
+	 *  u_MVMatrix: ...,
+	 *  u_Resolution: ...
+	 * }
+	 */
+	changeUniforms(obj = {}) {
+		var shader = this.mesh.shader;
+
+		if (this.isInstanced) {
+			for (var i in obj) {
+				if (obj.hasOwnProperty(i)) {
+					var val = obj[i];
+
+					this.initializeUniform(i, val, shader.uniforms);
+				}
+			}
+		}
+		else {
+			if (this.mesh) {
+				for (var i in obj) {
+					if (obj.hasOwnProperty(i)) {
+						var val = obj[i];
+
+						this.mesh.uniforms[i] = val;
+					}
+				}
+			}
+		}
+	}
+
+	/**
+	 * Creates buffer, defines location and writes
+	 * it to object "out" sended as argument
+	 *
+	 * @param {string} key Attribute's name, rewrites "out" with key-name
+	 * @param {Array} val Attribute's value, it must be an array with
+	 *  property "size" which means how much coordinates does in contain
+	 * @param {object} out Rewritable object
+	 */
+	initializeAttribute(key, val, out) {
+		// if attribute already exists and equal to new then skip
+		if (out[key] && amc('=', out[key].value, val)) {
+			return;
+		}
 
 		var gl = this.webGL;
-		var shader = this.shader;
-		var program = this.program;
+		var shader = this.mesh.shader,
+			program = this.mesh.program;
 
-		if (this.scene.lastShaderID != shader.id) {
+		if (this.scene.lastShaderID !== shader.id) {
 			this.scene.lastShaderID = shader.id;
 			gl.useProgram(program);
 		}
 
-		//methods to optimization of attributes initializing
-		var old_attributes = this.attributes;
-		var defines = shader.attributesDefines;
+		var size = val.size;
+		if (typeof size === 'undefined') {
+			console.warn(`Not selected size for attribute '${key}'`);
+		}
+
+		var location = gl.getAttribLocation(program, key);
+		if (location < 0) {
+			// console.warn(`Shader doesnt contain '${key}' attribute or this is unusable`);
+		}
 
 		var buffer = gl.createBuffer();
-		var size = data.size;
-
-		if (!size) {
-			console.warn(`Not selected size for attribute '${name}'`)
-		}
-
 		gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
-		gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(data), gl.STATIC_DRAW);
-
-		//if attribute location is determined
-		if (defines[name]) {
-			//so just change buffer and path for comparison
-			out = old_attributes[name];
-
-			out[0] = buffer;
-			out[3] = data;
-		}
-		//if attribute first time in shader
-		else {
-			defines[name] = true;
-
-			var index = gl.getAttribLocation(program, name);
-			var arr = [buffer, index, size, data];
-
-			//if shader contains attribute
-			if (index >= 0) {
-				gl.vertexAttribPointer(index, size, gl.FLOAT, false, 0, 0);
-				gl.enableVertexAttribArray(index);
-			}
-			else {
-				//console.warn(`Shader doesnt contain '${name}' attribute or this is unusable`);
-			}
-
-			out = arr;
-		}
-
+		gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(val), gl.STATIC_DRAW);
 		gl.bindBuffer(gl.ARRAY_BUFFER, null);
 
-		return out;
+		out[key] = {
+			buffer,
+			location,
+			size
+		};
 	}
 
-	initializeUniform(name, data, defined = false) {
-		var out;
+	/**
+	 * Transforms data in required format by value type, defines location,
+	 * type and method to send in shader and writes it to object
+	 * "out" sended as argument
+	 *
+	 * @param {string} key Uniform's name, rewrites "out" with key-name
+	 * @param {Mat|Vec|Quaternion|Color|Image|number|Array|object} val
+	 * @param {object} out Rewritable object
+	 */
+	initializeUniform(key, val, out) {
+		// if uniform already exists and equal to new then skip
+		if (out[key] && amc('=', out[key].value, val)) {
+			return;
+		}
 
 		var gl = this.webGL;
-		var shader = this.shader;
-		var program = this.program;
-
-		var defines = shader.uniformsDefines;
+		var shader = this.mesh.shader,
+			program = this.mesh.program;
 
 		if (this.scene.lastShaderID != shader.id) {
 			this.scene.lastShaderID = shader.id;
 			gl.useProgram(program);
 		}
 
-		//define type of uniform, uniform can have next types:
-		//Mat, Vec, float
+		var location,
+			method,
+			type,
+			value = val;
 
-		var index = defines[name];
-		if (typeof index === 'undefined' && !defined) {
-			index = gl.getUniformLocation(program, name);
-			defines[name] = index;
+		if (value instanceof Mat) {
+			var num = value.a;
+			method = `uniformMatrix${num}fv`;
+			type = 'mat';
+			location = getlocation();
+		}
+		else if (value instanceof Vec) {
+			var num = value.size;
+			method = `uniform${num}fv`;
+			type = 'vec';
+			location = getlocation();
+		}
+		else if (value instanceof Color) {
+			method = 'uniform4fv';
+			type = 'col';
+			location = getlocation();
+		}
+		else if (value instanceof Quaternion) {
+			method = 'uniform4fv';
+			type = 'qua';
+			location = getlocation();
+		}
+		else if (value instanceof Euler) {
+			method = 'uniform3fv';
+			type = 'eul';
+			location = getlocation();
+		}
+		else if (value instanceof Image) {
+			method = 'uniform1i';
+			type = 'img';
+			location = getlocation();
 
-			if (!index) {
-				//console.warn(`Shader doesnt contain '${name}' uniform or this is unusable`);
+			value = this.addTexture(value);
+		}
+		else if (typeof value === 'number') {
+			method = 'uniform1f';
+			type = 'num';
+			location = getlocation();
+		}
+		else if (value instanceof Array) {
+			// start recursion if value is an array
+			for (var i = 0; i < value.length; i++) {
+				var nval = value[i];
+				this.initializeUniform(`${key}[${i}]`, nval, out);
 			}
+			return;
 		}
-
-		if (data instanceof Euler || data instanceof Quaternion) {
-			data = data.Vec();
-		}
-
-		var method;
-		if (data instanceof Mat) {
-			switch(data.a) {
-				case 2:
-				method = 'uniformMatrix2fv';
-				break;
-
-				case 3:
-				method = 'uniformMatrix3fv';
-				break;
-
-				case 4:
-				method = 'uniformMatrix4fv';
-				break;
-			}
-
-			out = {
-				data: new Float32Array(data.array),
-				index,
-				type: 'mat',
-				method
-			};
-		}
-		else if (data instanceof Vec) {
-			switch(data.size) {
-				case 2:
-				method = 'uniform2f';
-				break;
-
-				case 3:
-				method = 'uniform3f';
-				break;
-
-				case 4:
-				method = 'uniform4f';
-				break;
-			}
-
-			out = {
-				data: new Float32Array(data.array),
-				index,
-				type: 'vec',
-				method
-			};
-		}
-		else if (data instanceof Color) {
-			method = 'uniform4f';
-
-			out = {
-				data: new Float32Array(data.normalize().array),
-				index,
-				type: 'vec',
-				method
-			};
-		}
-		else if (typeof data === 'number') {
-			out = {
-				data,
-				index,
-				type: 'float',
-				method: 'uniform1f'
-			};
-		}
-		else if (data instanceof Image) {
-			let buffer = gl.createTexture();
-			gl.bindTexture(gl.TEXTURE_2D, buffer);
-			gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
-			gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
-			gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
-			gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, this.project.transparentImage);
-			gl.bindTexture(gl.TEXTURE_2D, null);
-
-			data.onload = function() {
-				if (this.width % 2 !== 0 || this.height % 2 !== 0) {
-					console.warn(`Image '${this.src}' size isnt a power of 2 number`);
-				}
-				else {
-					gl.bindTexture(gl.TEXTURE_2D, buffer);
-					gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, this);
-					gl.bindTexture(gl.TEXTURE_2D, null);
+		else if (typeof value === 'object') {
+			// start recursion if value is an object
+			for (var i in value) {
+				if (value.hasOwnProperty(i)) {
+					var nval = value[i];
+					this.initializeUniform(`${key}.${i}`, nval, out);
 				}
 			}
-			//update onload
-			data.src = data.src;
-
-			out = {
-				data: buffer,
-				index,
-				type: 'texture',
-				method: 'uniform1i',
-				count: ++shader.texturesCount
-			};
-		}
-		else if (data instanceof Array) {
-			var arr = [];
-			var lastmethod, subtype;
-
-			if (data.length > 0) {
-				for (var i = 0; i < data.length; i++) {
-					var ndata = data[i];
-					var uniform = this.initializeUniform(`${name}${i}`, ndata, true);
-
-					if (uniform[2] == 'array') {
-						console.warn('Item: initializeUniform: array-uniform can\'t contain another arrays');
-					}
-					else {
-						if (lastmethod && lastmethod !== uniform.method) {
-							console.warn('Item: initializeUniform: array-uniform contains different types uniforms');
-						}
-						else {
-							lastmethod = uniform.method;
-							subtype = uniform.type;
-							var ndata = uniform.data;
-
-							switch (subtype) {
-								case 'texture':
-								ndata.count = uniform.count;
-								arr.push(ndata);
-								break;
-
-								case 'vec':
-								arr.push(...ndata);
-								break;
-
-								default:
-								arr.push(ndata);
-							}
-						}
-					}
-				}
-
-				out = {
-					data: arr,
-					index,
-					type: 'array',
-					subtype,
-					method: lastmethod + 'v'
-				};
-			}
-			else {
-				out = undefined;
-			}
+			return;
 		}
 
-		return out;
+		out[key] = {
+			isActive: false,
+			method,
+			location,
+			type,
+			value
+		};
+
+		function getlocation() {
+			var loc = gl.getUniformLocation(program, key);
+			if (!loc) {
+				// console.warn(`Shader doesnt contain '${key}' uniform or this is unusable`);
+			}
+			return loc;
+		}
 	}
 
-	initializeVertexIndices(vertices) {
-		if (typeof vertices !== 'object') {
-			console.warn('Item: initializeVertexIndices: error');
-		}
-
-		var gl = this.webGL;
-		var VIOBuffer = gl.createBuffer();
-
-		gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, VIOBuffer);
-		gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(vertices), gl.STATIC_DRAW);
-		gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, null);
-
-		VIOBuffer.length = vertices.length;
-
-		return VIOBuffer;
-	}
-
-	instance(scene, system = false) {
+	/**
+	 * Instances item on scene. Intializes shader, attributes, uniforms
+	 * and write it to the shader, defines vertexIndices; writes to
+	 * item's properties "scene", "project" and "webgl"
+	 *
+	 * @param {Scene} scene Which scene belongs to
+	 * @param {bool} system Defines object type: system or regular
+	 */
+	instance(scene, isSystem = false) {
 		if ((scene instanceof Scene)) {
-			this.instanced_ = true;
-
-			if (system) {
+			if (isSystem) {
 				scene.appendSystemItem(this);
 			}
 			else {
 				scene.appendItem(this);
 			}
 
+			this.isInstanced = true;
 			this.scene = scene;
 			this.project = scene.project;
-			this.webGL = scene.project.webGLRenderer.webGL;
+			this.webGL = this.project.webGLRenderer.webGL;
 
 			if (this.mesh) {
-				this.shader = this.mesh.shader;
-				this.vertexIndices = this.mesh.vertexIndices;
-				this.drawStyle = this.mesh.drawStyle;
+				this.mesh.shader = this.mesh.shader.initialize(this.webGL);
+				this.mesh.setVIOBuffer(this.webGL, this.mesh.vertexIndices);
 				this.changeAttributes(this.mesh.attributes);
 				this.changeUniforms(this.mesh.uniforms);
 			}
@@ -470,34 +423,37 @@ class Item {
 		}
 	}
 
-	get mesh() {
-		return this.mesh_;
-	}
-
-	set mesh(val) {
-		if (!val || val instanceof Mesh) {
-			this.mesh_ = val;
-		}
-		else {
-			console.warn('Item: mesh: error');
-		}
-	}
-
-	get mvmatrix() {
+	/**
+	 * Calculates model-view matrix by position and parents
+	 *
+	 * @return {Mat4} mvmatrix
+	 */
+	mvmatrix() {
 		var matS, matR, matT, matU, mvmatrix;
 		var body = this.body;
 
-		var storage = this.matrixStorage_;
-		var ie = 0;
-		var isBreaked = false;
+		/**
+		 * matrix memory contains data about last calculated
+		 * matrix, it needs to save memory, so it's returning
+		 * already calculated values
+		 */
+		var memory = this.matmem,
+			level = 0;  // level means "Parent's body number"
+		/**
+		 * if previous levels wasn't equal with memory
+		 * when multiply existing mvmatrix on memory cells instead
+		 * of writing all mvmatrix as value
+		 */
+		var isBreaked = false;  
 
+		// go through cicle until item have a parent
 		do {
-			if (!storage[ie]) {
-				storage[ie] = {};
+			if (!memory[level]) {
+				memory[level] = {};
 			}
-			var cell = storage[ie];
+			var cell = memory[level];
 
-			if (Body.compare(body, cell, false)) {
+			if (amc('=', body, cell)) {
 				if (isBreaked) {
 					mvmatrix = Mat.multi(mvmatrix, cell.matrix);
 				}
@@ -516,176 +472,25 @@ class Item {
 				matR = Mat4.rotate(body.rotation);
 				matT = Mat4.translate(body.position);
 
-				matU = Mat.multi(matS, matR, matT);
+				// matrix from this level only
+				matU = amc('*', matS, matR, matT);
 				cell.matrix = matU;
 
-				mvmatrix = mvmatrix ? Mat.multi(mvmatrix, matU) : matU;
+				// result matrix from first level to this
+				mvmatrix = mvmatrix ? amc('*', mvmatrix, matU) : matU;
 				cell.unity = mvmatrix;
 			}
 
 			body = body.parent;
-			ie++;
+			level++;
 		}
 		while(body);
 
 		return mvmatrix;
 	}
 
-	get name() {
-		return this.name_;
-	}
-
-	set name(val) {
-		if (typeof val === 'string') {
-			this.name_ = val;
-		}
-		else {
-			console.warn('Item: name: error');
-		}
-	}
-
-	static normals(vertices, indices) {
-		var out = [];
-		out.size = 3;
-
-		var dependencies = {};
-
-		for (var i = 0; i < indices.length; i += 3) {
-			var i0 = indices[i] * 3,
-				i1 = indices[i + 1] * 3,
-				i2 = indices[i + 2] * 3;
-			var v0 = [vertices[i0], vertices[i0 + 1], vertices[i0 + 2]],
-				v1 = [vertices[i1], vertices[i1 + 1], vertices[i1 + 2]],
-				v2 = [vertices[i2], vertices[i2 + 1], vertices[i2 + 2]];
-			var x = ((v0[1] - v1[1]) * (v0[2] - v2[2])) - ((v0[2] - v1[2]) * (v0[1] - v2[1])),
-				y = ((v0[2] - v1[2]) * (v0[0] - v2[0])) - ((v0[0] - v1[0]) * (v0[2] - v2[2])),
-				z = ((v0[0] - v1[0]) * (v0[1] - v2[1])) - ((v0[1] - v1[1]) * (v0[0] - v2[0]));
-			var length = Math.sqrt((x * x) + (y * y) + (z * z));
-			x = x / length;
-			y = y / length;
-			z = z / length;
-
-			i0 /= 3;
-			i1 /= 3;
-			i2 /= 3;
-
-			if (!dependencies[i0]) {
-				dependencies[i0] = [[x, y, z]];
-			}
-			else {
-				dependencies[i0].push([x, y, z]);
-			}
-
-			if (!dependencies[i1]) {
-				dependencies[i1] = [[x, y, z]];
-			}
-			else {
-				dependencies[i1].push([x, y, z]);
-			}
-
-			if (!dependencies[i2]) {
-				dependencies[i2] = [[x, y, z]];
-			}
-			else {
-				dependencies[i2].push([x, y, z]);
-			}
-		}
-
-		for (var i = 0; i < vertices.length / 3; i++) {
-			var vec = dependencies[i];
-
-			var x, y, z, count = 0;
-			for (var arr of vec) {
-				x = arr[0];
-				y = arr[1];
-				z = arr[2];
-				count++;
-			}
-
-			var vec = new Vec3(x, y, z).normalize();
-
-			out.push(vec.x, vec.y, vec.z);
-		}
-
-		return out;
-	}
-
-	get onremove() {
-		return this.onremove_;
-	}
-
-	set onremove(val) {
-		if (!val || typeof val === 'function') {
-			this.onremove_ = val;
-		}
-		else {
-			console.warn('Item: onremove: error');
-		}
-	}
-
-	get onupdate() {
-		return this.onupdate_;
-	}
-
-	set onupdate(val) {
-		if (!val || typeof val === 'function') {
-			this.onupdate_ = val;
-		}
-		else {
-			console.warn('Item: onupdate: error');
-		}
-	}
-
-	get physic() {
-		return this.physic_;
-	}
-
-	set physic(val) {
-		if (!val || val instanceof Physic) {
-			this.physic_ = val;
-			if (val) {
-				this.physic.body = this.body;
-			}
-		}
-		else {
-			console.warn('Item: physic: error');
-		}
-	}
-
 	get private() {
 		return this.private_;
-	}
-
-	get program() {
-		if (this.shader) {
-			return this.shader.program;
-		}
-	}
-
-	get project() {
-		return this.project_;
-	}
-
-	set project(val) {
-		if (val instanceof Project) {
-			this.project_ = val;
-		}
-		else {
-			console.warn('Item: project: error');
-		}
-	}
-
-	get project() {
-		return this.project_;
-	}
-
-	set project(val) {
-		if (val instanceof Project) {
-			this.project_ = val;
-		}
-		else {
-			console.warn('Item: project: error');
-		}
 	}
 
 	get public() {
@@ -696,9 +501,15 @@ class Item {
 		if (this.onremove) {
 			this.onremove();
 		}
+
 		this.scene.removeItem(this);
 	}
 
+	/**
+	 * Makes rotate the object on selected vector
+	 *
+	 * @param {Vec} vec
+	 */
 	rotate(vec) {
 		clearTimeout(this.rotateTimer);
 
@@ -716,82 +527,17 @@ class Item {
 		}
 	}
 
-	get scene() {
-		return this.scene_;
-	}
-
-	set scene(val) {
-		if (val instanceof Scene) {
-			this.scene_ = val;
-		}
-		else {
-			console.warn('Item: scene: error');
-		}
-	}
-
-	get shader() {
-		return this.shader_;
-	}
-
-	set shader(val) {
-		if (val instanceof Shader) {			
-			var webGL = this.webGL;
-			this.shader_ = val.initialize(webGL);
-		}
-		else {
-			console.warn('Item: shader: error');
-		}
-	}
-
-	get unavailableFrames() {
-		return this.availableFrames_;
-	}
-
-	set unavailableFrames(array) {
-		if (typeof array === 'object') {
-			this.availableFrames_ = array;
-		}
-		else {
-			console.warn('Item: availableFrames: error');
-		}
-	}
-
-	get uniforms() {
-		return this.uniforms_;
-	}
-
-	set uniforms(val) {
-		if (typeof val === 'object') {
-			this.uniforms_ = val;
-		}
-		else {
-			console.warn('Item: uniforms: error');
-		}
-	}
-
+	/**
+	 * Updates all attributes, uniforms and textures
+	 * binded to shader
+	 */
 	update() {
 		var gl = this.webGL;
-		var shader = this.shader;
-		var program = this.program;
-
-		if (this.scene.lastShaderID != shader.id) {
-			this.scene.lastShaderID = shader.id;
-			gl.useProgram(program);
-		}
-
-		this.updateAttributes();
-		this.updateUniforms();
-	}
-
-	updateAttributes() {
-		/* enables attributes in shader or miss them
-		if already activated */
-
-		var gl = this.webGL;
-		var attributes = this.attributes;
-
-		var shader = this.shader;
-		var program = this.program;
+		var shader = this.mesh.shader,
+			program = this.mesh.program,
+			attributes = shader.attributes,
+			uniforms = shader.uniforms,
+			textures = shader.textures;
 
 		if (this.scene.lastShaderID != shader.id) {
 			this.scene.lastShaderID = shader.id;
@@ -800,173 +546,64 @@ class Item {
 
 		for (var i in attributes) {
 			if (attributes.hasOwnProperty(i)) {
-				var attribute = attributes[i];
-
-				var [buffer, index, size, data] = [...attribute];
-
-				if (index >= 0) {
-					gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
-					gl.vertexAttribPointer(index, size, gl.FLOAT, false, 0, 0);
-					gl.enableVertexAttribArray(index);
-					gl.bindBuffer(gl.ARRAY_BUFFER, null);
-				}
+				this.updateAttribute(attributes[i]);
 			}
-		}
-	}
-
-	updateUniforms() {
-		/* enables uniforms in shader or miss them
-		if already activated */
-
-		var gl = this.webGL;
-		var uniforms = this.uniforms;
-
-		var shader = this.shader;
-		var program = this.program;
-
-		var storage = shader.uniformsStorage;
-
-		if (this.scene.lastShaderID != shader.id) {
-			this.scene.lastShaderID = shader.id;
-			gl.useProgram(program);
 		}
 
 		for (var i in uniforms) {
 			if (uniforms.hasOwnProperty(i)) {
 				var uniform = uniforms[i];
+				this.updateUniform(uniform);
+				uniform.isActive = true;
+			}
+		}
 
-				var index = uniform.index;
-				var data = uniform.data;
-				var method = uniform.method;
-
-				if (index) {
-					if (uniform.subtype == 'texture' || uniform.type == 'texture' || !amc('=', data, storage[i])) {
-						storage[i] = data;
-
-						switch (uniform.type) {
-							case 'vec':
-							gl[method](index, ...data);
-							break;
-
-							case 'mat':
-							gl[method](index, false, data);
-							break;
-
-							case 'float':
-							gl[method](index, data);
-							break;
-
-							case 'texture':
-							gl.activeTexture(gl.TEXTURE0 + uniform.count);
-							gl.bindTexture(gl.TEXTURE_2D, data);
-							gl[method](index, uniform.count);
-							break;
-
-							case 'array':
-							if (uniform.subtype == 'texture') {
-								var samplerarray = [];
-								for (var texture of data) {
-									gl.activeTexture(gl.TEXTURE0 + texture.count);
-									gl.bindTexture(gl.TEXTURE_2D, texture);
-
-									samplerarray.push(texture.count);
-
-									gl[method](index, samplerarray);
-								}
-							}
-							else {
-								gl[method](index, data);
-							}
-
-							break;
-						}
-					}
-				}
+		for (var i in textures) {
+			if (textures.hasOwnProperty(i)) {
+				this.activeTexture(i, textures[i]);
 			}
 		}
 	}
 
-	set vertexIndices(vertices) {
-		if (vertices instanceof Array) {
-			this.VIOBuffer = this.initializeVertexIndices(vertices);
-			this.VIOBuffer.length = vertices.length;
-		}
-		else {
-			console.warn('Item: vertexIndices: error');
-		}
-	}
+	updateAttribute({buffer, location, size} = {}) {
+		var gl = this.webGL;
 
-	get VIOBuffer() {
-		return this.VIOBuffer_;
-	}
-
-	set VIOBuffer(val) {
-		if (typeof val === 'object') {
-			this.VIOBuffer_ = val;
-		}
-		else {
-			console.warn('Item: VIOBuffer: error');
+		if (location >= 0) {
+			gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
+			gl.vertexAttribPointer(location, size, gl.FLOAT, false, 0, 0);
+			gl.enableVertexAttribArray(location);
+			gl.bindBuffer(gl.ARRAY_BUFFER, null);
 		}
 	}
 
-	get webGL() {
-		return this.webGL_;
-	}
+	updateUniform({isActive, method, location, type, value}) {
+		if (isActive) {
+			return;
+		}
 
-	set webGL(val) {
-		this.webGL_ = val;
-	}
-}
+		var gl = this.webGL;
 
-function compare(item0, item1) {
-	var out = true;
+		if (!location) {
+			return;
+		}
 
-	if (typeof item0 === 'undefined' || typeof item1 === 'undefined') {
-		out = false;
-		return out;
-	}
-
-	var type0 = item0.constructor,
-		type1 = item1.constructor;
-
-	if (type0 === type1) {
-		switch(type0) {
-			case Mat:
-			case Mat2:
-			case Mat3:
-			case Mat4:
-			out = Mat.compare(item0, item1);
+		switch (type) {
+			case 'mat':
+			gl[method](location, null, value.array());
 			break;
 
-			case Vec:
-			case Vec2:
-			case Vec3:
-			case Vec4:
-			out = Vec.compare(item0, item1);
+			case 'col':
+			value = value.tounit();
+			case 'vec':
+			case 'eul':
+			case 'qua':
+			gl[method](location, value.array());
 			break;
 
-			case Array:
-			case Float32Array:
-			if (item0.length != item1.length) {
-				out = false;
-			}
-			else {
-				for (var i = 0; i < item0.length; i++) {
-					if (item0[i] !== item1[i]) {
-						out = false;
-						break;
-					}
-				}
-			}
+			case 'img':
+			case 'num':
+			gl[method](location, value);
 			break;
-
-			default:
-			out = item0 === item1;
 		}
 	}
-	else {
-		out = item0 === item1;
-	}
-
-	return out;
 }

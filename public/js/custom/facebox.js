@@ -1,3 +1,12 @@
+/**
+ * Top layer for user vision, draws a direction arrow by
+ * shader
+ *
+ * @constructor
+ * @this {FaceBox}
+ * @param {string} name
+ */
+
 class FaceBox extends UI {
 	constructor({
 		name = 'facebox'
@@ -14,14 +23,20 @@ class FaceBox extends UI {
 		this.changeUniforms({
 			u_Mouse: new Vec2,
 			u_Resolution: new Vec2(RESOLUTION_MIN, RESOLUTION_MIN),
-			u_Maxspeed: 0
+			u_Maxspeed: 0,
+			u_E: [0, 1]
 		});
 
 		this.body.position = new Vec3;
 	}
 
+	/**
+	 * Sends uniforms velocity and maxspeed to shader
+	 * to draw arrow. Velocity is normal vector that draws
+	 * on circle radius
+	 */
 	onupdate() {
-		var vec = this.private.env_heaven.velocity;
+		var vec = this.private.env_heaven.velocity.xy;
 		var max = this.private.env_heaven.maxspeed;
 
 		this.changeUniforms({
@@ -31,7 +46,7 @@ class FaceBox extends UI {
 	}
 
 	static get shader() {
-		var out = new Shader(
+		var out = new ShaderTemplate(
 			`attribute vec3 a_Position;
 			attribute vec2 a_UI;
 

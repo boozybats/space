@@ -1,8 +1,26 @@
+/**
+ * Contains an info about cameras, items, skybox,
+ * lights, e.t.c. 
+ *
+ * @constructor
+ * @this {Scene}
+ *  {number} this.lastShaderId The last used shader's id
+ *  {Camera[]} this.cameras
+ *  {DirectionalLight[]} this.directionalLights
+ *  {PointLight[]} this.pointLights
+ *  {Item[]} this.items
+ *  {Item[]} this.systemitems Can be drawn separately from items
+ * @param {string} name
+ * @param {Project} project
+ * @param {Color} skyBoxColor
+ * @param {string} skyBoxType
+ */
+
 class Scene {
 	constructor({
 		name,
 		project,
-		skyBoxColor = new Color(0, 0, 0, 255),
+		skyBoxColor = new Color(0, 0, 0, 1),
 		skyBoxType = 'fill'
 	}) {
 		this.name = name;
@@ -10,7 +28,6 @@ class Scene {
 		this.skyBoxColor = skyBoxColor;
 		this.skyBoxType = skyBoxType;
 
-		this.callbacks = [];
 		this.cameras = [];
 		this.directionalLights = [];
 		this.pointLights = [];
@@ -18,9 +35,53 @@ class Scene {
 		this.systemitems = [];
 	}
 
+	get name() {
+		return this.name_;
+	}
+	set name(val) {
+		if (typeof val !== 'string') {
+			throw new Error('Scene: name: must be a string');
+		}
+
+		this.name_ = val;
+	}
+
+	get project() {
+		return this.project_;
+	}
+	set project(val) {
+		if (val && !(val instanceof Project)) {
+			throw new Error('Scene: project: must be a Project');
+		}
+
+		this.project_ = val;
+	}
+
+	get skyBoxColor() {
+		return this.skyBoxColor_;
+	}
+	set skyBoxColor(val) {
+		if (!(val instanceof Color)) {
+			throw new Error('Scene: skyBoxColor: must be a Color');
+		}
+
+		this.skyBoxColor_ = val;
+	}
+
+	get skyBoxType() {
+		return this.skyBoxType_;
+	}
+	set skyBoxType(val) {
+		if (typeof val !== 'string') {
+			throw new Error('Scene: skyBoxType: must be a string');
+		}
+
+		this.skyBoxType_ = val;
+	}
+
 	appendCamera(camera) {
 		if (!(camera instanceof Camera)) {
-			console.warn('Scene: appendCamera: error');
+			throw new Error('Scene: appendCamera: must be a Camera');
 		}
 
 		this.cameras.push(camera);
@@ -29,23 +90,24 @@ class Scene {
 
 	appendItem(item) {
 		if (!(item instanceof Item)) {
-			console.warn('Scene: appendItem: error');
+			throw new Error('Scene: appendItem: must be an Item');
 		}
 		
 		this.items.push(item);
 	}
-
+ 
 	appendSystemItem(item) {
 		if (!(item instanceof Item)) {
-			console.warn('Scene: appendItem: error');
+			throw new Error('Scene: appendSystemItem: must be an Item');
 		}
 		
 		this.systemitems.push(item);
 	}
 
+	// adds any type of light in scene, auto detection to class
 	addLight(light) {
 		if (!(light instanceof Light)) {
-			console.warn('Scene: addLight: error');
+			throw new Error('Scene: addLight: must be a Light');
 		}
 
 		var constructor = light.constructor;
@@ -60,32 +122,7 @@ class Scene {
 		}
 	}
 
-	get cameras() {
-		return this.cameras_;
-	}
-
-	set cameras(val) {
-		if (val instanceof Array) {
-			this.cameras_ = val;
-		}
-		else {
-			console.warn('Scene: cameras: error');
-		}
-	}
-
-	get directionalLights() {
-		return this.directionalLights_;
-	}
-
-	set directionalLights(val) {
-		if (val instanceof Array) {
-			this.directionalLights_ = val;
-		}
-		else {
-			console.warn('Scene: directionalLights: error');
-		}
-	}
-
+	// find item by this id
 	findItem(id) {
 		var items = this.items;
 
@@ -96,148 +133,65 @@ class Scene {
 		}
 	}
 
-	get items() {
-		return this.items_;
-	}
+	/**
+	 * Returns an object with all lights of scene with calculated
+	 * position, rotations, intensity, e.t.c.
+	 *
+	 * @return {object}
+	 *
+	 * return example:
+	 * {pointLights: {position: ..., ambient: ...}, directionalLights: ...}
+	 */
+	getSceneLights() {
+		var out = [];
 
-	set items(val) {
-		if (val instanceof Array) {
-			this.items_ = val;
-		}
-		else {
-			console.warn('Scene: items: error');
-		}
-	}
-
-	get lastShaderID() {
-		return this.lastShaderID_;
-	}
-
-	set lastShaderID(val) {
-		this.lastShaderID_ = val;
-	}
-
-	get name() {
-		return this.name_;
-	}
-
-	set name(val) {
-		if (typeof val === 'string') {
-			this.name_ = val;
-		}
-		else {
-			console.warn('Scene: name: error');
-		}
-	}
-
-	get pointLights() {
-		return this.pointLights_;
-	}
-
-	set pointLights(val) {
-		if (val instanceof Array) {
-			this.pointLights_ = val;
-		}
-		else {
-			console.warn('Scene: pointLights: error');
-		}
-	}
-
-	get project() {
-		return this.project_;
-	}
-
-	set project(val) {
-		if (!val || val instanceof Project) {
-			this.project_ = val;
-		}
-		else {
-			console.warn('Scene: project: error');
-		}
-	}
-
-	removeItem(item) {
-		if (!(item instanceof Item)) {
-			console.warn('Scene: removeItem: error');
-		}
-
-		var index = this.items.indexOf(item);
-		if (index >= 0) {
-			this.items.splice(index, 1);
-		}
-	}
-
-	removeLight(light) {
-		if (!(light instanceof Light)) {
-			console.warn('Scene: removeLight: error');
-		}
-
-		var constructor = light.constructor;
-		switch(constructor) {
-			case DirectionalLight:
-			this.directionalLights.split(this.directionalLights.indexOf(light), 1);
-			break;
-
-			case PointLight:
-			this.pointLights.split(this.pointLights.indexOf(light), 1);
-			break;
-		}
-	}
-
-	get sceneLights() {
-		var out = {};
 		var directionalLights = this.directionalLights;
 		var pointLights = this.pointLights;
 
-		out.directionalLights = [];
 		for (var light of directionalLights) {
-			out.directionalLights.push(light.rotation);
+			out.push(light.data());
 		}
 
-		out.pointLights = [];
 		for (var light of pointLights) {
-			out.pointLights.push(light.position);
+			out.push(light.data());
 		}
 
 		return out;
 	}
 
-	get skyBoxColor() {
-		return this.skyBoxColor_;
-	}
-
-	set skyBoxColor(val) {
-		if (val instanceof Color) {
-			this.skyBoxColor_ = val;
+	// just splices from items array
+	removeItem(item) {
+		if (!(item instanceof Item)) {
+			throw new Error('Scene: removeItem: must be an Item');
 		}
-		else {
-			console.warn('Camera: skyBox: error');
-		}
-	}
 
-	get skyBoxType() {
-		return this.skyBoxType_;
-	}
-
-	set skyBoxType(val) {
-		if (typeof val === 'string') {
-			this.skyBoxType_ = val;
-		}
-		else {
-			console.warn('Camera: skyBoxType: error');
+		var ind = this.items.indexOf(item);
+		if (ind >= 0) {
+			this.items.splice(ind, 1);
 		}
 	}
 
-	get systemitems() {
-		return this.systemitems_;
-	}
-
-	set systemitems(val) {
-		if (val instanceof Array) {
-			this.systemitems_ = val;
+	// auto detection to class
+	removeLight(light) {
+		if (!(light instanceof Light)) {
+			throw new Error('Scene: removeLight: must be a Light');
 		}
-		else {
-			console.warn('Scene: systemitems: error');
+
+		var constructor = light.constructor;
+		switch(constructor) {
+			case DirectionalLight:
+			var ind = this.directionalLights.indexOf(light);
+			if (ind >= 0) {
+				this.directionalLights.splice(ind, 1);
+			}
+			break;
+
+			case PointLight:
+			var ind = this.pointLights.indexOf(light);
+			if (ind >= 0) {
+				this.pointLights.splice(ind, 1);
+			}
+			break;
 		}
 	}
 }

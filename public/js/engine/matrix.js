@@ -1,19 +1,36 @@
+/**
+ * Arbitrary matrix with "a"-rows and "b"-columns,
+ * gives access to make matrix calculations
+ *
+ * @constructor
+ * @this {Mat}
+ * @param {num} a Rows
+ * @param {num} b Columns
+ * @param {Array} arr If need a custom values in matrix
+ *  then send an array
+ */
+
 class Mat {
 	constructor(a = 0, b = 0, arr) {
-		//custom matrix usable only for squad matrix functions
-
+		// optimization, don't make a calculations if a child class
 		if (this.constructor === Mat) {
-			if (!arr || arr.length == a * b) {
-				for (var i = 0; i < a; i++) {
-					this[i] = [];
-					for (var j = 0; j < b; j++) {
-						this[i][j] = arr ? arr[i * b + j] : 0;
-					}
-				}
-
-				this.a_ = a;
-				this.b_ = b;
+			if (typeof a !== 'number' || typeof b !== 'number') {
+				throw new Error('Matrix: rows and columns count must be a number');
 			}
+
+			if (arr && (!(arr instanceof Array) || arr.length !== a * b)) {
+				throw new Error('Matrix: corrupted array');
+			}
+
+			for (var i = 0; i < a; i++) {
+				this[i] = [];
+				for (var j = 0; j < b; j++) {
+					this[i][j] = arr ? arr[i * b + j] : 0;
+				}
+			}
+
+			this.a_ = a;
+			this.b_ = b;
 		}
 	}
 
@@ -21,9 +38,11 @@ class Mat {
 		return this.a_;
 	}
 
-	get array() {
-		//transform matrix format into array
+	get b() {
+		return this.b_;
+	}
 
+	array() {
 		var out = [];
 		var a = this.a,
 			b = this.b;
@@ -35,10 +54,6 @@ class Mat {
 		}
 
 		return out;
-	}
-
-	get b() {
-		return this.b_;
 	}
 
 	static compare(mat0, mat1) {
@@ -64,9 +79,8 @@ class Mat {
 		return out;
 	}
 
+	// Shows matrix in console with 2 numbers after dot
 	console() {
-		//draw matrix as a table in console
-
 		var max = [0, 0, 0, 0];
 		var a = this.a,
 			b = this.b;
@@ -74,7 +88,7 @@ class Mat {
 		for (var i = 0; i < a; i++) {
 			for (var j = 0; j < b; j++) {
 				var str = this[i][j].toFixed(2);
-				str = (/-/.test(str)) ? ' ' + str : '  ' + str;
+				str = (/-/.test(str)) ? ` ${str}` : `  ${str}`;
 				if (str.length > max[j]) {
 					max[j] = str.length;
 				}
@@ -86,56 +100,55 @@ class Mat {
 
 			for (var j = 0; j < b; j++) {
 				var str = this[i][j].toFixed(2);
-				str = (/-/.test(str)) ? ' ' + str : '  ' + str;
+				str = (/-/.test(str)) ? ` ${str}` : `  ${str}`;
 				while(max[j] > str.length) str += ' ';
 				show += str;
 			}
 
 			for (var v = 0; v < i; v++) {
-				show += " ";
+				show += ' ';
 			}
 
 			console.log(show);
 		}
 	}
 
+	// determinant
 	det() {
-		//determenant of matrix
-
 		var out = 0;
 		var a = this.a,
 			b = this.b;
 
-		if (a == b) {
-			if (a == 1) {
-				out = this[0][0];
-			}
-			else if (a == 2) {
-				out = this[0][0] * this[1][1] - this[1][0] * this[0][1];
-			}
-			else if (a == 3) {
-				out = this[0][0] * this[1][1] * this[2][2] + this[2][0] * this[0][1] * this[1][2] + this[1][0] * this[2][1] * this[0][2] -
-				this[2][0] * this[1][1] * this[0][2] - this[0][0] * this[2][1] * this[1][2] - this[1][0] * this[0][1] * this[2][2];
-			}
-			else if (a >= 4) {
-				var arr = [];
-
-				for (var i = 0; i < a; i++) {
-					arr.push(this[0][i] * this.slice(0, i).det());
-				}
-
-				for (var i = 0; i < arr.length; i++) {
-					out = i % 2 == 0 ? out + arr[i] : out - arr[i];
-				}
-			}
-
-			return out;
+		if (a !== b) {
+			throw new Error('Mat: det: must be a square matrix');
 		}
-		else {
-			console.warn('Mat: det: error');
+
+		if (a == 1) {
+			out = this[0][0];
 		}
+		else if (a == 2) {
+			out = this[0][0] * this[1][1] - this[1][0] * this[0][1];
+		}
+		else if (a == 3) {
+			out = this[0][0] * this[1][1] * this[2][2] + this[2][0] * this[0][1] * this[1][2] + this[1][0] * this[2][1] * this[0][2] -
+			this[2][0] * this[1][1] * this[0][2] - this[0][0] * this[2][1] * this[1][2] - this[1][0] * this[0][1] * this[2][2];
+		}
+		else if (a >= 4) {
+			var arr = [];
+
+			for (var i = 0; i < a; i++) {
+				arr.push(this[0][i] * this.slice(0, i).det());
+			}
+
+			for (var i = 0; i < arr.length; i++) {
+				out = i % 2 == 0 ? out + arr[i] : out - arr[i];
+			}
+		}
+
+		return out;
 	}
 
+	// difference
 	static dif(...matrixes) {
 		var mat1 = matrixes[0],
 			mat2 = matrixes[1];
@@ -144,25 +157,24 @@ class Mat {
 			a1 = mat2.a,
 			b1 = mat2.b;
 
-		if (a == a1 && b == b1) {
-			var out = new Mat(a, b);
-
-			for (var i = 0; i < a; i++) {
-				for (var j = 0; j < b; j++) {
-					out[i][j] = mat1[i][j] - mat2[i][j];
-				}
-			}
-
-			if (matrixes.length > 2) {
-				matrixes.splice(0, 2, out);
-				out = Mat.dif(...matrixes);
-			}
-
-			return out;
+		if (a != a1 || b != b1) {
+			throw new Error('Mat: dif: must be an equal matrixes')
 		}
-		else {
-			console.warn('Mat: dif: error');
+
+		var out = new Mat(a, b);
+
+		for (var i = 0; i < a; i++) {
+			for (var j = 0; j < b; j++) {
+				out[i][j] = mat1[i][j] - mat2[i][j];
+			}
 		}
+
+		if (matrixes.length > 2) {
+			matrixes.splice(0, 2, out);
+			out = Mat.dif(...matrixes);
+		}
+
+		return out;
 	}
 
 	inverse() {
@@ -170,47 +182,47 @@ class Mat {
 		var a = this.a,
 			b = this.b;
 
-		if (a == b) {
-			var det = this.det();
-
-			if (det != 0) {
-				var sub = [];
-				for (var i = 0; i < a; i++) {
-					for (var j = 0; j < b; j++) {
-						sub.push(this.sub(j, i));
-					}
-				}
-
-				out = new Mat(a, b, sub);
-				out = out.multi(1 / det);
-			}
-
-			return out;
+		if (a !== b) {
+			throw new Error('Mat: inverse: must be a square matrix');
 		}
-		else {
-			console.warn('Mat: inverse: error');
-		}
-	}
 
-	multi(num) {
-		if (typeof num === 'number') {
-			var a = this.a,
-				b = this.b;
-			var out = new Mat(a, b);
+		var det = this.det();
 
+		if (det != 0) {
+			var sub = [];
 			for (var i = 0; i < a; i++) {
 				for (var j = 0; j < b; j++) {
-					out[i][j] = this[i][j] * num;
+					sub.push(this.sub(j, i));
 				}
 			}
 
-			return out;
+			out = new Mat(a, b, sub);
+			out = out.multi(1 / det);
 		}
+
+		return out;
+	}
+
+	// multi matrix values on coefficient
+	multi(num) {
+		if (typeof num !== 'number') {
+			throw new Error('Mat: multi: must be a number');
+		}
+
+		var a = this.a,
+			b = this.b;
+		var out = new Mat(a, b);
+
+		for (var i = 0; i < a; i++) {
+			for (var j = 0; j < b; j++) {
+				out[i][j] = this[i][j] * num;
+			}
+		}
+
+		return out;
 	}
 
 	static multi(...matrixes) {
-		//multiply of matrixes
-
 		var mat1 = matrixes[0],
 			mat2 = matrixes[1];
 
@@ -219,42 +231,39 @@ class Mat {
 			c = mat2.a,
 			b1 = mat2.b;
 
-		if (b == c) {
-			var out = new Mat(a, b1);
+		if (b !== c) {
+			throw new Error('Mat: multi: columns count from first matrix doesn\'t much to rows count from second');
+		}
 
-			for (var i = 0; i < a; i++) {
-				for (var k = 0; k < c; k++) {
-					for (var j = 0; j < b1; j++) {
-						out[i][j] += mat1[i][k] * mat2[k][j];
-					}
+		var out = new Mat(a, b1);
+
+		for (var i = 0; i < a; i++) {
+			for (var k = 0; k < c; k++) {
+				for (var j = 0; j < b1; j++) {
+					out[i][j] += mat1[i][k] * mat2[k][j];
 				}
 			}
-
-			if (matrixes.length > 2) {
-				matrixes.splice(0, 2, out);
-				out = Mat.multi(...matrixes);
-			}
-
-			return out;
 		}
-		else {
-			console.warn('Mat: multi: error');
+
+		if (matrixes.length > 2) {
+			matrixes.splice(0, 2, out);
+			out = Mat.multi(...matrixes);
 		}
-	}
-
-	normalize() {
-		var out = this;
-		var a = this.a,
-			b = this.b;
-
-		out = out.transpose().inverse().slice(a - 1, b - 1);
 
 		return out;
 	}
 
-	slice(x, y) {
-		//matrix with sliced column and row
+	normalize() {
+		var a = this.a,
+			b = this.b;
 
+		var out = this.transpose().inverse().slice(a - 1, b - 1);
+
+		return out;
+	}
+
+	// slice column and row in matrix
+	slice(x, y) {
 		var a = this.a,
 			b = this.b;
 		var s = 0, z = 0;
@@ -265,90 +274,103 @@ class Mat {
 		return out;
 	}
 
+	// slice column in matrix
 	slicec(x) {
-		//matrix with sliced column
+		if (typeof x !== 'number') {
+			throw new Error('Mat: slicec: must be a number');
+		}
 
 		var a = this.a,
 			b = this.b;
 
-		if (b > 1) {
-			var z = 0;
-			var out = new Mat(a, b - 1);
+		if (b <= 1) {
+			throw new Error('Mat: slicec: columns count must be more then 1');
+		}
 
-			for (var i = 0; i < a; i++) {
-				for (var j = 0; j < b; j++) {
-					if (j != x) {
-						z = j < x ? j : j - 1;
-						out[i][z] = this[i][j];
-					}
+		var z = 0;
+		var out = new Mat(a, b - 1);
+
+		for (var i = 0; i < a; i++) {
+			for (var j = 0; j < b; j++) {
+				if (j != x) {
+					z = j < x ? j : j - 1;
+					out[i][z] = this[i][j];
 				}
 			}
+		}
 
-			return out;
-		}
-		else {
-			console.warn('Mat: slicec: error');
-		}
+		return out;
 	}
 
+	// slice row in matrix
 	slicer(y) {
-		//matrix with sliced row
+		if (typeof y !== 'number') {
+			throw new Error('Mat: slicer: must be a number');
+		}
 
 		var a = this.a,
 			b = this.b;
 
-		if (a > 1) {
-			var z = 0;
-			var out = new Mat(a - 1, b);
+		if (a <= 1) {
+			throw new Error('Mat: slicec: rows count must be more then 1');
+		}
 
-			for (var i = 0; i < a; i++) {
-				for (var j = 0; j < b; j++) {
-					if (i != y) {
-						z = i < y ? i : i - 1;
-						out[z][j] = this[i][j];
-					}
+		var z = 0;
+		var out = new Mat(a - 1, b);
+
+		for (var i = 0; i < a; i++) {
+			for (var j = 0; j < b; j++) {
+				if (i != y) {
+					z = i < y ? i : i - 1;
+					out[z][j] = this[i][j];
 				}
 			}
+		}
 
-			return out;
-		}
-		else {
-			console.warn('Mat: slicer: error');
-		}
+		return out;
 	}
+
+	/**
+	 * Returns value of sub-matrix selected by x and y position
+	 *
+	 * @return {Mat}
+	 */
 
 	sub(x, y) {
-		//sub-matrixes of matrix, x and y - key's positions
+		if (typeof x !== 'number' || typeof y !== 'number') {
+			throw new Error('Mat: sub: "x", "y" must be a numbers');
+		}
 
 		var out;
 		var a = this.a,
 			b = this.b;
 
-		if (a == b) {
-			var cut = this.slice(x, y);
-			out = Math.pow(-1, x + y) * cut.det();
+		if (a !== b) {
+			throw new Error('Mat: sub: must be a square matrix');
+		}
 
-			return out;
-		}
-		else {
-			console.warn('Mat: sub: error');
-		}
+		var cut = this.slice(x, y);
+		out = Math.pow(-1, x + y) * cut.det();
+
+		return out;
 	}
 
 	sum(num) {
-		if (typeof num === 'number') {
-			var a = this.a,
-				b = this.b;
-			var out = new Mat(a, b);
-
-			for (var i = 0; i < a; i++) {
-				for (var j = 0; j < b; j++) {
-					out[i][j] = this[i][j] + num;
-				}
-			}
-
-			return out;
+		if (typeof num !== 'number') {
+			throw new Error('Mat: sum: must be a number');
 		}
+
+		var a = this.a,
+			b = this.b;
+		var out = new Mat(a, b);
+
+		for (var i = 0; i < a; i++) {
+			for (var j = 0; j < b; j++) {
+				out[i][j] = this[i][j] + num;
+			}
+		}
+
+		return out;
 	}
 
 	static sum(...matrixes) {
@@ -359,30 +381,28 @@ class Mat {
 			a1 = mat2.a,
 			b1 = mat2.b;
 
-		if (a == a1 && b == b1) {
-			var out = new Mat(a, b);
-
-			for (var i = 0; i < a; i++) {
-				for (var j = 0; j < b; j++) {
-					out[i][j] = mat1[i][j] + mat2[i][j];
-				}
-			}
-
-			if (matrixes.length > 2) {
-				matrixes.splice(0, 2, out);
-				out = Mat.sum(...matrixes);
-			}
-
-			return out;
+		if (a !== a1 || b !== b1) {
+			throw new Error('Mat: sum: must be an equal matrixes');
 		}
-		else {
-			console.warn('Mat: sum: error');
+
+		var out = new Mat(a, b);
+
+		for (var i = 0; i < a; i++) {
+			for (var j = 0; j < b; j++) {
+				out[i][j] = mat1[i][j] + mat2[i][j];
+			}
 		}
+
+		if (matrixes.length > 2) {
+			matrixes.splice(0, 2, out);
+			out = Mat.sum(...matrixes);
+		}
+
+		return out;
 	}
 
+	// reverses matrix
 	transpose() {
-		//reverse matrix
-
 		var a = this.a,
 			b = this.b;
 		var out = new Mat(b, a);
@@ -397,8 +417,21 @@ class Mat {
 	}
 }
 
+/**
+ * Second-order matrix (2x2)
+ *
+ * @constructor
+ * @this {Mat2}
+ * @param {Array} arr Custom values for matrix can be a number
+ *  to fill matrix this number
+ */
+
 class Mat2 extends Mat {
 	constructor(arr = []) {
+		if (arr && !(arr instanceof Array) && typeof arr !== 'number') {
+			throw new Error('Mat2: must be an array or number');
+		}
+
 		super();
 		var filler = typeof arr == 'number' ? arr : undefined;
 
@@ -418,8 +451,21 @@ class Mat2 extends Mat {
 	}
 }
 
+/**
+ * Third-order matrix (3x3)
+ *
+ * @constructor
+ * @this {Mat3}
+ * @param {Array} arr Custom values for matrix can be a number
+ *  to fill matrix this number
+ */
+
 class Mat3 extends Mat {
 	constructor(arr = []) {
+		if (arr && !(arr instanceof Array) && typeof arr !== 'number') {
+			throw new Error('Mat3: must be an array or number');
+		}
+
 		super();
 		var filler = typeof arr == 'number' ? arr : undefined;
 
@@ -461,8 +507,21 @@ class Mat3 extends Mat {
 	}
 }
 
+/**
+ * Fourth-order matrix (4x4)
+ *
+ * @constructor
+ * @this {Mat4}
+ * @param {Array} arr Custom values for matrix can be a number
+ *  to fill matrix this number
+ */
+
 class Mat4 extends Mat {
 	constructor(arr = []) {
+		if (arr && !(arr instanceof Array) && typeof arr !== 'number') {
+			throw new Error('Mat4: must be an array or number');
+		}
+
 		super();
 		var filler = typeof arr == 'number' ? arr : undefined;
 
@@ -481,6 +540,12 @@ class Mat4 extends Mat {
 		this.a_ = this.b_ = 4;
 	}
 
+	/**
+	 * Orthogonal projection matrix by near and far fields
+	 *
+	 * @param {number} near
+	 * @param {number} far
+	 */
 	static orthogonal(near, far) {
 		var d = far - near;
 		var out = new Mat4([
@@ -493,10 +558,18 @@ class Mat4 extends Mat {
 		return out;
 	}
 
-	static perspective(ratio, near, far, fovy) {
+	/**
+	 * Perspective projection matrix
+	 *
+	 * @param {number} aspect Ratio of width and height 
+	 * @param {number} near
+	 * @param {number} far
+	 * @param {number} fovy Field of vision vertical
+	 */
+	static perspective(aspect, near, far, fovy) {
 		fovy = Math.DTR(fovy);
 		var y = 1 / Math.tan(fovy / 2);
-		var x = y / ratio;
+		var x = y / aspect;
 		var d = 1;
 		var out = new Mat4([
 			x, 0, 0, 0,

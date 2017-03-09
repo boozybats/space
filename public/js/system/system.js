@@ -5,7 +5,7 @@ const RESOLUTION_MIN = Math.min(RESOLUTION_WIDTH, RESOLUTION_HEIGHT);
 var canvas;
 var cursor;
 
-Loader.images({
+loader({
 	transparent: 'images/transparent.jpg'
 }, images => {
 	// REQUEST ANIMATION FRAME

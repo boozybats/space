@@ -61,7 +61,7 @@
 	var GUIDs = [];
 	function GUID() {
 		function path() {
-			return (Math.random() * 9999999999).toFixed(0);
+			return parseInt((Math.random() * 9999999999).toFixed(0));
 		}
 		var key = path();
 		if (GUIDs.indexOf(key) === -1) {

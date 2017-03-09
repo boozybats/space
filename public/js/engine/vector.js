@@ -1,3 +1,13 @@
+/**
+ * Object that contains 2-4 values by keys x, y, z and w,
+ * it helps to calculate geometric equations and send
+ * body's data to shader
+ *
+ * @constructor
+ * @this {Vec}
+ * @param {number} x, y, z, w
+ */
+
 class Vec {
 	constructor(...arr) {
 		if (this.constructor === Vec) {
@@ -17,15 +27,14 @@ class Vec {
 		}
 	}
 
+	// calculates angle between 2 vectors
 	static angle(vec1, vec2) {
-		//calculate angle between 2 vectors
-	
 		var out = Math.acos(Vec.cos(vec1, vec2));
 	
 		return out;
 	}
 
-	get array() {
+	array() {
 		var out = [this.x, this.y];
 
 		if (typeof this.w !== 'undefined') {
@@ -38,6 +47,11 @@ class Vec {
 		return out;
 	}
 
+	/**
+	 * Returns average vector between sended
+	 * @param  {Vec[]} vectors
+	 * @return {Vec}
+	 */
 	static avg(...vectors) {
 		var sum = Vec.sum(...vectors);
 		var out = sum.multi(1 / vectors.length);
@@ -71,10 +85,9 @@ class Vec {
 		return out;
 	}
 
+	// calculate cosinus between 2 vectors
 	static cos(vec1, vec2) {
-		//calculate cosinus between 2 vectors
-
-		var out = (vec1.x * vec2.x + vec1.y * vec2.y) / (vec1.length * vec2.length);
+		var out = (vec1.x * vec2.x + vec1.y * vec2.y) / (vec1.length() * vec2.length());
 
 		return out;
 	}
@@ -119,7 +132,11 @@ class Vec {
 		return out;
 	}
 
-	Euler() {
+	/**
+	 * Transforms vector to euler
+	 * @return {Euler}
+	 */
+	euler() {
 		var x = this.x,
 			y = this.y,
 			z = this.z;
@@ -133,7 +150,11 @@ class Vec {
 		return out;
 	}
 
-	HTC() {
+	/**
+	 * Transforms vec4 to vec3 by devision
+	 * @return {Vec3}
+	 */
+	tocartesian() {
 		var out;
 
 		switch (this.size) {
@@ -145,6 +166,14 @@ class Vec {
 			out = amc('/', this.xyz, this.w);
 			break;
 		}
+
+		return out;
+	}
+
+	tohomogeneous() {
+		var out;
+
+		out = new Vec4(this, 1);
 
 		return out;
 	}
@@ -167,17 +196,22 @@ class Vec {
 		return out;
 	}
 
-	get length() {
+	length() {
 		var out = Math.sqrt(Math.pow(this.x, 2) + Math.pow(this.y, 2) + Math.pow(this.z || 0, 2) + Math.pow(this.w || 0, 2));
 
 		return out;
 	}
 
+	// how much coordinates in vector
 	get size() {
 		return this.size_;
 	}
 
 	multi(num) {
+		if (typeof num !== 'number') {
+			throw new Error('Vector: multi: must be a number');
+		}
+
 		var Type = this.constructor;
 
 		var out = new Type(
@@ -211,7 +245,7 @@ class Vec {
 	}
 
 	normalize() {
-		var length = this.length;
+		var length = this.length();
 
 		var x = (this.x / length) || 0,
 			y = (this.y / length) || 0,
@@ -225,6 +259,10 @@ class Vec {
 	}
 
 	sum(num) {
+		if (typeof num !== 'number') {
+			throw new Error('Vector: sum: must be a number');
+		}
+
 		var Type = this.constructor;
 
 		var out = new Type(
@@ -257,10 +295,9 @@ class Vec {
 		return out;
 	}
 
+	// multiply 2 vectors by module
 	static vecmulti(vec1, vec2) {
-		//multiply 2 vectors by module
-
-		var out = vec1.length * vec2.length * Vec.cos(vec1, vec2);
+		var out = vec1.length() * vec2.length() * Vec.cos(vec1, vec2);
 
 		return out;
 	}
@@ -666,6 +703,15 @@ class Vec {
 	}
 }
 
+/**
+ * Contains 2 coordinates in vector
+ *
+ * @constructor
+ * @this {Vec2}
+ * @param {*} x
+ * @param {*} y
+ */
+
 class Vec2 extends Vec {
 	constructor(x = 0, y = 0) {
 		super();
@@ -681,6 +727,16 @@ class Vec2 extends Vec {
 		this.size_ = 2;
 	}
 }
+
+/**
+ * Contains 3 coordinates in vector
+ *
+ * @constructor
+ * @this {Vec3}
+ * @param {*} x
+ * @param {*} y
+ * @param {*} z
+ */
 
 class Vec3 extends Vec {
 	constructor(x = 0, y = 0, z = 0) {
@@ -709,6 +765,17 @@ class Vec3 extends Vec {
 		this.size_ = 3;
 	}
 }
+
+/**
+ * Contains 4 coordinates in vector
+ *
+ * @constructor
+ * @this {Vec4}
+ * @param {*} x
+ * @param {*} y
+ * @param {*} z
+ * @param {*} w
+ */
 
 class Vec4 extends Vec {
 	constructor(x = 0, y = 0, z = 0, w = 0) {

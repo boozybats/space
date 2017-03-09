@@ -1,11 +1,35 @@
+/**
+ * Quaternions are view if angles, they helps
+ * to calculate rotation matrix much easies instead
+ * of eulers
+ *
+ * @constructor
+ * @this {Quaternion}
+ *  {Euler} this.euler Auto determines after creation
+ * @param {number} x, y, z, w
+ */
+
 class Quaternion {
 	constructor(x = 0, y = 0, z = 0, w = 1) {
+		if (typeof x !== 'number' ||
+			typeof y !== 'number' ||
+			typeof z !== 'number' ||
+			typeof w !== 'number') {
+			throw new Error('Quaternion: xyzw must be a numbers');
+		}
+
 		this.x_ = x;
 		this.y_ = y;
 		this.z_ = z;
 		this.w_ = w;
 
 		this.euler = Euler.Quaternion(x, y, z, w);
+	}
+
+	array() {
+		var out = [this.x, this.y, this.z, this.w];
+
+		return out;
 	}
 
 	static compare(quat0, quat1) {
@@ -27,6 +51,11 @@ class Quaternion {
 	}
 
 	static dif(quat1, quat2) {
+		if (!(quat1 instanceof Quaternion) ||
+			!(quat2 instanceof Quaternion)) {
+			throw new Error('Quaternion: dif: must be a Quaternions');
+		}
+
 		var euler1 = quat1.euler,
 			euler2 = quat2.euler;
 		var euler = new Euler(
@@ -43,29 +72,39 @@ class Quaternion {
 	get euler() {
 		return this.euler_;
 	}
-
 	set euler(val) {
-		if (val instanceof Euler) {
-			this.euler_ = val;
+		if (!(val instanceof Euler)) {
+			throw new Error('Quaterion: euler: must be an Euler');
 		}
-		else {
-			console.warn('Quaternion: euler: error');
-		}
+
+		this.euler_ = val;
 	}
 
-	static Euler(euler = new Euler, ...args) {
-		//return quaternion by using eulers as arguments
-
+	/**
+	 * Transforms eulers to quaternions,
+	 * function gets Eulers or x, y, and z numbers
+	 *
+	 * @param {Euler|number} x, y, z, w
+	 * @return {Quaternion}
+	 */
+	static Euler(...args) {
 		var roll, pitch, yaw;
-		if (typeof euler === 'number') {
-			roll = euler || 0,
-			pitch = args[0] || 0,
-			yaw = args[1] || 0;
+		if (args[0] instanceof Quaternion) {
+			var euler = args[0];
+
+			roll = euler.x;
+			pitch = euler.y;
+			yaw = euler.z;
+		}
+		else if (typeof args[0] === 'number' &&
+			typeof args[1] === 'number' &&
+			typeof args[2] === 'number') {
+			roll = args[0];
+			pitch = args[1];
+			yaw = args[2];
 		}
 		else {
-			roll = euler.x,
-			pitch = euler.y,
-			yaw = euler.z;
+			throw new Error('Quaternion: Euler: must be a Euler or xyz numbers');
 		}
 
 		var nroll = Math.DTR(roll),
@@ -109,6 +148,11 @@ class Quaternion {
 	}
 
 	static sum(quat1, quat2) {
+		if (!(quat1 instanceof Quaternion) ||
+			!(quat2 instanceof Quaternion)) {
+			throw new Error('Quaternion: sum: must be a Quaternions');
+		}
+
 		var euler1 = quat1.euler,
 			euler2 = quat2.euler;
 		var eul = new Euler(
@@ -122,7 +166,7 @@ class Quaternion {
 		return out;
 	}
 
-	Vec() {
+	vec() {
 		var out = new Vec4(this.x, this.y, this.z, this.w);
 		return out;
 	}

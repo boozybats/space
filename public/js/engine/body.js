@@ -1,108 +1,80 @@
+/**
+ * Contains info about item's position in global space
+ *
+ * @constructor
+ * @this {Item}
+ * @param {Vec3} position
+ * @param {Quaternion} rotation
+ * @param {Vec3} scale
+ * @param {Body} parent
+*/
+
 class Body {
 	constructor({
 		position = new Vec3,
 		rotation = new Quaternion,
 		scale = new Vec3(1, 1, 1),
-		parent,
-		children = []
+		parent
 	} = {}) {
 		this.position = position;
 		this.rotation = rotation;
 		this.scale = scale;
 		this.parent = parent;
-		this.children = children;
-	}
-
-	get children() {
-		return this.children_;
-	}
-
-	set children(val) {
-		if (val instanceof Array) {
-			this.children_ = val;
-		}
-		else {
-			console.warn('Body: children: error');
-		}
-	}
-
-	static compare(body0, body1, strict = true) {
-		var out = true;
-
-		if (typeof body0 === 'undefined' || typeof body1 === 'undefined') {
-			out = false;
-		}
-		else {
-			if (!Vec.compare(body0.position, body1.position) ||
-				!Quaternion.compare(body0.rotation, body1.rotation) ||
-				!Vec.compare(body0.scale, body1.scale) ||
-				(strict && (body0.parent !== body1.parent ||
-				body0.children !== body1.children))) {
-				out = false;
-			}
-		}
-
-		return out;
-	}
-
-	get parent() {
-		return this.parent_;
-	}
-
-	set parent(val) {
-		if (!val || val instanceof Body) {
-			if (this.parent) {
-				var children = this.parent.children;
-				children.splice(children.indexOf(this), 1);
-			}
-			
-			if (val) {
-				val.children.push(this);
-			}
-
-			this.parent_ = val;
-		}
-		else {
-			console.warn('Body: parent must be Body');
-		}
+		this.children = [];
 	}
 
 	get position() {
 		return this.position_;
 	}
-
 	set position(val) {
-		if (val instanceof Vec3) {
-			this.position_ = val;
+		if (!(val instanceof Vec3)) {
+			throw new Error('Body: position: must be a Vec3');
 		}
-		else {
-			console.warn('Body: position must be Vec3');
-		}
+
+		this.position_ = val;
 	}
 
 	get rotation() {
 		return this.rotation_;
 	}
-
 	set rotation(val) {
-		if (val instanceof Quaternion) {
-			this.rotation_ = val;
+		if (!(val instanceof Quaternion)) {
+			throw new Error('Body: rotation: must be a Quaternion');
 		}
-		else {
-			console.warn('Body: rotation must be Vec3');
-		}
+
+		this.rotation_ = val;
 	}
 
 	get scale() {
 		return this.scale_;
 	}
-
 	set scale(val) {
-		if (val instanceof Vec3) {
-			this.scale_ = val;
+		if (!(val instanceof Vec3)) {
+			throw new Error('Body: scale: must be a Vec3');
 		}
-		else {
-			console.warn('Body: scale must be Vec3');
+
+		this.scale_ = val;
+	}
+
+	get parent() {
+		return this.parent_;
+	}
+	set parent(val) {
+		if (val && !(val instanceof Body)) {
+			throw new Error('Body: parent: must be a Body');
 		}
+
+		// if body had a parent when remove from parent's children
+		if (this.parent) {
+			var ind = this.parent.children.indexOf(this);
+			children.splice(ind, 1);
+		}
+
+		// autopush to children list of new parent
+		if (val) {
+			val.children.push(this);
+		}
+
+		this.parent_ = val;
 	}
 }
