@@ -1,12 +1,17 @@
 /**
- * Quaternions are view if angles, they helps
- * to calculate rotation matrix much easies instead
- * of eulers
- *
- * @constructor
+ * A system of hypercomplex numbers that forms a vector
+ * space of dimension four over the field of real numbers.
  * @this {Quaternion}
- *  {Euler} this.euler Auto determines after creation
- * @param {number} x, y, z, w
+ * @param {Number} x
+ * @param {Number} y
+ * @param {Number} z
+ * @param {Number} w
+ * @class
+ * @property {Number} x
+ * @property {Number} y
+ * @property {Number} z
+ * @property {Number} w
+ * @property {Euler} euler
  */
 
 class Quaternion {
@@ -23,26 +28,42 @@ class Quaternion {
 		this.z_ = z;
 		this.w_ = w;
 
-		this.euler = Euler.Quaternion(x, y, z, w);
+		this.euler_ = Euler.Quaternion(x, y, z, w);
 	}
 
+	/**
+	 * Returns an array of quaternion numbers.
+	 * @return {Arrat}
+	 * @method
+	 */
 	array() {
 		var out = [this.x, this.y, this.z, this.w];
 
 		return out;
 	}
 
-	static compare(quat0, quat1) {
+	/**
+	 * Compares two quaternions by x, y, z and w coordinates
+	 * and returns true if them equal else returns false.
+	 * P.S. Better use {@link amc} function, it is
+	 * much optimizing.
+	 * @param  {Quaternion} quat1
+	 * @param  {Quaternion} quat2
+	 * @return {Boolean}
+	 * @method
+	 * @static
+	 */
+	static compare(quat1, quat2) {
 		var out = true;
 
-		if (typeof quat0 === 'undefined' || typeof quat1 === 'undefined') {
+		if (typeof quat1 === 'undefined' || typeof quat2 === 'undefined') {
 			out = false;
 		}
 		else {
-			if (quat0.x !== quat1.x ||
-				quat0.y !== quat1.y ||
-				quat0.z !== quat1.z ||
-				quat0.w !== quat1.w) {
+			if (quat1.x !== quat2.x ||
+				quat1.y !== quat2.y ||
+				quat1.z !== quat2.z ||
+				quat1.w !== quat2.w) {
 				out = false;
 			}
 		}
@@ -50,6 +71,16 @@ class Quaternion {
 		return out;
 	}
 
+	/**
+	 * Calculates difference between two quaternions and returns
+	 * result quaternion. P.S. Better use {@link amc} function, it is
+	 * much optimizing.
+	 * @param {Quaternion} quat1
+	 * @param {Quaternion} quat2
+	 * @return {Quaternion}
+	 * @method
+	 * @static
+	 */
 	static dif(quat1, quat2) {
 		if (!(quat1 instanceof Quaternion) ||
 			!(quat2 instanceof Quaternion)) {
@@ -72,20 +103,14 @@ class Quaternion {
 	get euler() {
 		return this.euler_;
 	}
-	set euler(val) {
-		if (!(val instanceof Euler)) {
-			throw new Error('Quaterion: euler: must be an Euler');
-		}
-
-		this.euler_ = val;
-	}
 
 	/**
 	 * Transforms eulers to quaternions,
-	 * function gets Eulers or x, y, and z numbers
-	 *
+	 * function gets {@link Euler} or x, y, and z coordinates.
 	 * @param {Euler|number} x, y, z, w
 	 * @return {Quaternion}
+	 * @method
+	 * @static
 	 */
 	static Euler(...args) {
 		var roll, pitch, yaw;
@@ -136,6 +161,11 @@ class Quaternion {
 		return quat;
 	}
 
+	/**
+	 * Returns inversed quaternion.
+	 * @return {Quaternion}
+	 * @method
+	 */
 	inverse() {
 		var euler = this.euler;
 		var x = -euler.x,
@@ -147,6 +177,16 @@ class Quaternion {
 		return out;
 	}
 
+	/**
+	 * Calculates sum between two quaternions and returns
+	 * result quaternion. P.S. Better use {@link amc} function, it is
+	 * much optimizing.
+	 * @param {Quaternion} quat1
+	 * @param {Quaternion} quat2
+	 * @return {Quaternion}
+	 * @method
+	 * @static
+	 */
 	static sum(quat1, quat2) {
 		if (!(quat1 instanceof Quaternion) ||
 			!(quat2 instanceof Quaternion)) {
@@ -166,6 +206,11 @@ class Quaternion {
 		return out;
 	}
 
+	/**
+	 * Transforms quaternion to {@link Vec4}.
+	 * @return {Vec4}
+	 * @method
+	 */
 	vec() {
 		var out = new Vec4(this.x, this.y, this.z, this.w);
 		return out;

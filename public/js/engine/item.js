@@ -1,20 +1,32 @@
 /**
- * Scene's item constructor. Creates new item which
- * only in memory; sets body, mesh, physic, e.t.c. To
- * make item appear in scene it must be instantiated
- * by method "instance"
- *
- * @constructor
+ * Item stores info about object: {@link Body}, {@link Mesh},
+ * {@link Physic}, {@link Collider}, etc. Created item doesn't
+ * instantly binds to scene, it must be instantiated by same method.
  * @this {Item}
- *  {Function} this.oninstance Callback that is called after instance
- *  {Function} this.onupdate Callback that is called evey frame
- * @param {bool} enabled Is item enabled on scene
- * @param {number} id Not selfgenerated
- * @param {string} name
- * @param {Body} body
- * @param {Mesh} mesh
- * @param {Collider} collider
- * @param {Physic} physic
+ * @param {Object} options
+ * @param {Boolean} options.enabled Does item exist on scene.
+ * @param {Number} options.id
+ * @param {String} options.name
+ * @param {Body} options.body
+ * @param {Mesh} options.mesh
+ * @param {Physic} options.physic
+ * @param {Collider} options.collider
+ * @class
+ * @property {Boolean} enabled Does item exist on scene.
+ * @property {Number} id
+ * @property {String} name
+ * @property {Body} body
+ * @property {Mesh} mesh
+ * @property {Physic} physic
+ * @property {Collider} collider
+ * @property {Object} public A variable environment that can be
+ * obtained by external methods.
+ * @property {Object} private A variable environment that can be
+ * obtained only in this object.
+ * @property {Scene} scene On wich scene was instantiated.
+ * @property {Project} project Binded project.
+ * @property {WebGLContext} webGL WebGL item of {@link Project}'s
+ * {@link WebGLRenderer}.
  */
 
 class Item {
@@ -24,8 +36,8 @@ class Item {
 		name = 'empty',
 		body = new Body,
 		mesh,
-		collider,
-		physic
+		physic,
+		collider
 	} = {}) {
 		this.enabled = enabled;
 		this.id = id;
@@ -35,10 +47,30 @@ class Item {
 		this.collider = collider;
 		this.physic = physic;
 
-		/** @private */ this.isInstanced = false;
-		/** @private matrix memory */ this.matmem = [];
-		/** @private public variables */ this.public_ = {};
-		/** @private private variables */ this.private_ = {};
+		/**
+		 * Has been item instantiated.
+		 * @type {Boolean}
+		 * @private
+		 */
+		this.isInstanced = false;
+		/**
+		 * Stores last results of {@link Item#mvmatrix} calculations.
+		 * @type {Array}
+		 * @private
+		 */
+		this.matmem = [];
+		/**
+		 * A variable environment that can be obtained by external methods.
+		 * @type {Object}
+		 * @private
+		 */
+		this.public_ = {};
+		/**
+		 * A variable environment that can be obtained only in this object.
+		 * @type {Object}
+		 * @private
+		 */
+		this.private_ = {};
 
 		if (typeof this.oninstance === 'function') {
 			this.oninstance();
@@ -122,6 +154,12 @@ class Item {
 		this.physic_ = val;
 	}
 
+	/**
+	 * Activates texture by index.
+	 * @param  {Number} ind
+	 * @param  {WebGLBuffer} buf
+	 * @method
+	 */
 	activeTexture(ind, buf) {
 		var gl = this.webGL;
 
@@ -130,12 +168,19 @@ class Item {
 	}
 
 	/**
-	 * Creates WebGLBuffer by image and adds it to the
-	 * shader.textures; buffer takes index equal a length
-	 * of all images added in shader
-	 *
+	 * Creates WebGLBuffer of the image and adds it to the
+	 * {@link Shader.textures}-ojbect. Buffer acquires an
+	 * array index equal the length of all images added in shader.
 	 * @param {Image} image
-	 * @return {number} index
+	 * @return {Number} Texture index in shader position
+	 * @method
+	 * @example
+	 * var item = new Item(options);
+	 * 
+	 * var img = new Image();
+	 * img.src = './favouriteImage.jpg';
+	 * 
+	 * var index = item.addTexture(img);  // 0
 	 */
 	addTexture(image) {
 		var gl = this.webGL;
@@ -143,7 +188,6 @@ class Item {
 		var ind = shader.texturesCount++;
 
 		// if image didn't load yet then temporarily replace it with system picture
-
 		var buffer = gl.createTexture();
 		gl.bindTexture(gl.TEXTURE_2D, buffer);
 		gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
@@ -165,25 +209,27 @@ class Item {
 	}
 
 	/**
-	 * Initializes new attributes and adds to mesh,
-	 * if attribute already exists then compare them
-	 * and update it or skip
+	 * If item has been instantiated then adds attribute to {@link Shader}
+	 * with initialized location, else adds attribute to {@link Mesh}.
+	 * Each attribute-array must have parameter "size" that shows how
+	 * much coordinates have a one vertex.
+	 * @param {Object} obj Object with attribute-arrays.
+	 * @method
+	 * @example
+	 * var item = new Item(options);
+	 * 
+	 * var vertices = [-1,-1, -1,1, 1,1, 1,-1];
+	 * vertices.size = 2;  // 2 coordinates on a vertex
 	 *
-	 * @param {Object} obj Object with attributes key-value
-	 *
-	 * example: {
-	 *  a_Position: ...,
-	 *  a_Normal: ...
-	 * }
+	 * item.changeAttributes({a_Position: vertices});
 	 */
-	changeAttributes(obj = {}) {
+	changeAttributes(options) {
 		var shader = this.mesh.shader;
 
-		// if item not instantiated yet then pass him in mesh
 		if (this.isInstanced) {
-			for (var i in obj) {
-				if (obj.hasOwnProperty(i)) {
-					var val = obj[i];
+			for (var i in options) {
+				if (options.hasOwnProperty(i)) {
+					var val = options[i];
 
 					this.initializeAttribute(i, val, shader.attributes);
 				}
@@ -191,9 +237,9 @@ class Item {
 		}
 		else {
 			if (this.mesh) {
-				for (var i in obj) {
-					if (obj.hasOwnProperty(i)) {
-						var val = obj[i];
+				for (var i in options) {
+					if (options.hasOwnProperty(i)) {
+						var val = options[i];
 
 						this.mesh.attributes[i] = val;
 					}
@@ -203,24 +249,24 @@ class Item {
 	}
 
 	/**
-	 * Initializes new uniforms and adds to mesh,
-	 * if uniform already exists then compare them
-	 * and update it or skip
-	 *
-	 * @param {Object} obj Object with uniforms key-value
-	 *
-	 * example: {
-	 *  u_MVMatrix: ...,
-	 *  u_Resolution: ...
-	 * }
+	 * If item has been instantiated then adds uniform to {@link Shader}
+	 * with initialized location, else adds uniform to {@link Mesh}.
+	 * @param {Object} options Object with uniforms.
+	 * @method
+	 * @example
+	 * var item = new Item(options);
+	 * item.changeUniforms({
+	 * 	u_MVMatrix: new Mat4,
+	 * 	u_Intensity: 20.125
+	 * })
 	 */
-	changeUniforms(obj = {}) {
+	changeUniforms(options) {
 		var shader = this.mesh.shader;
 
 		if (this.isInstanced) {
-			for (var i in obj) {
-				if (obj.hasOwnProperty(i)) {
-					var val = obj[i];
+			for (var i in options) {
+				if (options.hasOwnProperty(i)) {
+					var val = options[i];
 
 					this.initializeUniform(i, val, shader.uniforms);
 				}
@@ -228,9 +274,9 @@ class Item {
 		}
 		else {
 			if (this.mesh) {
-				for (var i in obj) {
-					if (obj.hasOwnProperty(i)) {
-						var val = obj[i];
+				for (var i in options) {
+					if (options.hasOwnProperty(i)) {
+						var val = options[i];
 
 						this.mesh.uniforms[i] = val;
 					}
@@ -240,13 +286,21 @@ class Item {
 	}
 
 	/**
-	 * Creates buffer, defines location and writes
-	 * it to object "out" sended as argument
+	 * Sets in "out" in "key" position the new object with created
+	 * buffer from attribute-array, buffer size and defined location.
+	 * @param  {String} key Uniform name
+	 * @param  {Array} val
+	 * @param  {Object} out Rewritable object
+	 * @method
+	 * @example
+	 * var item = new Item(options);
 	 *
-	 * @param {string} key Attribute's name, rewrites "out" with key-name
-	 * @param {Array} val Attribute's value, it must be an array with
-	 *  property "size" which means how much coordinates does in contain
-	 * @param {object} out Rewritable object
+	 * var attributes = {};
+	 * var vertices = [-1,-1, -1,1, 1,1, 1,-1];
+	 * vertices.size = 2;
+	 *
+	 * item.initializeUniform('a_Position', vertices, attributes);
+	 * attributes;  // Object {a_Position: {buffer, size, location}}
 	 */
 	initializeAttribute(key, val, out) {
 		// if attribute already exists and equal to new then skip
@@ -280,19 +334,27 @@ class Item {
 
 		out[key] = {
 			buffer,
-			location,
-			size
+			size,
+			location
 		};
 	}
 
 	/**
-	 * Transforms data in required format by value type, defines location,
-	 * type and method to send in shader and writes it to object
-	 * "out" sended as argument
+	 * Sets in "out" in "key" position the new object with defined
+	 * uniform location, method, type and value. Called from
+	 * {@link Item.changeUniforms}.
+	 * @param  {String} key Uniform name
+	 * @param  {Mat | Vec | Color | Euler | Quaternion |
+	 * Image | Number | Array | Object} val
+	 * @param  {Object} out Rewritable object
+	 * @method
+	 * @example
+	 * var item = new Item(options);
 	 *
-	 * @param {string} key Uniform's name, rewrites "out" with key-name
-	 * @param {Mat|Vec|Quaternion|Color|Image|number|Array|object} val
-	 * @param {object} out Rewritable object
+	 * var uniforms = {};
+	 *
+	 * item.initializeUniform('u_MVMatrix', new Mat4, uniforms);
+	 * uniforms;  // Object {u_MVMatrix: {location, method, type, value}}
 	 */
 	initializeUniform(key, val, out) {
 		// if uniform already exists and equal to new then skip
@@ -355,10 +417,27 @@ class Item {
 		}
 		else if (value instanceof Array) {
 			// start recursion if value is an array
-			for (var i = 0; i < value.length; i++) {
+			var length = value.length;
+			for (var i = 0; i < length; i++) {
 				var nval = value[i];
 				this.initializeUniform(`${key}[${i}]`, nval, out);
 			}
+
+			for (var i in out) {
+				if (out.hasOwnProperty(i)) {
+					var regexp = new RegExp(`^${key}[(\\d+)]`, '');
+					var match = i.match(regexp);
+
+					if (match) {
+						var ind = ~~match[1];
+
+						if (ind >= length) {
+							this.nullifyUniform(i, out);
+						}
+					}
+				}
+			}
+
 			return;
 		}
 		else if (typeof value === 'object') {
@@ -369,6 +448,7 @@ class Item {
 					this.initializeUniform(`${key}.${i}`, nval, out);
 				}
 			}
+
 			return;
 		}
 
@@ -390,12 +470,18 @@ class Item {
 	}
 
 	/**
-	 * Instances item on scene. Intializes shader, attributes, uniforms
-	 * and write it to the shader, defines vertexIndices; writes to
-	 * item's properties "scene", "project" and "webgl"
+	 * Instances item to scene. Intializes shader, attributes, uniforms
+	 * and write it to the shader, defines vertexIndices. Adds to
+	 * item's properties "scene", "project" and "webGL".
+	 * @param {Scene} scene
+	 * @param {Boolean} system Defines object type: system or regular
+	 * @method
+	 * @example
+	 * var item = new Item(options);
 	 *
-	 * @param {Scene} scene Which scene belongs to
-	 * @param {bool} system Defines object type: system or regular
+	 * var scene = new Scene('main');
+	 *
+	 * item.instance(scene, true);
 	 */
 	instance(scene, isSystem = false) {
 		if ((scene instanceof Scene)) {
@@ -407,9 +493,9 @@ class Item {
 			}
 
 			this.isInstanced = true;
-			this.scene = scene;
-			this.project = scene.project;
-			this.webGL = this.project.webGLRenderer.webGL;
+			this.scene_ = scene;
+			this.project_ = scene.project;
+			this.webGL_ = this.project.webGLRenderer.webGL;
 
 			if (this.mesh) {
 				this.mesh.shader = this.mesh.shader.initialize(this.webGL);
@@ -424,9 +510,11 @@ class Item {
 	}
 
 	/**
-	 * Calculates model-view matrix by position and parents
-	 *
-	 * @return {Mat4} mvmatrix
+	 * Returns {@link Mat4} modified by {@link Body}'s position,
+	 * rotation and scale, also include relation of body's
+	 * parents.
+	 * @return {Mat4}
+	 * @method
 	 */
 	mvmatrix() {
 		var matS, matR, matT, matU, mvmatrix;
@@ -489,14 +577,124 @@ class Item {
 		return mvmatrix;
 	}
 
+	/**
+	 * Sets the uniform value as default value of this type.
+	 * Uniform can not be removed so it's the only way, to
+	 * clear it.
+	 * @param  {String} key Uniform name
+	 * @param  {Object} out Rewritable object
+	 * @method
+	 * @example
+	 * var item = new Item(options);
+	 *
+	 * var uniforms = {};
+	 *
+	 * item.initializeUniform('u_Count', 5, uniforms);
+	 * uniforms;  // Object {u_MVMatrix: {location, type, method, value: 5}}
+	 * item.nullifyUniform('u_Count', uniforms);
+	 * uniforms;  // Object {u_MVMatrix: {location, type, method, value: 0}}
+	 */
+	nullifyUniform(key, out) {
+		var uniform = out[key];
+		console.log(key);
+
+		switch (uniform.type) {
+			case 'mat':
+			switch (uniform.method) {
+				case 'uniformMatrix4fv':
+				uniform.value = DEFAULT_VALUES.mat4;
+				break;
+
+				case 'uniformMatrix3fv':
+				uniform.value = DEFAULT_VALUES.mat3;
+				break;
+
+				case 'uniformMatrix2fv':
+				uniform.value = DEFAULT_VALUES.mat2;
+				break;
+			}
+			break;
+
+			case 'vec':
+			switch (uniform.method) {
+				case 'uniform4fv':
+				uniform.value = DEFAULT_VALUES.vec4;
+				break;
+
+				case 'uniform3fv':
+				uniform.value = DEFAULT_VALUES.vec3;
+				break;
+
+				case 'uniform2fv':
+				uniform.value = DEFAULT_VALUES.vec2;
+				break;
+			}
+			break;
+
+			case 'col':
+			uniform.value = DEFAULT_VALUES.col;
+			break;
+
+			case 'qua':
+			uniform.value = DEFAULT_VALUES.qua;
+			break;
+
+			case 'eul':
+			uniform.value = DEFAULT_VALUES.eul;
+			break;
+
+			case 'img':
+			uniform.value = DEFAULT_VALUES.img;
+			break;
+
+			case 'num':
+			uniform.value = DEFAULT_VALUES.num;
+			break;
+		}
+	}
+
+	/**
+	 * Called after item instantiation
+	 * @method
+	 * @callback
+	 */
+	oninstance() {
+	}
+
+	/**
+	 * Called after {@link Project} initialization on each frame
+	 * @method
+	 * @callback
+	 */
+	onupdate() {
+	}
+
+	/**
+	 * Called after item remove
+	 * @method
+	 * @callback
+	 */
+	onremove() {
+	}
+
 	get private() {
 		return this.private_;
+	}
+
+	get project() {
+		return this.project_;
 	}
 
 	get public() {
 		return this.public_;
 	}
 
+	/**
+	 * Removes item from {@link Scene}'s objects. After
+	 * remove item can not be instantiated again, it needs
+	 * to create new item.
+	 * @method
+	 */
 	remove() {
 		if (this.onremove) {
 			this.onremove();
@@ -506,9 +704,9 @@ class Item {
 	}
 
 	/**
-	 * Makes rotate the object on selected vector
-	 *
-	 * @param {Vec} vec
+	 * Sets the rotation of item's {@link Body} by {@link Vec3}.
+	 * @param {Vec3} vec
+	 * @method
 	 */
 	rotate(vec) {
 		clearTimeout(this.rotateTimer);
@@ -527,9 +725,14 @@ class Item {
 		}
 	}
 
+	get scene() {
+		return this.scene_;
+	}
+
 	/**
-	 * Updates all attributes, uniforms and textures
-	 * binded to shader
+	 * Calls updateAttribute, updateUniform and activeTexture for
+	 * every attribute, uniform and texture in shader.
+	 * @method
 	 */
 	update() {
 		var gl = this.webGL;
@@ -565,6 +768,14 @@ class Item {
 		}
 	}
 
+	/**
+	 * Sends all valid attribute-buffers to shader.
+	 * @param {Object} options
+	 * @param  {WebGLBuffer} options.buffer
+	 * @param  {WebGLLocation} options.location
+	 * @param  {Number} options.size
+	 * @method
+	 */
 	updateAttribute({buffer, location, size} = {}) {
 		var gl = this.webGL;
 
@@ -576,7 +787,18 @@ class Item {
 		}
 	}
 
-	updateUniform({isActive, method, location, type, value}) {
+	/**
+	 * Sends all valid uniform-values to shader.
+	 * @param {Object} options
+	 * @param  {Boolean} options.isActive
+	 * @param  {String} options.type
+	 * @param  {String} options.method
+	 * @param  {WebGLLocation} options.location
+	 * @param  {Mat | Vec | Color | Euler | Quaternion |
+	 * Image | Number | Array | Object} options.value
+	 * @method
+	 */
+	updateUniform({isActive, type, method, location, value}) {
 		if (isActive) {
 			return;
 		}
@@ -606,4 +828,28 @@ class Item {
 			break;
 		}
 	}
+
+	get webGL() {
+		return this.webGL_;
+	}
 }
+
+/**
+ * Contains default values for every available
+ * uniform-types. Used to {@link Item.nullifyUniform}.
+ * @type {Object}
+ * @constant
+ */
+const DEFAULT_VALUES = {
+	mat4: new Mat4(0),
+	mat3: new Mat3(0),
+	mat2: new Mat2(0),
+	vec4: new Vec4,
+	vec3: new Vec3,
+	vec2: new Vec2,
+	col: new Color(0, 0, 0, 0),
+	qua: new Quaternion(0, 0, 0, 0),
+	eul: new Euler(0, 0, 0),
+	img: new Image,
+	num: 0
+};

@@ -1,18 +1,23 @@
 /**
- * Arbitrary matrix with "a"-rows and "b"-columns,
- * gives access to make matrix calculations
- *
- * @constructor
+ * Represent matrices in column-major-view: array's position index is
+ * a row number, the inner array's position index is a column number.
  * @this {Mat}
- * @param {num} a Rows
- * @param {num} b Columns
- * @param {Array} arr If need a custom values in matrix
- *  then send an array
+ * @param {Number} a Quantity of a rows
+ * @param {Number} b Quantity of a columns
+ * @param {Array} arr If need a custom matrix then throw array
+ * @class
+ * @property {Number} a Quantity of a rows
+ * @property {Number} b Quantity of a columns
+ * @example
+ * var mat = new Mat(2, 3, [
+ * 	1, 2, 2
+ * 	4, 3, 1
+ * ]);
+ * mat;  // [[1, 2, 2], [4, 3, 1]]
  */
 
 class Mat {
 	constructor(a = 0, b = 0, arr) {
-		// optimization, don't make a calculations if a child class
 		if (this.constructor === Mat) {
 			if (typeof a !== 'number' || typeof b !== 'number') {
 				throw new Error('Matrix: rows and columns count must be a number');
@@ -42,6 +47,11 @@ class Mat {
 		return this.b_;
 	}
 
+	/**
+	 * Returns an array from matrix in column-major-view.
+	 * @return {Array}
+	 * @method
+	 */
 	array() {
 		var out = [];
 		var a = this.a,
@@ -56,6 +66,16 @@ class Mat {
 		return out;
 	}
 
+	/**
+	 * Compares 2 matrixes and returns true if them equal else
+	 * returns false. P.S. Better use {@link amc} function, it is
+	 * much optimizing.
+	 * @param  {Mat} mat0 First matrix
+	 * @param  {Mat} mat1 Second matrix
+	 * @return {Boolean}
+	 * @method
+	 * @static
+	 */
 	static compare(mat0, mat1) {
 		var out = true;
 		var a0 = mat0.a,
@@ -79,7 +99,10 @@ class Mat {
 		return out;
 	}
 
-	// Shows matrix in console with 2 numbers after dot
+	/**
+	 * Represents a matrix in the console in its usual form. Rounds up to two.
+	 * @method
+	 */
 	console() {
 		var max = [0, 0, 0, 0];
 		var a = this.a,
@@ -113,7 +136,11 @@ class Mat {
 		}
 	}
 
-	// determinant
+	/**
+	 * Retuens determinante of matrix. 
+	 * @return {Number}
+	 * @method
+	 */
 	det() {
 		var out = 0;
 		var a = this.a,
@@ -148,17 +175,28 @@ class Mat {
 		return out;
 	}
 
-	// difference
-	static dif(...matrixes) {
-		var mat1 = matrixes[0],
-			mat2 = matrixes[1];
+	/**
+	 * Calculates difference between two matrices and returns
+	 * result matrix. P.S. Better use {@link amc} function, it is
+	 * much optimizing.
+	 * @param  {...Mat} matrices Array of matrices to calculation
+	 * @return {Mat}
+	 * @method
+	 * @static
+	 * @example
+	 * var mat = Mat.dif(new Mat4(4), new Mat4(1));
+	 * mat;  // [[3,3,3,3],[3,3,3,3],[3,3,3,3],[3,3,3,3]]
+	 */
+	static dif(...matrices) {
+		var mat1 = matrices[0],
+			mat2 = matrices[1];
 		var a = mat1.a,
 			b = mat1.b,
 			a1 = mat2.a,
 			b1 = mat2.b;
 
 		if (a != a1 || b != b1) {
-			throw new Error('Mat: dif: must be an equal matrixes')
+			throw new Error('Mat: dif: must be an equal matrices')
 		}
 
 		var out = new Mat(a, b);
@@ -169,14 +207,19 @@ class Mat {
 			}
 		}
 
-		if (matrixes.length > 2) {
-			matrixes.splice(0, 2, out);
-			out = Mat.dif(...matrixes);
+		if (matrices.length > 2) {
+			matrices.splice(0, 2, out);
+			out = Mat.dif(...matrices);
 		}
 
 		return out;
 	}
 
+	/**
+	 * Returns inversed matrix.
+	 * @return {Mat}
+	 * @method
+	 */
 	inverse() {
 		var out = this;
 		var a = this.a,
@@ -203,7 +246,16 @@ class Mat {
 		return out;
 	}
 
-	// multi matrix values on coefficient
+	/**
+	 * Multiplies matrix's each cell on number and returns
+	 * result matrix.
+	 * @param {Number} num
+	 * @return {Mat}
+	 * @method
+	 * @example
+	 * var mat = (new Mat2).multi(2);
+	 * mat;  // [[2, 0], [0, 2]]
+	 */
 	multi(num) {
 		if (typeof num !== 'number') {
 			throw new Error('Mat: multi: must be a number');
@@ -222,9 +274,21 @@ class Mat {
 		return out;
 	}
 
-	static multi(...matrixes) {
-		var mat1 = matrixes[0],
-			mat2 = matrixes[1];
+	/**
+	 * Calculates multiply of two matrices and returns
+	 * result matrix. P.S. Better use {@link amc} function, it is
+	 * much optimizing.
+	 * @param  {...Mat} matrices Array of matrices to calculation
+	 * @return {Mat}
+	 * @method
+	 * @static
+	 * @example
+	 * var mat = Mat.multi(new Mat(2, 3, [5,4,3,3,4,5]), new Mat(3, 2, [2,1,1,2,2,1]));
+	 * mat;  // [[20, 16], [20, 16]]
+	 */
+	static multi(...matrices) {
+		var mat1 = matrices[0],
+			mat2 = matrices[1];
 
 		var a = mat1.a,
 			b = mat1.b,
@@ -245,14 +309,20 @@ class Mat {
 			}
 		}
 
-		if (matrixes.length > 2) {
-			matrixes.splice(0, 2, out);
-			out = Mat.multi(...matrixes);
+		if (matrices.length > 2) {
+			matrices.splice(0, 2, out);
+			out = Mat.multi(...matrices);
 		}
 
 		return out;
 	}
 
+	/**
+	 * Slices matrix on 1 by column and row, makes transposition
+	 * and inversion of matrix, returns result matrix
+	 * @return {Mat}
+	 * @method
+	 */
 	normalize() {
 		var a = this.a,
 			b = this.b;
@@ -262,7 +332,16 @@ class Mat {
 		return out;
 	}
 
-	// slice column and row in matrix
+	/**
+	 * Slices matrix column and row by selected coordinates.
+	 * @param  {Number} x Row position
+	 * @param  {Number} y Column position
+	 * @return {Mat}
+	 * @method
+	 * @example
+	 * var mat = new Mat4;
+	 * mat.slice(3, 3);  // [[1, 0, 0], [0, 1, 0], [0, 0, 1]]
+	 */
 	slice(x, y) {
 		var a = this.a,
 			b = this.b;
@@ -274,7 +353,15 @@ class Mat {
 		return out;
 	}
 
-	// slice column in matrix
+	/**
+	 * Slices matrix column by selected coordinate
+	 * @param  {Number} x Column position
+	 * @return {Mat}
+	 * @method
+	 * @example
+	 * var mat = new Mat4;
+	 * mat.slicec(1);  // [[1, 0, 0], [0, 0, 0], [0, 1, 0], [0, 0, 1]]
+	 */
 	slicec(x) {
 		if (typeof x !== 'number') {
 			throw new Error('Mat: slicec: must be a number');
@@ -302,7 +389,15 @@ class Mat {
 		return out;
 	}
 
-	// slice row in matrix
+	/**
+	 * Slices matrix row by selected coordinate
+	 * @param  {Number} y Row position
+	 * @return {Mat}
+	 * @method
+	 * @example
+	 * var mat = new Mat4;
+	 * mat.slicer(2);  // [[1, 0, 0], [0, 1, 0], [0, 0, 0]]
+	 */
 	slicer(y) {
 		if (typeof y !== 'number') {
 			throw new Error('Mat: slicer: must be a number');
@@ -331,11 +426,15 @@ class Mat {
 	}
 
 	/**
-	 * Returns value of sub-matrix selected by x and y position
-	 *
-	 * @return {Mat}
+	 * Calculates sub-matrix of matrix by selected coordinates.
+	 * @param  {Number} x Row coordinate
+	 * @param  {Number} y Column coordinate
+	 * @return {Number}
+	 * @method
+	 * @example
+	 * var mat = new Mat2([1, 2, 2, 1]);
+	 * mat.sub();  // -3
 	 */
-
 	sub(x, y) {
 		if (typeof x !== 'number' || typeof y !== 'number') {
 			throw new Error('Mat: sub: "x", "y" must be a numbers');
@@ -355,6 +454,16 @@ class Mat {
 		return out;
 	}
 
+	/**
+	 * Sum matrix's each cell on number and returns
+	 * result matrix.
+	 * @param {Number} num
+	 * @return {Mat}
+	 * @method
+	 * @example
+	 * var mat = (new Mat2).sum(2);
+	 * mat;  // [[3, 0], [0, 3]]
+	 */
 	sum(num) {
 		if (typeof num !== 'number') {
 			throw new Error('Mat: sum: must be a number');
@@ -373,6 +482,18 @@ class Mat {
 		return out;
 	}
 
+	/**
+	 * Calculates sum of two matrices and returns
+	 * result matrix. P.S. Better use {@link amc} function, it is
+	 * much optimizing.
+	 * @param  {...Mat} matrices Array of matrices to calculation
+	 * @return {Mat}
+	 * @method
+	 * @static
+	 * @example
+	 * var mat = Mat.sum(new Mat2, new Mat2);
+	 * mat;  // [[2, 0], [0, 2]]
+	 */
 	static sum(...matrixes) {
 		var mat1 = matrixes[0],
 			mat2 = matrixes[1];
@@ -401,7 +522,11 @@ class Mat {
 		return out;
 	}
 
-	// reverses matrix
+	/**
+	 * Returns reversed matrix.
+	 * @return {Mat}
+	 * @method
+	 */
 	transpose() {
 		var a = this.a,
 			b = this.b;
@@ -418,12 +543,17 @@ class Mat {
 }
 
 /**
- * Second-order matrix (2x2)
- *
- * @constructor
+ * Derivative of the {@link Mat} class. Has 2 rows and 2 columns.
+ * @param {Array} arr If need a custom matrix then throw array, if
+ * need to fill each cell of matrix with one number then throw number.
  * @this {Mat2}
- * @param {Array} arr Custom values for matrix can be a number
- *  to fill matrix this number
+ * @class
+ * @extends Mat
+ * @property {Number} a Quantity of a rows
+ * @property {Number} b Quantity of a columns
+ * @example
+ * var mat = new Mat2(5);
+ * mat;  // [[5, 5], [5, 5]]
  */
 
 class Mat2 extends Mat {
@@ -452,12 +582,17 @@ class Mat2 extends Mat {
 }
 
 /**
- * Third-order matrix (3x3)
- *
- * @constructor
+ * Derivative of the {@link Mat} class. Has 3 rows and 3 columns.
+ * @param {Array} arr If need a custom matrix then throw array, if
+ * need to fill each cell of matrix with one number then throw number.
  * @this {Mat3}
- * @param {Array} arr Custom values for matrix can be a number
- *  to fill matrix this number
+ * @class
+ * @extends Mat
+ * @property {Number} a Quantity of a rows
+ * @property {Number} b Quantity of a columns
+ * @example
+ * var mat = new Mat3(5);
+ * mat;  // [[5, 5], [5, 5], [5, 5]]
  */
 
 class Mat3 extends Mat {
@@ -484,6 +619,15 @@ class Mat3 extends Mat {
 		this.a_ = this.b_ = 3;
 	}
 
+	/**
+	 * Returns scaled matrix by vector.
+	 * @param  {Vec2} vec
+	 * @return {Mat}
+	 * @method
+	 * @static
+	 * @example
+	 * Mat3.scale(new Vec2(3, 2));  // [[3,0,0], [0,2,0], [0,0,1]]
+	 */
 	static scale(vec) {
 		var x = vec.x,
 			y = vec.y;
@@ -495,6 +639,15 @@ class Mat3 extends Mat {
 		return out;
 	}
 
+	/**
+	 * Returns translated matrix by vector.
+	 * @param  {Vec2} vec
+	 * @return {Mat}
+	 * @method
+	 * @static
+	 * @example
+	 * Mat3.translate(new Vec2(5, 4));  // [[1,0,0], [0,1,0], [5,4,1]]
+	 */
 	static translate(vec) {
 		var x = vec.x,
 			y = vec.y;
@@ -508,12 +661,17 @@ class Mat3 extends Mat {
 }
 
 /**
- * Fourth-order matrix (4x4)
- *
- * @constructor
+ * Derivative of the {@link Mat} class. Has 4 rows and 4 columns.
+ * @param {Array} arr If need a custom matrix then throw array, if
+ * need to fill each cell of matrix with one number then throw number.
  * @this {Mat4}
- * @param {Array} arr Custom values for matrix can be a number
- *  to fill matrix this number
+ * @class
+ * @extends Mat
+ * @property {Number} a Quantity of a rows
+ * @property {Number} b Quantity of a columns
+ * @example
+ * var mat = new Mat4(5);
+ * mat;  // [[5, 5], [5, 5], [5, 5], [5, 5]]
  */
 
 class Mat4 extends Mat {
@@ -541,12 +699,16 @@ class Mat4 extends Mat {
 	}
 
 	/**
-	 * Orthogonal projection matrix by near and far fields
-	 *
-	 * @param {number} near
-	 * @param {number} far
+	 * Creates orthogonal-projection matrix. It is a form of parallel
+	 * projection, where all the projection lines are orthogonal
+	 * to the projection plane.
+	 * @param  {Number} near Physical offset from deduction point, pseudo-origin.
+	 * @param  {Far} far Maximum far plan position where you can see a point.
+	 * @return {Mat}
+	 * @method
+	 * @static
 	 */
-	static orthogonal(near, far) {
+	static orthographic(near, far) {
 		var d = far - near;
 		var out = new Mat4([
 			d, 0, 0, 0,
@@ -559,12 +721,15 @@ class Mat4 extends Mat {
 	}
 
 	/**
-	 * Perspective projection matrix
-	 *
-	 * @param {number} aspect Ratio of width and height 
-	 * @param {number} near
-	 * @param {number} far
-	 * @param {number} fovy Field of vision vertical
+	 * Creates perspective-projection matrix. It is a form of projection,
+	 * where items change them size relative to the distance from user.
+	 * @param {Number} aspect Ratio of the width and height.
+	 * @param {Number} near Physical offset from deduction point, pseudo-origin.
+	 * @param {Number} far Maximum far plan position where you can see a point.
+	 * @param {Number} fovy Vertical field of vision in degrees.
+	 * @return {Mat}
+	 * @method
+	 * @static
 	 */
 	static perspective(aspect, near, far, fovy) {
 		fovy = Math.DTR(fovy);
@@ -581,6 +746,16 @@ class Mat4 extends Mat {
 		return out;
 	}
 
+	/**
+	 * Returns rotated matrix by vector.
+	 * @param  {Quaternion} quat
+	 * @return {Mat}
+	 * @method
+	 * @static
+	 * @example
+	 * var mat = Mat4.rotate(Quaternion.Euler(90, 0, 0));
+	 * mat;  // [[1,0,0,0], [0,0,-1,0], [0,1,0,0], [0,0,0,1]]
+	 */
 	static rotate(quat) {
 		var x = quat.x,
 			y = quat.y,
@@ -601,6 +776,16 @@ class Mat4 extends Mat {
 		return out;
 	}
 
+	/**
+	 * Returns scaled matrix by vector.
+	 * @param  {Vec3} vec
+	 * @return {Mat}
+	 * @method
+	 * @static
+	 * @example
+	 * var mat = Mat4.scale(new Vec3(5, 5, 1));
+	 * mat;  // [[5,0,0,0], [0,5,0,0], [0,0,1,0], [0,0,0,1]]
+	 */
 	static scale(vec) {
 		var x = vec.x,
 			y = vec.y,
@@ -614,6 +799,16 @@ class Mat4 extends Mat {
 		return out;
 	}
 
+	/**
+	 * Returns translated matrix by vector.
+	 * @param  {Vec3} vec
+	 * @return {Mat}
+	 * @method
+	 * @static
+	 * @example
+	 * var mat = Mat4.translate(new Vec3(4, 3, 2));
+	 * mat;  // [[1,0,0,0], [0,1,0,0], [0,0,1,0], [4,3,2,1]]
+	 */
 	static translate(vec) {
 		var x = vec.x,
 			y = vec.y,
@@ -628,6 +823,13 @@ class Mat4 extends Mat {
 	}
 }
 
+/**
+ * Returns boolean true if argument is number
+ * else returns false.
+ * @param  {a}  a Argument
+ * @return {Boolean}
+ * @method isNum
+ */
 function isNum(a) {
 	return typeof a === 'number';
 }

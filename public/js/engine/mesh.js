@@ -1,16 +1,26 @@
 /**
- * Mesh contains info about item's shader, attributes,
- * uniforms, vertex-indices, e.t.c. This class needs to
- * send all info about item to shader
- *
- * @constructor
+ * Mesh contains item's shader, material, uniforms, etc.
+ * Initializes forms to send in shader after instantiation.
  * @this {Mesh}
- *  {webGLBuffer} VIOBuffer Initialized buffer of vertexIndices
- * @param {Shader} shader
- * @param {string} drawStyle WebGL type of drawning
- * @param {number[]} vertexIndices
- * @param {object} attributes
- * @param {object} uniforms
+ * @param {Object} options
+ * @param {Shader} options.shader
+ * @param {String} options.drawStyle How to connect vertices on WebGL context.
+ * LINES, LINE_STRIP, LINE_LOOP, TRIANGLES, TRIANGLE_STRIP, TRIANGLE_FAN,
+ * POINTS.
+ * @param {Array} options.vertexIndices
+ * @param {Object} options.attributes
+ * @param {Object} options.uniforms
+ * @param {Material} options.material
+ * @class
+ * @property {Shader} shader
+ * @property {String} drawStyle How to connect vertices on WebGL context.
+ * LINES, LINE_STRIP, LINE_LOOP, TRIANGLES, TRIANGLE_STRIP, TRIANGLE_FAN,
+ * POINTS.
+ * @property {Array} vertexIndices
+ * @property {Object} attributes
+ * @property {Object} uniforms
+ * @property {Material} material
+ * @property {webGLBuffer} VIOBuffer Initialized buffer of vertexIndices.
  */
 
 class Mesh {
@@ -19,13 +29,15 @@ class Mesh {
 		drawStyle = 'TRIANGLES',
 		vertexIndices = [],
 		attributes = {},
-		uniforms = {}
+		uniforms = {},
+		material
 	} = {}) {
 		this.shader = shader;
 		this.drawStyle = drawStyle;
 		this.vertexIndices = vertexIndices;
 		this.attributes = attributes;
 		this.uniforms = uniforms;
+		this.material = material;
 	}
 
 	get shader() {
@@ -84,12 +96,29 @@ class Mesh {
 		this.uniforms_ = val;
 	}
 
+	get material() {
+		return this.material_;
+	}
+	set material(val) {
+		if (val && !(val instanceof Material)) {
+			throw new Error('Mesh: material: must be a Material');
+		}
+
+		this.material_ = val;
+	}
+
 	get program() {
 		if (this.shader) {
 			return this.shader.program;
 		}
 	}
 
+	/**
+	 * Initializes vertexIndices array and crates buffer.
+	 * @param {WebGLContext} gl
+	 * @param {Array} val
+	 * @method
+	 */
 	setVIOBuffer(gl, val) {
 		var buffer = gl.createBuffer();
 
@@ -99,6 +128,83 @@ class Mesh {
 
 		buffer.length = val.length;
 
-		this.VIOBuffer = buffer;
+		this.VIOBuffer_ = buffer;
+	}
+
+	get VIOBuffer() {
+		return this.VIOBuffer_;
+	}
+}
+
+/**
+ * Sends data about mesh's material in shader.
+ * @this {Material}
+ * @param {Object} options
+ * @param {Color} options.ambient Shadow's color in item's surface.
+ * @param {Color} options.diffuse Main color of the object.
+ * @param {Color} options.specular Shininess color.
+ * @class
+ * @property {Color} ambient Shadow's color in item's surface.
+ * @property {Color} diffuse Main color of the object.
+ * @property {Color} specular Shininess color.
+ */
+
+class Material {
+	constructor({
+		ambient = new Color(0, 0, 0, 1),
+		diffuse = new Color(161, 250, 206, 1),
+		specular = new Color(230, 255, 247, 1)
+	} = {}) {
+		this.ambient = ambient;
+		this.diffuse = diffuse;
+		this.specular = specular;
+	}
+
+	get ambient() {
+		return this.ambient_;
+	}
+	set ambient(val) {
+		if (!(val instanceof Color)) {
+			throw new Error('Material: ambient: must be a Color');
+		}
+
+		this.ambient_ = val;
+	}
+
+	get diffuse() {
+		return this.diffuse_;
+	}
+	set diffuse(val) {
+		if (!(val instanceof Color)) {
+			throw new Error('Material: diffuse: must be a Color');
+		}
+
+		this.diffuse_ = val;
+	}
+
+	get specular() {
+		return this.specular_;
+	}
+	set specular(val) {
+		if (!(val instanceof Color)) {
+			throw new Error('Material: specular: must be a Color');
+		}
+
+		this.specular_ = val;
+	}
+
+	/**
+	 * Returns object from material data.
+	 * @return {Object}
+	 * @method
+	 */
+	data() {
+		var out = {
+			ambient: this.ambient,
+			diffuse: this.diffuse,
+			specular: this.specular
+		};
+
+		return out;
 	}
 }

@@ -1,13 +1,20 @@
 /**
- * Array of colors (red, green, blue, alpha-channel)
- * this class helps work this colors, it gives any
- * permissions to use color filters, math functions, e.t.c
- *
- * @constructor
+ * Array of numbers (red, green, blue, alpha-channel) that
+ * creates web-color.
  * @this {Color}
- *  {number} this.size Quantity of sended arguments (3 or 4)
- * @param {number} r, g, b, a
- *  rgb must have value 0-255, a - 0-1
+ * @param {Number} r Red (0-255)
+ * @param {Number} g Green (0-255)
+ * @param {Number} b Blue (0-255)
+ * @param {Number} a Alpha-channel (0-1)
+ * @class
+ * @property {Number} r Red (0-255)
+ * @property {Number} g Green (0-255)
+ * @property {Number} b Blue (0-255)
+ * @property {Number} a Alpha-channel (0-1)
+ * @property {Number} size How much numbers in color (3-4)
+ * @property {Color} rgb Red, Green and Blue channels color
+ * @property {Color} rgba Red, Green, Blue and Alpha channels
+ * color
  */
 
 class Color {
@@ -37,7 +44,7 @@ class Color {
 		this.b_ = arr[2];
 		this.a_ = arr[3];
 
-		/** @private */ this.size_ = arr.length;
+		this.size_ = arr.length;
 
 		if (this.size > 4) {
 			this.size_ = 4;
@@ -51,6 +58,11 @@ class Color {
 		return this.a_;
 	}
 
+	/**
+	 * Returns an array from color numbers.
+	 * @return {Array}
+	 * @method
+	 */
 	array() {
 		var out = [this.r, this.g, this.b];
 
@@ -96,7 +108,10 @@ class Color {
 	}
 
 	/**
-	 * Devides rgb on 255 to becane rgb interval 0-1
+	 * Returns color with divided Red, Green and Blue
+	 * channels on 255.
+	 * @return {Color}
+	 * @method
 	 */
 	tounit() {
 		var arr = [
@@ -114,6 +129,11 @@ class Color {
 		return out;
 	}
 
+	/**
+	 * Transforms Color in {@link Vec}.
+	 * @return {Vec}
+	 * @method
+	 */
 	vec() {
 		var out = new Vec(...this.array());
 

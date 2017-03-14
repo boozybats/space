@@ -1,12 +1,32 @@
-// gravitational constant
+/**
+ * Gravitational constant.
+ * @type {Number}
+ * @const
+ */
 const G = 6.6738480 * Math.pow(10, -11);
-// how much layers must be in object
+/**
+ * How much layers must be in object.
+ * @type {Number}
+ * @const
+ */
 const LAYERS_COUNT = 1000;
-// constant for determining temperature (taken from Earth)
+/**
+ * Constant for determining temperature (taken from Earth).
+ * @type {Number}
+ * @const
+ */
 const PRESSURE_TEMPERATURE_CONST = 6669090909090;
-// minimal radius which from starts calculations
+/**
+ * Minimal radius from which start calculations.
+ * @type {Number}
+ * @const
+ */
 const CORE_MIN_RADIUS = 25;
-// normal pressure for planets like Earth
+/**
+ * Normal pressure for planets like Earth.
+ * @type {Number}
+ * @const
+ */
 const NORMAL_PRESSURE = 101325;
 
 var PeriodicTable = {

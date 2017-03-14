@@ -1,6 +1,6 @@
 /**
- * Simplify work with websockets to get/send server's data,
- * always sends 'id' as a parametr if defined
+ * Simplifies work with websockets to get/send server's data,
+ * always sends 'id' as a parametr if defined.
  * @type {Object}
  */
 const server = {
@@ -26,9 +26,9 @@ const server = {
 		});
 	},
 	/**
-	 * read id from cookie or generate new on server also send
+	 * Reads id from cookie or generate new on server also send
 	 * 'id' on server to track activity
-	 * Calls callback after successful request
+	 * Calls callback after successful request.
 	 */
 	getid: function(callback) {
 		var id = cookie.read('id');

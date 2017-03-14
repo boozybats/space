@@ -1,19 +1,19 @@
 /**
- * Contains an info about cameras, items, skybox,
- * lights, e.t.c. 
- *
- * @constructor
+ * Collects cameras, items and lights. Scene must be binded to the project
+ * and defined as current scene to start action here.
  * @this {Scene}
- *  {number} this.lastShaderId The last used shader's id
- *  {Camera[]} this.cameras
- *  {DirectionalLight[]} this.directionalLights
- *  {PointLight[]} this.pointLights
- *  {Item[]} this.items
- *  {Item[]} this.systemitems Can be drawn separately from items
- * @param {string} name
- * @param {Project} project
- * @param {Color} skyBoxColor
- * @param {string} skyBoxType
+ * @param {Object} options
+ * @param {String} options.name
+ * @param {Project} options.project
+ * @param {Color} options.skyBoxColor
+ * @param {String} options.skyBoxType
+ * @class
+ * @property {Number} lastShaderId The last used shader's id.
+ * @property {Array} cameras
+ * @property {Array} directionalLights
+ * @property {Array} pointLights
+ * @property {Array} items
+ * @property {Array} systemitems Can be drawn separately from items.
  */
 
 class Scene {
@@ -28,11 +28,11 @@ class Scene {
 		this.skyBoxColor = skyBoxColor;
 		this.skyBoxType = skyBoxType;
 
-		this.cameras = [];
-		this.directionalLights = [];
-		this.pointLights = [];
-		this.items = [];
-		this.systemitems = [];
+		this.cameras_ = [];
+		this.directionalLights_ = [];
+		this.pointLights_ = [];
+		this.items_ = [];
+		this.systemitems_ = [];
 	}
 
 	get name() {
@@ -79,6 +79,13 @@ class Scene {
 		this.skyBoxType_ = val;
 	}
 
+	/**
+	 * Appends camera to scene. All binded enabled cameras
+	 * draw new WebGLContext view. To see all redrawed items
+	 * set skyBoxType as transparent.
+	 * @param  {Camera} camera
+	 * @method
+	 */
 	appendCamera(camera) {
 		if (!(camera instanceof Camera)) {
 			throw new Error('Scene: appendCamera: must be a Camera');
@@ -88,6 +95,12 @@ class Scene {
 		camera.scene = this;
 	}
 
+	/**
+	 * Appends item to scene. Usualy function are
+	 * called by {@link Item#instance}.
+	 * @param  {Item} item
+	 * @method
+	 */
 	appendItem(item) {
 		if (!(item instanceof Item)) {
 			throw new Error('Scene: appendItem: must be an Item');
@@ -96,6 +109,12 @@ class Scene {
 		this.items.push(item);
 	}
  
+	/**
+	 * Appends system item to scene. Usualy function are
+	 * called by {@link Item#instance}.
+	 * @param  {Item} item
+	 * @method
+	 */
 	appendSystemItem(item) {
 		if (!(item instanceof Item)) {
 			throw new Error('Scene: appendSystemItem: must be an Item');
@@ -104,7 +123,11 @@ class Scene {
 		this.systemitems.push(item);
 	}
 
-	// adds any type of light in scene, auto detection to class
+	/**
+	 * Adds light of any type in scene, auto detection to class.
+	 * @param {Light} light
+	 * @method
+	 */
 	addLight(light) {
 		if (!(light instanceof Light)) {
 			throw new Error('Scene: addLight: must be a Light');
@@ -122,25 +145,51 @@ class Scene {
 		}
 	}
 
-	// find item by this id
-	findItem(id) {
+	get cameras() {
+		return this.cameras_;
+	}
+
+	get directionalLights() {
+		return this.directionalLights_;
+	}
+
+	/**
+	 * Returns finded item of scene by id, name (depending on
+	 * "type") else returns undefined.
+	 * @param {String} type id, name.
+	 * @param  {Number | String} val
+	 * @return {Item}
+	 * @method
+	 * @example
+	 * var scene = new Scene();
+	 *
+	 * var item = new Item({id: 2031, ...});
+	 * item.instance(scene);
+	 *
+	 * scene.findItem('id', 2031);  // Item {id: 2031, ...}
+	 */
+	findItem(type, val) {
 		var items = this.items;
 
-		for (var item of items) {
-			if (item.id === id) {
-				return item;
+		switch (type) {
+			case 'id':
+			for (var item of items) {
+				if (item.id === val) {
+					return item;
+				}
 			}
+			break;
 		}
 	}
 
 	/**
 	 * Returns an object with all lights of scene with calculated
-	 * position, rotations, intensity, e.t.c.
-	 *
-	 * @return {object}
-	 *
-	 * return example:
-	 * {pointLights: {position: ..., ambient: ...}, directionalLights: ...}
+	 * position, rotations, intensity, etc.
+	 * @return {Object}
+	 * @method
+	 * @example
+	 * var scene = new Scene();
+	 * scene.getSceneLights();  // Object {pointLights: {position: ..., ambient: ...}, directionalLights: ...}
 	 */
 	getSceneLights() {
 		var out = [];
@@ -159,7 +208,19 @@ class Scene {
 		return out;
 	}
 
-	// just splices from items array
+	get items() {
+		return this.items_;
+	}
+
+	get pointLights() {
+		return this.pointLights_;
+	}
+
+	/**
+	 * Removes item from scene's items or systemitems.
+	 * @param  {item} item
+	 * @method
+	 */
 	removeItem(item) {
 		if (!(item instanceof Item)) {
 			throw new Error('Scene: removeItem: must be an Item');
@@ -169,9 +230,20 @@ class Scene {
 		if (ind >= 0) {
 			this.items.splice(ind, 1);
 		}
+		else {
+			var ind = this.systemitems.indexOf(item);
+
+			if (ind >= 0) {
+				this.systemitems.splice(ind, 1);
+			}
+		}
 	}
 
-	// auto detection to class
+	/**
+	 * Removes light from scene's lights, auto detection to class.
+	 * @param  {Light} light
+	 * @method
+	 */
 	removeLight(light) {
 		if (!(light instanceof Light)) {
 			throw new Error('Scene: removeLight: must be a Light');
@@ -193,5 +265,9 @@ class Scene {
 			}
 			break;
 		}
+	}
+
+	get systemitems() {
+		return this.systemitems_;
 	}
 }

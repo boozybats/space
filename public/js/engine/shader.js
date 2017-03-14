@@ -1,11 +1,10 @@
 /**
- * Gets info about vertex and fragment shaders,
- * must be initialized
- *
- * @constructor
+ * Containt vertex shader and fragment shader,
+ * must be initialized to get WebGLShader.
  * @this {ShaderTemplate}
- * @param {string} vertexShader
- * @param {string} fragmentShader
+ * @param {String} vertexShader
+ * @param {String} fragmentShader
+ * @class
  */
 
 class ShaderTemplate {
@@ -17,10 +16,11 @@ class ShaderTemplate {
 	/**
 	 * Initalizes vertex and fragment shaders, throw errors if
 	 * founded, return new constructor Shader with program. Must
-	 * be initialized for item, each item have own shader
-	 *
+	 * be initialized for item, each item must have own shader.
+	 * Usualy function are called by {@link Item#instance}.
 	 * @param {WebGLContext} gl
 	 * @return {Shader}
+	 * @method
 	 */
 	initialize(gl) {
 		var vertexShader = this.vertexShader,
@@ -65,18 +65,17 @@ class ShaderTemplate {
 }
 
 /**
- * Contains data about uniforms, attributes, textures
- * of item, have a WebGLProgram. Generates unique id for
- * shader to determine which shader has been used the last one
- *
- * @constructor
+ * Initialized shader with WebGLShader, contains data about
+ * uniforms, attributes, textures of item. Generates unique id for
+ * shader to determine which shader has been used the last one.
  * @this {Shader}
- *  {object} this.attributes
- *  {object} this.uniforms
- *  {object} this.textures
- *  {number} this.texturesCount
- *  {number} id
  * @param {WebGLProgram} program
+ * @class
+ * @property {Object} attributes
+ * @property {Object} uniforms
+ * @property {Object} textures
+ * @property {Number} texturesCount
+ * @property {Number} id
  */
 
 class Shader {

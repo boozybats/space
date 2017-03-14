@@ -1,12 +1,6 @@
 /**
- * 
  * Cursor class contains info about mouse position and axis,
- * doesn't draw anything on screen
- *
- * @constructor
- * @this {Cursor}
- *  {Vec2} this.axis Mouse current instantly direction
- *  {Vec2} this.position Current mouse position (in radius == 1)
+ * doesn't draw anything on screen.
  */
 
 class Cursor {
@@ -19,7 +13,7 @@ class Cursor {
 		return this.axis_;
 	}
 	/**
-	 * Writes axis as a Vec2 and adds to position
+	 * Writes axis as a Vec2 and adds to position.
 	 * @param  {Vec2} val
 	 */
 	set axis(val) {
@@ -35,8 +29,8 @@ class Cursor {
 		return this.position_;
 	}
 	/**
-	 * Position is set by axis, maximum Vec2 length is radius
-	 * of circle with R = 1
+	 * Position is seted by axis, maximum Vec2 length is radius
+	 * of circle with R = 1.
 	 * @param  {Vec2} val
 	 */
 	set position(val) {

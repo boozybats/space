@@ -1,10 +1,8 @@
 /**
  * Loads all sended images and after loading
- * calls callback function with sended object
- * @param  {object}   images
+ * calls callback function with sended object.
+ * @param  {Object}   images
  * @param  {Function} callback
- *
- * callback example: function({space: Image, computer: Image});
  */
 function loader(images, callback) {
 	var out = {};

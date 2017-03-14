@@ -1,13 +1,16 @@
 /**
- * WebGL main component, initialize context with
- * selected attributes
- *
- * @constructor
+ * Initializes WebGLRendererContext with selected
+ * attributes.
  * @this {WebGLRenderer}
- *  {WebGLContext} this.webGL
- *  {Canvas} this.canvas
- * @param {Project} project
- * @param {object} attributes WebGLContext attributes
+ * @param {Object} options
+ * @param {Project} options.project
+ * @param {Object} options.attributes WebGLContext attributes:
+ * Boolean antialias, Boolean alpha, Boolean willReadFrequently,
+ * String storage, Number depth, Number stencil, Boolean premultipliedAlpha,
+ * Boolean preserveDrawingBuffer, Boolean failIfMajorPerformanceCaveat.
+ * @class
+ * @property {WebGLContext} webGL
+ * @property {Canvas} canvas
  */
 
 class WebGLRenderer {

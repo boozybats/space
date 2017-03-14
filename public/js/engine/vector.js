@@ -1,11 +1,13 @@
 /**
- * Object that contains 2-4 values by keys x, y, z and w,
- * it helps to calculate geometric equations and send
- * body's data to shader
- *
- * @constructor
+ * Vector contains 2-4 values by keys x, y, z and w.
  * @this {Vec}
- * @param {number} x, y, z, w
+ * @param {*} x
+ * @param {*} y
+ * @param {*} z
+ * @param {*} w
+ * @class
+ * @property {Vec} x-wzyx Returns new vector with coordinates
+ * in new order.
  */
 
 class Vec {
@@ -27,13 +29,25 @@ class Vec {
 		}
 	}
 
-	// calculates angle between 2 vectors
+	/**
+	 * Calculates angle between 2 vectors.
+	 * @param  {Vec} vec1
+	 * @param  {Vec} vec2
+	 * @return {Number} Degrees
+	 * @method
+	 * @static
+	 */
 	static angle(vec1, vec2) {
 		var out = Math.acos(Vec.cos(vec1, vec2));
 	
 		return out;
 	}
 
+	/**
+	 * Returns an array with vector coordinates.
+	 * @return {Vec}
+	 * @method
+	 */
 	array() {
 		var out = [this.x, this.y];
 
@@ -48,9 +62,14 @@ class Vec {
 	}
 
 	/**
-	 * Returns average vector between sended
-	 * @param  {Vec[]} vectors
+	 * Returns average vector between sended other.
+	 * @param  {...Vec} vectors
 	 * @return {Vec}
+	 * @method
+	 * @static
+	 * @example
+	 * var vec = Vec.avg(new Vec(3,5,6), new Vec(4,2,4), new Vec3(2,2,2));
+	 * vec;  // Vec {x: 3, y: 3, z: 4}
 	 */
 	static avg(...vectors) {
 		var sum = Vec.sum(...vectors);
@@ -59,21 +78,32 @@ class Vec {
 		return out;
 	}
 
-	static compare(vec0, vec1) {
+	/**
+	 * Compares two vectors by x, y, z and w coordinates
+	 * and returns true if them equal else returns false.
+	 * P.S. Better use {@link amc} function, it is
+	 * much optimizing.
+	 * @param  {Vec} vec1
+	 * @param  {Vec} vec2
+	 * @return {Boolean}
+	 * @method
+	 * @static
+	 */
+	static compare(vec1, vec2) {
 		var out = true;
 
-		if (typeof vec0 === 'undefined' || typeof vec1 === 'undefined') {
+		if (typeof vec1 === 'undefined' || typeof vec2 === 'undefined') {
 			out = false;
 		}
 		else {
-			var length0 = vec0.size,
-				length1 = vec1.size;
+			var length0 = vec1.size,
+				length1 = vec2.size;
 
 			if (length0 == length1) {
-				if (vec0.x !== vec1.x ||
-					vec0.y !== vec1.y ||
-					vec0.z !== vec1.z ||
-					vec0.w !== vec1.w) {
+				if (vec1.x !== vec2.x ||
+					vec1.y !== vec2.y ||
+					vec1.z !== vec2.z ||
+					vec1.w !== vec2.w) {
 					out = false;
 				}
 			}
@@ -85,13 +115,29 @@ class Vec {
 		return out;
 	}
 
-	// calculate cosinus between 2 vectors
+	/**
+	 * Calculates cosinus between two vectors.
+	 * @param  {Vec} vec1
+	 * @param  {Vec} vec2
+	 * @return {Number} Radians
+	 * @method
+	 * @static
+	 */
 	static cos(vec1, vec2) {
 		var out = (vec1.x * vec2.x + vec1.y * vec2.y) / (vec1.length() * vec2.length());
 
 		return out;
 	}
 
+	/**
+	 * Calculates difference between two vectors and returns
+	 * result vector. P.S. Better use {@link amc} function, it is
+	 * much optimizing.
+	 * @param {...Vec} vectors
+	 * @return {Vec}
+	 * @method
+	 * @static
+	 */
 	static dif(...vectors) {
 		var vec1 = vectors[0],
 			vec2 = vectors[1];
@@ -111,6 +157,13 @@ class Vec {
 		return out;
 	}
 
+	/**
+	 * Scalar product of two vectors.
+	 * @param  {...Vec} vectors
+	 * @return {Number}
+	 * @method
+	 * @static
+	 */
 	static dot(...vectors) {
 		var vec1 = vectors[0];
 		var vec2 = vectors[1];
@@ -126,15 +179,16 @@ class Vec {
 
 		if (vectors.length > 2) {
 			vectors.splice(0, 2, out);
-			out = Vec.sum(...vectors);
+			out = Vec.dot(...vectors);
 		}
 
 		return out;
 	}
 
 	/**
-	 * Transforms vector to euler
+	 * Transforms vector to euler.
 	 * @return {Euler}
+	 * @method
 	 */
 	euler() {
 		var x = this.x,
@@ -151,8 +205,12 @@ class Vec {
 	}
 
 	/**
-	 * Transforms vec4 to vec3 by devision
-	 * @return {Vec3}
+	 * Converts a vector into a vector into a smaller rank
+	 * by division on last coordinate.
+	 * @return {Vec}
+	 * @method
+	 * @example
+	 * (new Vec4(1, 5, 3, 2)).tocartesian();  // Vec3 {x: 0.5, y: 2.5, z: 1.5}
 	 */
 	tocartesian() {
 		var out;
@@ -170,6 +228,14 @@ class Vec {
 		return out;
 	}
 
+	/**
+	 * Converts a vector into a vector into a higher rank
+	 * by appending value as 1 to last coordinate.
+	 * @return {Vec}
+	 * @method
+	 * @example
+	 * (new Vec3(1, 5, 3)).tohomogeneous();  // Vec3 {x: 1, y: 5, z: 3, w: 1}
+	 */
 	tohomogeneous() {
 		var out;
 
@@ -178,6 +244,11 @@ class Vec {
 		return out;
 	}
 
+	/**
+	 * Returns inversed vector.
+	 * @return {Vec}
+	 * @method
+	 */
 	inverse() {
 		var x = -this.x,
 			y = -this.y,
@@ -196,17 +267,34 @@ class Vec {
 		return out;
 	}
 
+	/**
+	 * Returns length of vector.
+	 * @return {Number}
+	 * @method
+	 */
 	length() {
 		var out = Math.sqrt(Math.pow(this.x, 2) + Math.pow(this.y, 2) + Math.pow(this.z || 0, 2) + Math.pow(this.w || 0, 2));
 
 		return out;
 	}
 
-	// how much coordinates in vector
+	/**
+	 * Returns quantity of coordinates in vector.
+	 * @return {Number}
+	 * @method
+	 */
 	get size() {
 		return this.size_;
 	}
 
+	/**
+	 * Multiplies vector coordinates on number and returns
+	 * result vector. P.S. Better use {@link amc} function, it is
+	 * much optimizing.
+	 * @param  {Number} num
+	 * @return {Vec}
+	 * @method
+	 */
 	multi(num) {
 		if (typeof num !== 'number') {
 			throw new Error('Vector: multi: must be a number');
@@ -224,6 +312,15 @@ class Vec {
 		return out;
 	}
 
+	/**
+	 * Calculates multiply of two vectors and returns
+	 * result vector. P.S. Better use {@link amc} function, it is
+	 * much optimizing.
+	 * @param  {...Vec} vectors Array
+	 * @return {Vec}
+	 * @method
+	 * @static
+	 */
 	static multi(...vectors) {
 		var vec1 = vectors[0],
 			vec2 = vectors[1];
@@ -244,6 +341,11 @@ class Vec {
 		return out;
 	}
 
+	/**
+	 * Returns normalized vector.
+	 * @return {Vec}
+	 * @method
+	 */
 	normalize() {
 		var length = this.length();
 
@@ -258,6 +360,13 @@ class Vec {
 		return out;
 	}
 
+	/**
+	 * Sum vector's coordinates on number and returns
+	 * result vector.
+	 * @param {Number} num
+	 * @return {Vec}
+	 * @method
+	 */
 	sum(num) {
 		if (typeof num !== 'number') {
 			throw new Error('Vector: sum: must be a number');
@@ -275,6 +384,15 @@ class Vec {
 		return out;
 	}
 
+	/**
+	 * Calculates sum of two vectors and returns
+	 * result vector. P.S. Better use {@link amc} function, it is
+	 * much optimizing.
+	 * @param  {...Vec} vectors
+	 * @return {Vec}
+	 * @method
+	 * @static
+	 */
 	static sum(...vectors) {
 		var vec1 = vectors[0],
 			vec2 = vectors[1];
@@ -295,13 +413,6 @@ class Vec {
 		return out;
 	}
 
-	// multiply 2 vectors by module
-	static vecmulti(vec1, vec2) {
-		var out = vec1.length() * vec2.length() * Vec.cos(vec1, vec2);
-
-		return out;
-	}
-
 	get x() {
 		return this.x_;
 	}
@@ -312,6 +423,10 @@ class Vec {
 
 	get z() {
 		return this.z_;
+	}
+
+	get w() {
+		return this.w_;
 	}
 
 	get xy() {
@@ -674,42 +789,56 @@ class Vec {
 		return out;
 	}
 
-	get w() {
-		return this.w_;
-	}
-
+	/**
+	 * @return {Vec3} [1, 0, 0]
+	 */
 	static get right() {
 		return [1, 0, 0];
 	}
 
+	/**
+	 * @return {Vec3} [-1, 0, 0]
+	 */
 	static get left() {
 		return [-1, 0, 0];
 	}
 
+	/**
+	 * @return {Vec3} [0, 1, 0]
+	 */
 	static get up() {
 		return [0, 1, 0];
 	}
 
+	/**
+	 * @return {Vec3} [0, -1, 0]
+	 */
 	static get down() {
 		return [0, -1, 0];
 	}
 
+	/**
+	 * @return {Vec3} [0, 0, 1]
+	 */
 	static get front() {
 		return [0, 0, 1];
 	}
 
+	/**
+	 * @return {Vec3} [0, 0, -1]
+	 */
 	static get back() {
 		return [0, 0, -1];
 	}
 }
 
 /**
- * Contains 2 coordinates in vector
- *
- * @constructor
+ * Vector with 2 coordinates x and y.
  * @this {Vec2}
  * @param {*} x
  * @param {*} y
+ * @class
+ * @extends Vec
  */
 
 class Vec2 extends Vec {
@@ -729,13 +858,13 @@ class Vec2 extends Vec {
 }
 
 /**
- * Contains 3 coordinates in vector
- *
- * @constructor
+ * Vector with 3 coordinates x, y and z.
  * @this {Vec3}
  * @param {*} x
  * @param {*} y
  * @param {*} z
+ * @class
+ * @extends Vec
  */
 
 class Vec3 extends Vec {
@@ -767,14 +896,14 @@ class Vec3 extends Vec {
 }
 
 /**
- * Contains 4 coordinates in vector
- *
- * @constructor
+ * Vector with 4 coordinates x, y, z and w.
  * @this {Vec4}
  * @param {*} x
  * @param {*} y
  * @param {*} z
  * @param {*} w
+ * @class
+ * @extends Vec
  */
 
 class Vec4 extends Vec {

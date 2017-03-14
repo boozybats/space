@@ -1,10 +1,15 @@
 /**
- * Habitual kind of angles which value
- * is degress between 0 and 360
- *
- * @constructor
+ * Eulers angles define three turns of the system by
+ * x, y and z coordinates. Store value between 0 and
+ * 360 for each coordinate.
  * @this {Euler}
- * @param {number} x, y, z degrees
+ * @param {Number} x
+ * @param {Number} y
+ * @param {Number} z
+ * @class
+ * @property {Number} x
+ * @property {Number} y
+ * @property {Number} z
  */
 
 class Euler {
@@ -39,12 +44,30 @@ class Euler {
 		this.z_ = z;
 	}
 
+	/**
+	 * Returns an array from eulers coordinates.
+	 * @return {Array}
+	 * @method
+	 */
 	array() {
 		var out = [this.x, this.y, this.z];
 
 		return out;
 	}
 
+	/**
+	 * Compares 2 Euler-objects by x, y, z
+	 * coordinates and return "true" if everything equal,
+	 * else - "false".
+	 * @param  {Euler} eul0
+	 * @param  {Euler} eul1
+	 * @return {Boolean}
+	 * @method
+	 * @static
+	 * @example
+	 * Euler.compare(new Euler(10, 20, 30), new Euler(11, 21, 31));  // false
+	 * Euler.compare(new Euler(40, 60, 80), new Euler(40, 60, 80));  // true
+	 */
 	static compare(eul0, eul1) {
 		var out = true;
 
@@ -62,6 +85,16 @@ class Euler {
 		return out;
 	}
 
+	/**
+	 * Returns multiplied euler's coordinates by
+	 * specified number.
+	 * @param  {Number} num
+	 * @return {Euler}
+	 * @method
+	 * @example
+	 * var eul = new Euler(10, 0, 6);
+	 * eul.multi(5);  // Euler {x: 50, y: 0, z: 30}
+	 */
 	multi(num) {
 		if (typeof num !== 'number') {
 			throw new Error('Euler: multi: must be a number');
@@ -77,11 +110,20 @@ class Euler {
 	}
 
 	/**
-	 * Transforms quaternions to eulers,
-	 * function gets Quaternions or x, y, z and w numbers
-	 *
-	 * @param {Quaternion|number} x, y, z, w
+	 * Transforms {@link Quaternion}-object to Euler-object
+	 * @param {Quaternion | Number} x Can take Quaternion-object
+	 * as value
+	 * @param {Number} y
+	 * @param {Number} z
+	 * @param {Number} w
 	 * @return {Euler}
+	 * @method
+	 * @static
+	 * @example
+	 * Euler.Quaternion(0.7071, 0, 0, 0.7071);  // Euler {x: 90, y: 0, z: 0}
+	 * 
+	 * var quat = new Quaternion(0.7071, 0, 0, 0.7071);
+	 * Euler.Quaternion(quat);  // Euler {x: 90, y: 0, z: 0}
 	 */
 	static Quaternion(...args) {
 		var x, y, z, w;
@@ -156,6 +198,11 @@ class Euler {
 		return out;
 	}
 
+	/**
+	 * Transforms Euler-object to Vec
+	 * @return {Vec}
+	 * @method
+	 */
 	vec() {
 		var out = new Vec3(this.x, this.y, this.z);
 		return out;

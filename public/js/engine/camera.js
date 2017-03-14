@@ -1,40 +1,24 @@
 /**
- * Camera is a pseudo-object in scene which
- * changes model-view projection matrix to user's
- * vision (e.g. perspective, orthogonal)
- *
- * @constructor
+ * Camera is user's field of vision, it can be moved
+ * by position or rotation, can not be scaled. It have a
+ * projection matrix (most known examples: perspective, orthographic)
+ * that sets sizes of the surrounding area.
  * @this {Camera}
- * 	{Scene} this.scene Which scene belongs
- *  to (changing by scene manipulation)
- * @param {string} name
- * @param {Body} body
- * @param {number} deepOffset Value of neariest field front of camera
- * @param {Mat4} projectionMatrix
+ * @param {Object} options
+ * @param {String} options.name
+ * @param {Body} options.body
+ * @param {Number} options.deepOffset Front offset of the deduction point
+ * @param {Mat4} options.projectionMatrix Usually is seted by function
+ * {@link Mat4.perspective}, sets proportions of screen and edits to
+ * required values
+ * @class
+ * @property {String} name
+ * @property {Body} body
+ * @property {Number} deepOffset Front offset of the deduction point
+ * @property {Mat4} projectionMatrix Usually is seted by function
+ * {@link Mat4.perspective}, sets proportions of screen and edits to
+ * required values
 */
-
-
-/* for projection matrix default params */
-
-// canvas width
-const RESOLUTION_WIDTH = screen.width;
-// canvas height
-const RESOLUTION_HEIGHT = screen.height;
-// leave this value like 0.9(9)
-const DEFAULT_NEARFIELD  = 0.9999;
-/* maximum value where you can see a point on canvas
-can take any value and there will be no distortion,
-cause Z-coordinate needs only for depth-buffer */
-const DEFAULT_FARFIELD   = 1000000;
-// vertical field of vision (recommended value less than 60)
-const DEFAULT_FOVY       = 50;
-// perspective projection matrix show all objects as you look
-const DEFAULT_PERSPECTIVE = Mat4.perspective(
-	RESOLUTION_WIDTH / RESOLUTION_HEIGHT,
-	DEFAULT_NEARFIELD,
-	DEFAULT_FARFIELD,
-	DEFAULT_FOVY
-);
 
 class Camera {
 	constructor({
@@ -48,7 +32,12 @@ class Camera {
 		this.deepOffset = deepOffset;
 		this.projectionMatrix = projectionMatrix;
 		
-		/** @private matrix memory */ this.matmem = [];
+		/**
+		 * Stores last results of {@link Camera#mvmatrix} calculations.
+		 * @type {Array}
+		 * @private
+		 */
+		this.matmem = [];
 	}
 
 	get name() {
@@ -96,9 +85,11 @@ class Camera {
 	}
 
 	/**
-	 * Calculates model-view matrix by position and parents
-	 *
-	 * @return {Mat4} mvmatrix
+	 * Returns {@link Mat4} modified by {@link Body}'s position,
+	 * rotation and scale, also include relation of body's
+	 * parents.
+	 * @return {Mat4}
+	 * @method
 	 */
 	mvmatrix() {
 		var matS, matR, matT, matU, mvmatrix;
@@ -107,14 +98,14 @@ class Camera {
 		/**
 		 * matrix memory contains data about last calculated
 		 * matrix, it needs to save memory, so it's returning
-		 * already calculated values
+		 * already calculated values.
 		 */
 		var memory = this.matmem,
 			level = 0;  // level means "Parent's body number"
 		/**
 		 * if previous levels wasn't equal with memory
 		 * when multiply existing mvmatrix on memory cells instead
-		 * of writing all mvmatrix as value
+		 * of writing all mvmatrix as value.
 		 */
 		var isBreaked = false;  
 
@@ -161,3 +152,49 @@ class Camera {
 		return mvmatrix;
 	}
 }
+
+/**
+ * Auto-determined value by screen width.
+ * @type {Number}
+ * @const
+ */
+const RESOLUTION_WIDTH = screen.width;
+/**
+ * Auto-determined value by screen height.
+ * @type {Number}
+ * @const
+ */
+const RESOLUTION_HEIGHT = screen.height;
+/**
+ * Physical offset from deduction point, pseudo-origin.
+ * @type {Number}
+ * @const
+ */
+const DEFAULT_NEARFIELD = 0.9999;
+/**
+ * Maximum far plan position where you can see a point,
+ * doesn't brings a distortion on any value; needs only
+ * for depth-buffer.
+ * @type {Number}
+ * @const
+ */
+const DEFAULT_FARFIELD = 1000000;
+/**
+ * How much degrees user see vertically
+ * (recommended value less than 55).
+ * @type {Number}
+ * @const
+ */
+const DEFAULT_FOVY = 50;
+/**
+ * Perspective matrix for projection matrix. Sets proportions of
+ * screen and edits to required values.
+ * @type {Mat4}
+ * @const
+ */
+const DEFAULT_PERSPECTIVE = Mat4.perspective(
+	RESOLUTION_WIDTH / RESOLUTION_HEIGHT,
+	DEFAULT_NEARFIELD,
+	DEFAULT_FARFIELD,
+	DEFAULT_FOVY
+);

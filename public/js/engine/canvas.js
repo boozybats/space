@@ -1,31 +1,62 @@
 /**
- * Creates canvas-element and binds
- * to choosen dom-element
- *
- * @constructor
+ * Creates canvas dom-element, sets width and
+ * height for it. Required for {@link WebGLRenderer}.
  * @this {Canvas}
- *  {Project} this.project
- * @param {number} width
- * @param {number} height
+ * @param {Number} width
+ * @param {Number} height
+ * @class
+ * @property {Number} width
+ * @property {Number} height
+ * @property {Project} project Current binded project to the canvas
  */
 
 class Canvas {
 	constructor(width, height) {
 		var canvas = document.createElement('canvas');
+		this.canvas_ = canvas;
 		// if browser doesn't support canvas
 		canvas.innerText = '';
 
-		this.canvas = canvas;
 		this.width = width;
 		this.height = height;
 	}
 
+	get canvas() {
+		return this.canvas_;
+	}
+
+	get height() {
+		return this.height_;
+	}
+	set height(val) {
+		if (typeof val !== 'number') {
+			throw new Error('Canvas: height: must be a number');
+		}
+
+		this.canvas.height = val;
+		this.height_ = val;
+	}
+
+	get width() {
+		return this.width_;
+	}
+	set width(val) {
+		if (typeof val !== 'number') {
+			throw new Error('Canvas: width: must be a number');
+		}
+
+		this.canvas.width = val;
+		this.width_ = val;
+	}
+
 	/**
-	 * appends to choosen dom element
-	 * return "true" if successful added
-	 * else "false" 
-	 *
-	 * @return {bool}
+	 * Appends canvas dom-element to choosen dom-element,
+	 * returns true if successful, else returns false.
+	 * @return {Boolean}
+	 * @method
+	 * @example
+	 * var canvasClass = new Canvas(1280, 768);
+	 * canvasClass.apendTo(document.body);
 	 */
 	appendTo(element) {
 		if (!(element instanceof HTMLElement)) {
@@ -42,42 +73,7 @@ class Canvas {
 		}
 	}
 
-	get height() {
-		return this.height_;
-	}
-
-	// Sets canvas-element height
-	set height(val) {
-		if (typeof val !== 'number') {
-			throw new Error('Canvas: height: must be a number');
-		}
-
-		this.canvas.height = val;
-		this.height_ = val;
-	}
-
-	get width() {
-		return this.width_;
-	}
-
-	// Sets canvas-element width
-	set width(val) {
-		if (typeof val !== 'number') {
-			throw new Error('Canvas: width: must be a number');
-		}
-
-		this.canvas.width = val;
-		this.width_ = val;
-	}
-
 	get project() {
 		return this.project_;
-	}
-	set project(val) {
-		if (val && !(val instanceof Project)) {
-			throw new Error('Canvas: project: must be a Project');
-		}
-
-		this.project_ = val
 	}
 }

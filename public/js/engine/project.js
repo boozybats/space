@@ -1,36 +1,48 @@
 /**
- * Collects all data and info about current action.
- * 
- * @constructor
+ * Collects scenes and project properties. Must be created to start
+ * WebGLContext drawning. Should be initialized for main layer.
  * @this {Project}
- *  {Canvas} this.canvas Drawning-element
- *  {WebGLRenderer} this.webGLRenderer WebGL component
- *  {Scene[]} this.scenes
- *  {Function[]} this.layers Layers are called every frame in order
- * @param {Image} transparentImage Default image that shows if
- *  sampler didn't load
+ * @param {Object} options
+ * @param {Image} options.transparentImage Default image that shows if
+ * sampler didn't load.
+ * @class
+ * @property {Array} scenes
+ * @property {Array} layers Layers are called each frame in order.
+ * @property {Image} transparentImage Default image that shows if
+ * sampler didn't load.
+ * @property {Canvas} canvas
+ * @property {WebGLRenderer} webGLRenderer
+ * @property {Scene} currentScene
  */
 
 class Project {
 	constructor({
 		transparentImage
 	}) {
-		this.scenes = [];
-		this.layers = [];
+		this.scenes_ = [];
+		this.layers_ = [];
 		this.transparentImage = transparentImage;
-		/** @private */ this.oldtime = 0;
 
+		/**
+		 * @private
+		 * @type {Number}
+		 */
+		this.oldtime = 0;
 		this.requestAnimationFrame = this.requestAnimationFrame.bind(this);
 	}
 
 	/**
-	 * Add layer-function to project, every layer-function executes
-	 * every frame. All function runs reversely (in decreasing order
+	 * Adds layer-function to project, every layer-function executes
+	 * each frame. All function runs reversely (in decreasing order
 	 * ..., 2, 1, 0), this is necessary to add main function first
-	 * and draw it the last one (the last layer is what see user)
-	 *
+	 * and draw last one (the last layer is what see user).
 	 * @param {Function} fun Executable function
-	 * @param {number} index Index of function or can be a null
+	 * @param {Number} index Index of function or can be a null
+	 * @method
+	 * @example
+	 * var project = new Project(options);
+	 * project.addLayer(callback, 'main');
+	 * project.layers;  // {main: function}
 	 */
 	addLayer(fun, index) {
 		if (typeof fun !== 'function') {
@@ -47,22 +59,22 @@ class Project {
 
 	/**
 	 * Binds canvas to project and sets viewport width
-	 * and height, initializes WebGLRenderer
-	 *
+	 * and height, initializes WebGLRenderer.
 	 * @param {Canvas} canvas
+	 * @method
 	 */
 	attachCanvas(canvas) {
 		if (!(canvas instanceof Canvas)) {
 			throw new Error('Project: attachCanvas: must be a Canvas');
 		}
 
-		this.canvas = canvas;
+		this.canvas_ = canvas;
 		canvas.project = this;
 
 		this.viewportWidth = canvas.canvas.width;
 		this.viewportHeight = canvas.canvas.height;
 
-		this.webGLRenderer = new WebGLRenderer({
+		this.webGLRenderer_ = new WebGLRenderer({
 			project: this
 		});
 	}
@@ -70,23 +82,18 @@ class Project {
 	get canvas() {
 		return this.canvas_;
 	}
-	set canvas(val) {
-		if (!val || val instanceof Canvas) {
-			this.canvas_ = val;
-		}
-		else {
-			console.warn('Project: canvas: error');
-		}
-	}
 
 	/**
 	 * Fills scene with selected colors on canvas width and height.
 	 * Possible types:
 	 * 'fill' - fill area with selected color
 	 * 'transparent' - fill area transparent black
-	 *
-	 * @param {string} skyBoxType
+	 * @param {String} skyBoxType
 	 * @param {Color} skyBoxColor
+	 * @method
+	 * @example
+	 * var project = new Project(options);
+	 * project.clearScene('fill', new Color(255, 100, 0, 1));
 	 */
 	clearScene(skyBoxType, skyBoxColor) {
 		var renderer = this.webGLRenderer,
@@ -109,10 +116,10 @@ class Project {
 	/**
 	 * Creates and returns a new scene this selected name,
 	 * choose as current if "isCurrent" = true
-	 *
-	 * @param {string} name
-	 * @param {bool} isCurrent
+	 * @param {String} name
+	 * @param {Boolean} isCurrent
 	 * @return {Scene}
+	 * @method
 	 */
 	createScene(name, isCurrent = false) {
 		if (typeof name !== 'string') {
@@ -135,15 +142,11 @@ class Project {
 	get currentScene() {
 		return this.currentScene_;
 	}
-	set currentScene(val) {
-		if (!(val instanceof Scene) ||
-			this.scenes.indexOf(val) === -1) {
-			throw new Error('Project: currentScene: must be a scene created in current project');
-		}
 
-		this.currentScene_ = val;
-	}
-
+	/**
+	 * Detaches canvas from project.
+	 * @method
+	 */
 	detachCanvasElement() {
 		if (this.canvas) {
 			this.canvas.project = undefined;
@@ -153,12 +156,12 @@ class Project {
 
 	/**
 	 * Adds a new main layer-function that draws items in a regular
-	 * vision for user. Usual draws the last one. Goes through all
+	 * vision for user. Usual is drawed the last one. Goes through all
 	 * cameras in scene and draws for each camera all scene's items,
-	 * sends to items uniform a mvpmatrix, mvmatrix, lights, e.t.c,
-	 * updates all attributes, uniforms and textures
-	 *
-	 * P.S. May be called once in code
+	 * adds to items uniform a mvpmatrix, mvmatrix, lights, etc,
+	 * updates all attributes, uniforms and textures.
+	 * P.S. May be called once in code.
+	 * @method
 	 */
 	initialize() {
 		var self = this;
@@ -195,10 +198,15 @@ class Project {
 			var gl = self.webGLRenderer.webGL;
 			var scene = self.currentScene;
 
-			if (item.mesh) {
+			var mesh = item.mesh;
+			if (mesh) {
 				var uniforms = {
 					u_MVPMatrix: mvpmatrix
 				};
+
+				if (mesh.material) {
+					uniforms.u_Material = mesh.material.data();
+				}
 
 				if (item.body) {
 					var mvmatrix = item.mvmatrix();
@@ -213,9 +221,9 @@ class Project {
 
 				item.update();
 
-				var VIOBuffer = item.mesh.VIOBuffer;
+				var VIOBuffer = mesh.VIOBuffer;
 				gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, VIOBuffer);
-				gl.drawElements(gl[item.mesh.drawStyle], VIOBuffer.length, gl.UNSIGNED_SHORT, 0);
+				gl.drawElements(gl[mesh.drawStyle], VIOBuffer.length, gl.UNSIGNED_SHORT, 0);
 			}
 
 			if (typeof item.onupdate === 'function') {
@@ -224,7 +232,14 @@ class Project {
 		}
 	}
 
-	// updates function "update" of project by requestAnimationFrame-timer
+	get layers() {
+		return this.layers_;
+	}
+
+	/**
+	 * updates function "update" of project by requestAnimationFrame-timer
+	 * @method
+	 */
 	requestAnimationFrame() {
 		var canvas = this.canvas.canvas;
 		this.update();
@@ -232,10 +247,14 @@ class Project {
 		requestAnimationFrame(this.requestAnimationFrame, canvas);
 	}
 
+	get scenes() {
+		return this.scenes_;
+	}
+
 	/**
-	 * Selects scene for currentScene of project
-	 *
+	 * Selects scene as current scene in project.
 	 * @param {Scene} scene
+	 * @method
 	 */
 	selectScene(scene) {
 		if (!(scene instanceof Scene) ||
@@ -243,10 +262,13 @@ class Project {
 			throw new Error('Project: selectScene: must be a Scene of this project');
 		}
 
-		this.currentScene = scene;
+		this.currentScene_ = scene;
 	}
 
-	// updates all layer-functions and clears scene on each function
+	/**
+	 * Updates all layer-functions and clears scene on each function
+	 * @method
+	 */
 	update() {
 		var layers = this.layers;
 		var scene = this.currentScene;
@@ -266,14 +288,5 @@ class Project {
 
 	get webGLRenderer() {
 		return this.webGLRenderer_;
-	}
-
-	set webGLRenderer(val) {
-		if (val instanceof WebGLRenderer) {
-			this.webGLRenderer_ = val;
-		}
-		else {
-			console.warn('Project: webGLRenderer: error');
-		}
 	}
 }

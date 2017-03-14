@@ -1,12 +1,19 @@
 /**
- * Contains info about item's position in global space
- *
- * @constructor
- * @this {Item}
- * @param {Vec3} position
- * @param {Quaternion} rotation
- * @param {Vec3} scale
- * @param {Body} parent
+ * Stores position, rotation, scale vectors.
+ * Can have a parent-body. When calling method
+ * {@link Item#mvmatrix} in {@link Item} calculations
+ * will be relative to parent-bodies.
+ * Stores children-array.
+ * @this {Body}
+ * @param {Object} options
+ * @param {Vec3} options.position
+ * @param {Quaternion} options.rotation
+ * @param {Vec3} options.scale
+ * @param {Body} options.parent
+ * @class
+ * @property {Array} children Children-array fills automatically after adding
+ * for some body a parent this body and automatically
+ * removes children if parent has been changed.
 */
 
 class Body {
@@ -20,7 +27,17 @@ class Body {
 		this.rotation = rotation;
 		this.scale = scale;
 		this.parent = parent;
-		this.children = [];
+
+		/**
+		 * Stores children of a body
+		 * @type {Array}
+		 * @private
+		 */
+		this.children_ = [];
+	}
+
+	get children() {
+		return this.children_;
 	}
 
 	get position() {

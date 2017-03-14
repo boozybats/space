@@ -1,13 +1,14 @@
 /**
- * Creates mesh of icosahedron as item
- *
- * @constructor
+ * Creates item with icosahedron's mesh.
  * @this {Icosahedron}
- * @param {number} id
- * @param {string} name
- * @param {Body} body
- * @param {Collider} collider
- * @param {Physic} physic
+ * @param {Object} options
+ * @param {Number} options.id
+ * @param {String} options.name
+ * @param {Body} options.body
+ * @param {Collider} options.collider
+ * @param {Physic} options.physic
+ * @class
+ * @extends Item
  */
 
 class Icosahedron extends Item {
@@ -41,7 +42,15 @@ class Icosahedron extends Item {
 		});
 	}
 
-	// creates icosahedron in sphere with R = 1
+	/**
+	 * Creates icosahedron in sphere with R = 1.
+	 * @return {Object}
+	 * @method
+	 * @static
+	 * @example
+	 * var mesh = Icosachedron.mesh();
+	 * mesh;  // {vertices, indices, normals, uis, tangents, bitangents}
+	 */
 	static mesh() {
 		// 20 sides, 30 edges, 12 vertices
 		var indices = [0, 1, 2, 0, 2, 3, 0, 3, 4, 0, 4, 5, 0, 5, 1,
@@ -128,6 +137,12 @@ class Icosahedron extends Item {
 		return out;
 	}
 
+	/**
+	 * Usual shader with vertex shadow.
+	 * @return {ShaderTemplate}
+	 * @method
+	 * @static
+	 */
 	static get shader() {
 		var out = new ShaderTemplate(
 			`#define MAX_POINTLIGHTS 16
@@ -174,18 +189,19 @@ class Icosahedron extends Item {
 }
 
 /**
- * Creates mesh of sphere by icosachedron mesh - this
- * is the on of the best ways to make sphere as item
- *
- * @constructor
+ * Creates item with mesh of sphere by icosachedron mesh. This
+ * is the one of the best ways to make sphere's mesh.
  * @this {Sphere}
- * @param {number} id
- * @param {string} name
- * @param {Body} body
- * @param {Collider} collider
- * @param {Physic} physic
- * @param {number} precision How much times sphere must be
- *  updated by new vertices, must be between 0 to 4
+ * @param {Object} options
+ * @param {Number} options.id
+ * @param {String} options.name
+ * @param {Body} options.body
+ * @param {Collider} options.collider
+ * @param {Physic} options.physic
+ * @param {Number} options.precision How much times sphere must be
+ * updated by upgrade system, must be between 0 and 4.
+ * @class
+ * @extends Item
  */
 
 class Sphere extends Item {
@@ -221,13 +237,15 @@ class Sphere extends Item {
 	}
 
 	/**
-	 * adds 4 new faces for every triangle for sphere
-	 * by equation R^2 = x^2 + y^2
-	 *
-	 * @param {number[]} vertices
-	 * @param {number[]} normals
-	 * @param {number[]} uis Texture coordinates
-	 * @param {number[]} indices Vertex-indices
+	 * Adds 4 new faces for each face of spher's mesh.
+	 * @return {Object}
+	 * @param {Array} vertices
+	 * @param {Array} normals
+	 * @param {Array} uis
+	 * @param {Array} indices
+	 * @example
+	 * var mesh = Sphere.mesh();
+	 * mesh;  // {vertices, indices, normals, uis, tangents, bitangents}
 	 */
 	static mesh({
 		vertices,
@@ -365,12 +383,16 @@ var icosahedronMesh,
 	sphereMesh;
 
 /**
- * @constructor
+ * Creates item with cube's mesh.
  * @this {Cube}
- * @param {string} name
- * @param {Body} body
- * @param {Collider} collider
- * @param {Physic} physic
+ * @param {Object} options
+ * @param {Number} options.id
+ * @param {String}options. name
+ * @param {Body} options.body
+ * @param {Collider} options.collider
+ * @param {Physic} options.physic
+ * @class
+ * @extends Item
  */
 class Cube extends Item {
 	constructor({
@@ -459,6 +481,12 @@ class Cube extends Item {
 		});
 	}
 
+	/**
+	 * Creates cube shader.
+	 * @return {ShaderTemplate}
+	 * @method
+	 * @static
+	 */
 	static get shader() {
 		var out = new ShaderTemplate(
 			`#define MAX_POINTLIGHTS 16
@@ -505,29 +533,20 @@ class Cube extends Item {
 }
 
 /**
- * Initializes icosahedron ans sphere meshes (with precision
- * from 1 to 4), it optimizes process because don't need to
- * initialize new mesh then creating new item 
- */
-;(function() {
-	icosahedronMesh = Icosahedron.mesh();
-
-	sphereMesh = [];
-	sphereMesh[0] = icosahedronMesh;
-	for (var i = 1; i < 5; i++) {
-		sphereMesh[i] = Sphere.mesh(sphereMesh[i - 1]);
-	}
-})();
-
-/**
- * Quad object to support user interface, fills sizes
- * of window, can be scaled by width and height parameters
- *
- * @constructor
+ * Creates item with quad's mesh.
  * @this {UI}
- * @param {name} id
- * @param {number} width
- * @param {number} height
+ * @param {Object} options
+ * @param {Number} options.id
+ * @param {String} options.name
+ * @param {Body} options.body
+ * @param {Collider} options.collider
+ * @param {Physic} options.physic
+ * @param {Number} options.width
+ * @param {Number} options.height
+ * @class
+ * @property {Vec2} position Defines position
+ * in the project space by screen position.
+ * @extends Item
  */
 
 class UI extends Item {
@@ -590,6 +609,11 @@ class UI extends Item {
 		this.scale();
 	}
 
+	/**
+	 * Initializes mesh.
+	 * @return {Object}
+	 * @method
+	 */
 	initializeMesh() {
 		var vertices = [
 			-1, -1, 0,
@@ -615,17 +639,13 @@ class UI extends Item {
 				a_UI: UI
 			},
 			vertexIndices: VI,
-			shader: Cursor.shader
+			shader: UI.shader
 		});
 	}
 
 	get position() {
 		return this.position_;
 	}
-	/**
-	 * Sets a position of object by screen size
-	 * @param {Vec} val
-	 */
 	set position(val) {
 		if (val instanceof Vec) {
 			var x = (val.x) / RESOLUTION_WIDTH * 2 - 1;
@@ -639,7 +659,9 @@ class UI extends Item {
 		}
 	}
 
-	// sets scale of object by screen size
+	/**
+	 * @private
+	 */
 	scale() {
 		this.body.scale = new Vec3(
 			1 * (this.width / RESOLUTION_WIDTH),
@@ -648,7 +670,11 @@ class UI extends Item {
 		);
 	}
 
-	static get ShaderTemplate() {
+	/**
+	 * Create UI's shader.
+	 * @return {ShaderTemplate}
+	 */
+	static get Shader() {
 		var out = new Shader(
 			`attribute vec3 a_Position;
 			attribute vec2 a_UI;
@@ -681,13 +707,14 @@ class UI extends Item {
 }
 
 /**
- * Generates tangents and bitangents for mesh
- *
- * @param {number[]} indices
- * @param {number[]} vertices
- * @param {number[]} uis
- * @param {number[]} normals
- * @return {object} {Array tangents, Array bitangents}
+ * Generates tangents and bitangents for mesh.
+ * @param {Array} indices
+ * @param {Array} vertices
+ * @param {Array} uis
+ * @param {Array} normals
+ * @return {Object}
+ * @example
+ * TB(Icosahedron.mesh());  // {indices, vertices, uis, normals, tangents, bitangents}
  */
 function TB({indices, vertices, uis, normals} = {}) {
 	var tangents = [],
@@ -834,3 +861,18 @@ function TB({indices, vertices, uis, normals} = {}) {
 		return res;
 	}
 }
+
+/***
+ * Initializes icosahedron ans sphere meshes (with precision
+ * from 1 to 4), it optimizes process because don't need to
+ * initialize new mesh then creating new item.
+ */
+;(function() {
+	icosahedronMesh = Icosahedron.mesh();
+
+	sphereMesh = [];
+	sphereMesh[0] = icosahedronMesh;
+	for (var i = 1; i < 5; i++) {
+		sphereMesh[i] = Sphere.mesh(sphereMesh[i - 1]);
+	}
+})();

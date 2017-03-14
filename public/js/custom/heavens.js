@@ -1,20 +1,3 @@
-/**
- * Heaven-item staned by sphere mesh, unique
- * shader for heaven objects
- *
- * @constructor
- * @this {Heaven}
- * @param {number} id
- * @param {string} name
- * @param {Body} body
- * @param {Physic} phsyic
- * @param {Mesh} mesh
- * @param {Collider} collider
- * @param {bool} me Is it player object
- * @param {Cursor} this.mouseControl Cursor binded to object
- *  for controll this direction
- */
-
 class Heaven extends Sphere {
 	constructor({
 		id,
@@ -44,6 +27,7 @@ class Heaven extends Sphere {
 		this.mouseControl = mouseControl;
 
 		this.mesh.shader = Heaven.shader;
+		this.mesh.material = new Material;
 
 		var displacement = new Image();
 		displacement.src = 'images/d_heaven.jpg';
@@ -191,7 +175,7 @@ class Heaven extends Sphere {
 			`#define MAX_LIGHTS 32
 
 			struct Light {
-				int    type;
+				float  type;
 				float  intensity;
 				vec3   position;
 				vec3   rotation;
@@ -206,11 +190,10 @@ class Heaven extends Sphere {
 			uniform mat4 u_MVMatrix;
 			uniform mat4 u_MVPMatrix;
 			uniform mat3 u_MVNMatrix;
-			uniform Light u_Lights[MAX_LIGHTS];
 			uniform sampler2D u_Maps[2];
+			uniform Light u_Lights[MAX_LIGHTS];
 
-			varying vec3 v_lightDir;
-			varying vec3 v_viewDir;
+			varying mat3 tbn;
 			varying vec2 v_UI;
 
 			void main(void) {

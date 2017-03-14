@@ -1,21 +1,33 @@
-// radians to degrees
+/**
+ * Converts radians to degrees.
+ * @param  {Number} rad
+ * @return {Number}
+ * @method RTD
+ * @memberOf Math
+ */
 Math.RTD = (rad) => rad * 180 / Math.PI;
-// degreed to radians
+
+/**
+ * Converts degrees to radians.
+ * @param  {Number} deg
+ * @return {Number}
+ * @method DTR
+ * @memberOf Math
+ */
 Math.DTR = (deg) => deg * Math.PI / 180;
 
 /**
- * Arythmetic function replaces an opyrand function
- * in javascript of necessity. An easy way to do
- * every operation with non-number classes like Mat,
- * Vec, Body, e.t.c.
- *
- * @param {string} operand Available: +, -, *, /, =
- * @param {Array} terms Listed pointers to do operation
- *  with them by order
- *
- * example: amc('*', new Vec4, new Mat4);
+ * Gives available to mathematical calculations with
+ * {@link Mat} and {@link Vec}.
+ * +, -, *, /: {@link Mat}, {@link Vec}, Number
+ * =: {@link Mat}, {@link Vec}, {@link Body}, {@link Quaternion},
+ * {@link Euler}, Array, Float32Array, Image, Number.
+ * @param  {String}    operand +, -, *, /, =
+ * @param  {...*} terms   Can be selected more than one,
+ * will be calculated by order.
+ * @return {*} Returns appropriate class.
+ * @function amc
  */
-
 function amc(operand, ...terms) {
 	var out = 0;
 
@@ -56,10 +68,12 @@ function amc(operand, ...terms) {
 }
 
 /**
- * Returns sum of terms
- * @param  {Mat|Vec|number} term1
- * @param  {Mat|Vec|number} term2
- * @return {Mat|Vec|number}
+ * Returns sum of terms.
+ * @param  {Mat | Vec | Number} term1
+ * @param  {Mat | Vec | Number} term2
+ * @return {Mat | Vec | Number}
+ * @private
+ * @function amc_sum
  */
 function amc_sum(term1, term2) {
 	var out;
@@ -92,10 +106,12 @@ function amc_sum(term1, term2) {
 }
 
 /**
- * Returns difference of terms
- * @param  {Mat|Vec|number} term1
- * @param  {Mat|Vec|number} term2
- * @return {Mat|Vec|number}
+ * Returns difference of terms.
+ * @param  {Mat | Vec | Number} term1
+ * @param  {Mat | Vec | Number} term2
+ * @return {Mat | Vec | Number}
+ * @private
+ * @function amc_dif
  */
 function amc_dif(term1, term2) {
 	var out;
@@ -128,10 +144,12 @@ function amc_dif(term1, term2) {
 }
 
 /**
- * Returns multiply of terms
- * @param  {Mat|Vec|number} term1
- * @param  {Mat|Vec|number} term2
- * @return {Mat|Vec|number}
+ * Returns multiply of terms.
+ * @param  {Mat | Vec | Number} term1
+ * @param  {Mat | Vec | Number} term2
+ * @return {Mat | Vec | Number}
+ * @private
+ * @function amc_multi
  */
 function amc_multi(term1, term2) {
 	var out;
@@ -184,10 +202,12 @@ function amc_multi(term1, term2) {
 }
 
 /**
- * Returns divide of terms
- * @param  {Mat|Vec} term1
- * @param  {Mat|Vec|number} term2
- * @return {Mat|Vec|number}
+ * Returns divide of terms.
+ * @param  {Mat | Vec} term1
+ * @param  {Mat | Vec | Number} term2
+ * @return {Mat | Vec | Number}
+ * @private
+ * @function amc_divide
  */
 function amc_divide(term1, term2) {
 	var out;
@@ -214,9 +234,12 @@ function amc_divide(term1, term2) {
 }
 
 /**
- * Returns equality of terms
- * @param  {Mat|Vec|Array|number|Float32Array|Quaternion|Euler|Body|Image} term1, term2
- * @return {bool}
+ * Returns equality of terms.
+ * @param  {Mat | Vec | Quaternion | Euler | Body | Array | Float32Array | Image | Number} term1
+ * @param  {Mat | Vec | Quaternion | Euler | Body | Array | Float32Array | Image | Number} term2
+ * @return {Boolean}
+ * @private
+ * @function amc_equality
  */
 function amc_equality(term1, term2) {
 	var out;
