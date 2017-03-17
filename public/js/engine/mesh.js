@@ -30,7 +30,7 @@ class Mesh {
 		vertexIndices = [],
 		attributes = {},
 		uniforms = {},
-		material
+		material = new Material
 	} = {}) {
 		this.shader = shader;
 		this.drawStyle = drawStyle;
@@ -100,7 +100,7 @@ class Mesh {
 		return this.material_;
 	}
 	set material(val) {
-		if (val && !(val instanceof Material)) {
+		if (!(val instanceof Material)) {
 			throw new Error('Mesh: material: must be a Material');
 		}
 
@@ -140,24 +140,32 @@ class Mesh {
  * Sends data about mesh's material in shader.
  * @this {Material}
  * @param {Object} options
- * @param {Color} options.ambient Shadow's color in item's surface.
- * @param {Color} options.diffuse Main color of the object.
- * @param {Color} options.specular Shininess color.
+ * @param {Image} options.ambient Shadow's color in item's surface.
+ * @param {Image} options.diffuse Main color of the object.
+ * @param {Image} options.specular Shininess color.
  * @class
- * @property {Color} ambient Shadow's color in item's surface.
- * @property {Color} diffuse Main color of the object.
- * @property {Color} specular Shininess color.
+ * @property {Image} ambient Shadow's color in item's surface.
+ * @property {Image} diffuse Main color of the object.
+ * @property {Image} specular Shininess color.
  */
 
 class Material {
 	constructor({
 		ambient = new Color(0, 0, 0, 1),
 		diffuse = new Color(161, 250, 206, 1),
-		specular = new Color(230, 255, 247, 1)
+		specular = new Color(230, 255, 247, 1),
+		ambientmap,
+		diffusemap,
+		specularmap,
+		normalmap
 	} = {}) {
 		this.ambient = ambient;
 		this.diffuse = diffuse;
 		this.specular = specular;
+		this.ambientmap = ambientmap;
+		this.diffusemap = diffusemap;
+		this.specularmap = specularmap;
+		this.normalmap = normalmap;
 	}
 
 	get ambient() {
@@ -193,17 +201,82 @@ class Material {
 		this.specular_ = val;
 	}
 
+	get ambientmap() {
+		return this.ambientmap_;
+	}
+	set ambientmap(val) {
+		if (val && !(val instanceof Image)) {
+			throw new Error('Material: ambientmap: must be an image');
+		}
+
+		this.ambientmap_ = val;
+	}
+
+	get diffusemap() {
+		return this.diffusemap_;
+	}
+	set diffusemap(val) {
+		if (val && !(val instanceof Image)) {
+			throw new Error('Material: diffusemap: must be an image');
+		}
+
+		this.diffusemap_ = val;
+	}
+
+	get specularmap() {
+		return this.specularmap_;
+	}
+	set specularmap(val) {
+		if (val && !(val instanceof Image)) {
+			throw new Error('Material: specularmap: must be an image');
+		}
+
+		this.specularmap_ = val;
+	}
+
+	get normalmap() {
+		return this.normalmap_;
+	}
+	set normalmap(val) {
+		if (val && !(val instanceof Image)) {
+			throw new Error('Material: normalmap: must be an image');
+		}
+
+		this.normalmap_ = val;
+	}
+
 	/**
-	 * Returns object from material data.
+	 * Returns an object with material's data.
 	 * @return {Object}
 	 * @method
 	 */
 	data() {
-		var out = {
-			ambient: this.ambient,
-			diffuse: this.diffuse,
-			specular: this.specular
-		};
+		var out = {};
+
+		if (this.ambient) {
+			out.ambient = this.ambient;
+		}
+		if (this.diffuse) {
+			out.diffuse = this.diffuse;
+		}
+		if (this.specular) {
+			out.specular = this.specular;
+		}
+		if (this.normalmap) {
+			out.normalmap = this.normalmap;
+		}
+		if (this.ambientmap) {
+			out.ambientmap = this.ambientmap;
+		}
+		if (this.diffusemap) {
+			out.diffusemap = this.diffusemap;
+		}
+		if (this.specularmap) {
+			out.specularmap = this.specularmap;
+		}
+		if (this.normalmap) {
+			out.normalmap = this.normalmap;
+		}
 
 		return out;
 	}

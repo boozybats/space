@@ -145,42 +145,23 @@ class Icosahedron extends Item {
 	 */
 	static get shader() {
 		var out = new ShaderTemplate(
-			`#define MAX_POINTLIGHTS 16
-
-			attribute vec3 a_Position;
-			attribute vec3 a_Normal;
+			`attribute vec3 a_Position;
 
 			uniform mat4 u_MVMatrix;
 			uniform mat4 u_MVPMatrix;
-			uniform mat3 u_MVNMatrix;
-			uniform vec3 u_PointLights[MAX_POINTLIGHTS];
 
 			varying float v_Light;
 
 			void main(void) {
 				vec4 position4 = u_MVMatrix * vec4(a_Position, 1.0);
-				vec3 position3 = position4.xyz / position4.w;
-
-				float light = 0.0;
-				for (int i = 0; i < 1; i++) {
-					vec3 lightDir = normalize(u_PointLights[0] - position3);
-					vec3 normal = normalize(u_MVNMatrix * a_Normal);
-
-					light += max(dot(normal, lightDir), 0.0);
-				}
-				v_Light = min(light, 1.0);
 
 				gl_Position = u_MVPMatrix * position4;
 			}`,
 
 			`precision mediump float;
 
-			uniform vec4 u_DiffuseColor;
-
-			varying float v_Light;
-
 			void main(void) {
-				gl_FragColor = vec4(u_DiffuseColor.rgb * v_Light, u_DiffuseColor.a);
+				gl_FragColor = vec4(1.0);
 			}`
 		);
 
@@ -212,7 +193,7 @@ class Sphere extends Item {
 		collider,
 		physic,
 		precision = 3
-	}) {
+	} = {}) {
 		super({
 			id,
 			name,
@@ -473,9 +454,6 @@ class Cube extends Item {
 				a_Normal: normals,
 				a_UV: uvs
 			},
-			uniforms: {
-				u_DiffuseColor: new Color(50, 50, 255, 1),
-			},
 			vertexIndices: indices,
 			shader: Cube.shader
 		});
@@ -489,42 +467,21 @@ class Cube extends Item {
 	 */
 	static get shader() {
 		var out = new ShaderTemplate(
-			`#define MAX_POINTLIGHTS 16
-
-			attribute vec3 a_Position;
-			attribute vec3 a_Normal;
+			`attribute vec3 a_Position;
 
 			uniform mat4 u_MVMatrix;
 			uniform mat4 u_MVPMatrix;
-			uniform mat3 u_MVNMatrix;
-			uniform vec3 u_PointLights[MAX_POINTLIGHTS];
-
-			varying float v_Light;
 
 			void main(void) {
 				vec4 position4 = u_MVMatrix * vec4(a_Position, 1.0);
-				vec3 position3 = position4.xyz / position4.w;
-
-				float light = 0.0;
-				for (int i = 0; i < 1; i++) {
-					vec3 lightDir = normalize(u_PointLights[0] - position3);
-					vec3 normal = normalize(u_MVNMatrix * a_Normal);
-
-					light += max(dot(normal, lightDir), 0.0);
-				}
-				v_Light = min(light, 1.0);
 
 				gl_Position = u_MVPMatrix * position4;
 			}`,
 
 			`precision mediump float;
 
-			uniform vec4 u_DiffuseColor;
-
-			varying float v_Light;
-
 			void main(void) {
-				gl_FragColor = vec4(u_DiffuseColor.rgb * v_Light, u_DiffuseColor.a);
+				gl_FragColor = vec4(1.0);
 			}`
 		);
 

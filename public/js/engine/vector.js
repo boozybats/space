@@ -205,6 +205,26 @@ class Vec {
 	}
 
 	/**
+	 * Returns homogeneous vector of direction.
+	 * @return {Vec4} Vec4 {x: 0, y: 0, z: 0, w: 0}
+	 * @method
+	 * @static
+	 */
+	static homogeneousdir() {
+		return new Vec4(0, 0, 0, 0);
+	}
+
+	/**
+	 * Returns homogeneous vector of position.
+	 * @return {Vec4} Vec4 {x: 0, y: 0, z: 0, w: 1}
+	 * @method
+	 * @static
+	 */
+	static homogeneouspos() {
+		return new Vec4(0, 0, 0, 1);
+	}
+
+	/**
 	 * Converts a vector into a vector into a smaller rank
 	 * by division on last coordinate.
 	 * @return {Vec}
@@ -217,7 +237,7 @@ class Vec {
 
 		switch (this.size) {
 			case 3:
-			out = amc('/', this.xyz, this.z);
+			out = amc('/', this.xy, this.z);
 			break;
 
 			case 4:
@@ -234,9 +254,9 @@ class Vec {
 	 * @return {Vec}
 	 * @method
 	 * @example
-	 * (new Vec3(1, 5, 3)).tohomogeneous();  // Vec3 {x: 1, y: 5, z: 3, w: 1}
+	 * (new Vec3(1, 5, 3)).tohomogeneouspos();  // Vec3 {x: 1, y: 5, z: 3, w: 1}
 	 */
-	tohomogeneous() {
+	tohomogeneouspos() {
 		var out;
 
 		out = new Vec4(this, 1);
@@ -892,6 +912,23 @@ class Vec3 extends Vec {
 		this.z_ = z;
 
 		this.size_ = 3;
+	}
+
+	/**
+	 * Retruns cross product of 2 vectors.
+	 * @param  {Vec3} vec1
+	 * @param  {Vec3} vec2
+	 * @return {Vec3}
+	 * @method
+	 */
+	static cross(vec1, vec2) {
+		var x = vec1.y * vec2.z - vec1.z * vec2.y,
+			y = vec1.z * vec2.x - vec1.x * vec2.z,
+			z = vec1.x * vec2.y - vec1.y * vec2.x;
+
+		var out = new Vec3(x, y, z);
+
+		return out;
 	}
 }
 

@@ -58,7 +58,7 @@ class Light extends Item {
 			out.type = 2;
 		}
 
-		var position = amc('*', new Vec4(0, 0, 0, 1), this.mvmatrix()).tocartesian();
+		var position = amc('*', this.mvmatrix(), Vec.homogeneouspos()).tocartesian();
 		out.position = position;
 		out.rotation = this.body.rotation.euler;
 		out.intensity = this.intensity || 0.0;

@@ -57,9 +57,9 @@ class Mat {
 		var a = this.a,
 			b = this.b;
 
-		for (var i = 0; i < a; i++) {
-			for (var j = 0; j < b; j++) {
-				out.push(this[i][j]);
+		for (var i = 0; i < b; i++) {
+			for (var j = 0; j < a; j++) {
+				out.push(this[j][i]);
 			}
 		}
 
@@ -592,7 +592,7 @@ class Mat2 extends Mat {
  * @property {Number} b Quantity of a columns
  * @example
  * var mat = new Mat3(5);
- * mat;  // [[5, 5], [5, 5], [5, 5]]
+ * mat;  // [[5,5,5], [5,5,5], [5,5,5]]
  */
 
 class Mat3 extends Mat {
@@ -671,7 +671,7 @@ class Mat3 extends Mat {
  * @property {Number} b Quantity of a columns
  * @example
  * var mat = new Mat4(5);
- * mat;  // [[5, 5], [5, 5], [5, 5], [5, 5]]
+ * mat;  // [[5,5,5,5], [5,5,5,5], [5,5,5,5], [5,5,5,5]]
  */
 
 class Mat4 extends Mat {
@@ -740,7 +740,7 @@ class Mat4 extends Mat {
 			x, 0, 0, 0,
 			0, y, 0, 0,
 			0, 0, (far + near) / (far - near), d,
-			0, 0, -2 * far * near / (far - near), 0
+			0, 0, 2 * far * near / (far - near), 0
 		]);
 
 		return out;
@@ -807,7 +807,7 @@ class Mat4 extends Mat {
 	 * @static
 	 * @example
 	 * var mat = Mat4.translate(new Vec3(4, 3, 2));
-	 * mat;  // [[1,0,0,0], [0,1,0,0], [0,0,1,0], [4,3,2,1]]
+	 * mat;  // [[1,0,0,4], [0,1,0,3], [0,0,1,2], [0,0,0,0]]
 	 */
 	static translate(vec) {
 		var x = vec.x,
@@ -815,9 +815,9 @@ class Mat4 extends Mat {
 			z = vec.z;
 		var out = new Mat4;
 
-		out[3][0] = x;
-		out[3][1] = y;
-		out[3][2] = z;
+		out[0][3] = x;
+		out[1][3] = y;
+		out[2][3] = z;
 
 		return out;
 	}

@@ -156,7 +156,7 @@ class Quaternion {
 			crcp * sy - srsp * cy,
 			crcp * cy + srsp * sy
 		);
-		quat.euler = new Euler(roll, pitch, yaw);
+		quat.euler_ = new Euler(roll, pitch, yaw);
 
 		return quat;
 	}

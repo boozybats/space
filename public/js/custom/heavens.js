@@ -20,22 +20,18 @@ class Heaven extends Sphere {
 			physic,
 			mesh,
 			collider,
-			precision: 4
+			precision: 2
 		});
 
 		this.me = me;
 		this.mouseControl = mouseControl;
 
+		var normalmap = new Image();
+		normalmap.src = 'images/n_heaven.jpg';
+
 		this.mesh.shader = Heaven.shader;
-		this.mesh.material = new Material;
-
-		var displacement = new Image();
-		displacement.src = 'images/d_heaven.jpg';
-		var normal = new Image();
-		normal.src = 'images/n_heaven.jpg';
-
-		this.changeUniforms({
-			u_Maps: [displacement, normal]
+		this.mesh.material = new Material({
+			normalmap
 		});
 	}
 
@@ -103,7 +99,7 @@ class Heaven extends Sphere {
 		}
 
 		var sizeint = _private.sizeint;
-		if (sizeint) {
+		if (false && sizeint) {
 			var body = this.body;
 			var scale = amc('+', this.body.scale, sizeint);
 			body.scale = scale;
@@ -150,7 +146,7 @@ class Heaven extends Sphere {
 			var cam = this.camera.body;
 			var body = this.body;
 
-			var z = body.scale.z * -12;
+			var z = body.scale.z * -6;
 
 			cam.position = new Vec3(body.position.xy, z);
 		}
@@ -163,25 +159,16 @@ class Heaven extends Sphere {
 				this.private.position = body.position;
 				this.private.scale = body.scale;
 
-				server.mydata({
+				/*server.mydata({
 					body: body
-				});
+				});*/
 			}
 		}
 	}
 
 	static get shader() {
 		var out = new ShaderTemplate(
-			`#define MAX_LIGHTS 32
-
-			struct Light {
-				float  type;
-				float  intensity;
-				vec3   position;
-				vec3   rotation;
-			};
-
-			attribute vec3 a_Position;
+			`attribute vec3 a_Position;
 			attribute vec3 a_Normal;
 			attribute vec3 a_Tangent;
 			attribute vec3 a_Bitangent;
@@ -190,57 +177,37 @@ class Heaven extends Sphere {
 			uniform mat4 u_MVMatrix;
 			uniform mat4 u_MVPMatrix;
 			uniform mat3 u_MVNMatrix;
-			uniform sampler2D u_Maps[2];
-			uniform Light u_Lights[MAX_LIGHTS];
-
-			varying mat3 tbn;
-			varying vec2 v_UI;
 
 			void main(void) {
-				v_UI = a_UI;
-
 				vec4 position4 = u_MVMatrix * vec4(a_Position, 1.0);
 				vec3 position3 = position4.xyz / position4.w;
-
-				vec3 n = normalize(u_MVNMatrix * a_Normal);
-				vec3 t = normalize(u_MVNMatrix * a_Tangent);
-				vec3 b = normalize(u_MVNMatrix * a_Bitangent);
-
-				mat3 tbn = mat3(t, b, n);
-
-				v_lightDir = tbn * (u_Lights[0].position - position3);
-				v_viewDir = tbn * -position3;
 
 				gl_Position = u_MVPMatrix * position4;
 			}`,
 
 			`precision mediump float;
 
-			uniform vec4 u_DiffuseColor;
-			uniform sampler2D u_Maps[2];
+			#define MAX_LIGHTS 32
 
-			varying vec3 v_lightDir;
-			varying vec3 v_viewDir;
-			varying vec2 v_UI;
+			struct Light {
+				float type;
+				float intensity;
+				vec3  position;
+				vec3  rotation;
+				vec4  ambient;
+				vec4  diffuse;
+				vec4  specular;
+			};
 
-			const vec3 intensity = vec3(0.0);
-
-			vec3 phong(vec3 bumpDir, vec3 lightDir, vec3 viewDir, vec3 diffuseColor) {
-			    vec3 reflectDir = reflect(-lightDir, bumpDir);
-
-			    vec3 Ambient = vec3(0.0);
-			    vec3 Diffuse = vec3(1.0) * u_DiffuseColor.rgb * max(dot(lightDir, bumpDir), 0.0) * diffuseColor;
-			    vec3 Specular = vec3(1.0) * pow(max(dot(reflectDir, viewDir), 0.0), 0.8);
-
-			    return (Ambient + Diffuse + Specular);
-			}
+			struct Material {
+				sampler2D ambient;
+				sampler2D diffuse;
+				sampler2D specular;
+				sampler2D normalmap;
+			};
 
 			void main(void) {
-				vec3 normal = normalize(texture2D(u_Maps[0], v_UI).xyz * 2.0 - 1.0);
-				
-				vec3 light = phong(-normal, normalize(v_lightDir), normalize(v_viewDir), u_DiffuseColor.rgb);
-
-				gl_FragColor = vec4(light, 1.0);
+				gl_FragColor = vec4(1.0);
 			}`
 		);
 

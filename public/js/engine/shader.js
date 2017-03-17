@@ -1,5 +1,5 @@
 /**
- * Containt vertex shader and fragment shader,
+ * Containts vertex shader and fragment shader,
  * must be initialized to get WebGLShader.
  * @this {ShaderTemplate}
  * @param {String} vertexShader

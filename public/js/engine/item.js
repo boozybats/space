@@ -374,6 +374,7 @@ class Item {
 		var location,
 			method,
 			type,
+			counter,
 			value = val;
 
 		if (value instanceof Mat) {
@@ -407,8 +408,7 @@ class Item {
 			method = 'uniform1i';
 			type = 'img';
 			location = getlocation();
-
-			value = this.addTexture(value);
+			counter = this.addTexture(value);
 		}
 		else if (typeof value === 'number') {
 			method = 'uniform1f';
@@ -457,6 +457,7 @@ class Item {
 			method,
 			location,
 			type,
+			counter,
 			value
 		};
 
@@ -541,7 +542,9 @@ class Item {
 			}
 			var cell = memory[level];
 
-			if (amc('=', body, cell)) {
+			if (amc('=', body.position, cell.position) &&
+				amc('=', body.rotation, cell.rotation) &&
+				amc('=', body.scale, cell.scale)) {
 				if (isBreaked) {
 					mvmatrix = Mat.multi(mvmatrix, cell.matrix);
 				}
@@ -561,7 +564,7 @@ class Item {
 				matT = Mat4.translate(body.position);
 
 				// matrix from this level only
-				matU = amc('*', matS, matR, matT);
+				matU = amc('*', matT, matR, matS);
 				cell.matrix = matU;
 
 				// result matrix from first level to this
@@ -798,7 +801,7 @@ class Item {
 	 * Image | Number | Array | Object} options.value
 	 * @method
 	 */
-	updateUniform({isActive, type, method, location, value}) {
+	updateUniform({isActive, type, method, location, counter, value}) {
 		if (isActive) {
 			return;
 		}
@@ -811,7 +814,7 @@ class Item {
 
 		switch (type) {
 			case 'mat':
-			gl[method](location, null, value.array());
+			gl[method](location, null, new Float32Array(value.array()));
 			break;
 
 			case 'col':
@@ -819,10 +822,11 @@ class Item {
 			case 'vec':
 			case 'eul':
 			case 'qua':
-			gl[method](location, value.array());
+			gl[method](location, new Float32Array(value.array()));
 			break;
 
 			case 'img':
+			value = counter;
 			case 'num':
 			gl[method](location, value);
 			break;

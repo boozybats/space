@@ -77,11 +77,38 @@ class Camera {
 		return this.projectionMatrix_;
 	}
 	set projectionMatrix(val) {
-		if (!(val instanceof Mat4)) {
+		if (!(val instanceof Mat)) {
 			throw new Error('Camera: projectionMatrix: must be a Mat4');
 		}
 
 		this.projectionMatrix_ = val;
+	}
+
+	/**
+	 * Forward-vector of camera looking.
+	 * @method
+	 * @static
+	 */
+	static get forward() {
+		return new Vec4(0, 0, 1, 0);
+	}
+
+	/**
+	 * Right-vector of camera looking.
+	 * @method
+	 * @static
+	 */
+	static get right() {
+		return new Vec4(1, 0, 0, 0);
+	}
+
+	/**
+	 * Up-vector of camera looking.
+	 * @method
+	 * @static
+	 */
+	static get up() {
+		return new Vec4(0, 1, 0, 0);
 	}
 
 	/**
@@ -116,9 +143,11 @@ class Camera {
 			}
 			var cell = memory[level];
 
-			if (amc('=', body, cell)) {
+			if (amc('=', body.position, cell.position) &&
+				amc('=', body.rotation, cell.rotation) &&
+				amc('=', body.scale, cell.scale)) {
 				if (isBreaked) {
-					mvmatrix = Mat.multi(mvmatrix, cell.matrix);
+					mvmatrix = amc('*', mvmatrix, cell.matrix);
 				}
 				else {
 					mvmatrix = cell.unity;
@@ -136,7 +165,7 @@ class Camera {
 				matT = Mat4.translate(body.position);
 
 				// matrix from this level only
-				matU = amc('*', matS, matR, matT);
+				matU = amc('*', matT, matR, matS);
 				cell.matrix = matU;
 
 				// result matrix from first level to this
@@ -150,6 +179,37 @@ class Camera {
 		while(body);
 
 		return mvmatrix;
+	}
+
+	/**
+	 * Returns model-view projection matrix updated by camera's
+	 * model-view matrix.
+	 * @return {Mat4}
+	 * @method
+	 */
+	mvpmatrix() {
+		var cammvm = this.mvmatrix();
+
+		var pos = amc('*', cammvm, Vec.homogeneouspos()).tocartesian(),
+			matT = Mat4.translate(new Vec3(-pos.x, -pos.y, -pos.z));
+
+		var N = amc('*', cammvm, Camera.forward),
+			V = amc('*', cammvm, Camera.up),
+			U = amc('*', cammvm, Camera.right);
+		var MatTr = new Mat4([
+			U.x, U.y, U.z, 0,
+			V.x, V.y, V.z, 0,
+			N.x, N.y, N.z, 0,
+			0,   0,   0,   1
+		]);
+
+		var mvpmatrix = amc('*',
+			this.projectionMatrix,
+			matT,
+			MatTr
+		);
+
+		return mvpmatrix;
 	}
 }
 
@@ -178,7 +238,7 @@ const DEFAULT_NEARFIELD = 0.9999;
  * @type {Number}
  * @const
  */
-const DEFAULT_FARFIELD = 1000000;
+const DEFAULT_FARFIELD = 1e+20;
 /**
  * How much degrees user see vertically
  * (recommended value less than 55).

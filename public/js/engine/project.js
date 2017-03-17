@@ -69,7 +69,7 @@ class Project {
 		}
 
 		this.canvas_ = canvas;
-		canvas.project = this;
+		canvas.project_ = this;
 
 		this.viewportWidth = canvas.canvas.width;
 		this.viewportHeight = canvas.canvas.height;
@@ -172,23 +172,10 @@ class Project {
 				items = scene.items;
 
 			for (var camera of cameras) {
-				var cammvm = camera.mvmatrix(),
-					campos4 = amc('*', new Vec4(0, 0, 0, 1), cammvm),
-					campos3 = amc('/', campos4.xyz, campos4.w);
+				var mvpmatrix = camera.mvpmatrix();
 
-				var mvpmatrix = amc('*',
-					Mat4.translate(campos3.inverse()),
-					Mat4.translate(new Vec3(0, 0, -camera.deepOffset)),
-					Mat4.rotate(camera.body.rotation.inverse()),
-					Mat4.translate(new Vec3(0, 0, camera.deepOffset)),
-					camera.projectionMatrix
-				);
-
-				for (var item of sysitems) {
-					draw(item, mvpmatrix, options);
-				}
-
-				for (var item of items) {
+				var allitems = sysitems.concat(items);
+				for (var item of allitems) {
 					draw(item, mvpmatrix, options);
 				}
 			}
