@@ -546,7 +546,7 @@ class Item {
 				amc('=', body.rotation, cell.rotation) &&
 				amc('=', body.scale, cell.scale)) {
 				if (isBreaked) {
-					mvmatrix = Mat.multi(mvmatrix, cell.matrix);
+					mvmatrix = amc('*', cell.matrix, mvmatrix);
 				}
 				else {
 					mvmatrix = cell.unity;
@@ -568,7 +568,7 @@ class Item {
 				cell.matrix = matU;
 
 				// result matrix from first level to this
-				mvmatrix = mvmatrix ? amc('*', mvmatrix, matU) : matU;
+				mvmatrix = mvmatrix ? amc('*', matU, mvmatrix) : matU;
 				cell.unity = mvmatrix;
 			}
 
@@ -814,7 +814,7 @@ class Item {
 
 		switch (type) {
 			case 'mat':
-			gl[method](location, null, new Float32Array(value.array()));
+			gl[method](location, null, new Float32Array(value.columnmajor()));
 			break;
 
 			case 'col':

@@ -42,6 +42,17 @@ class Light extends Item {
 		this.name_ = val;
 	}
 
+	get ambient() {
+		return this.ambient_;
+	}
+	set ambient(val) {
+		if (!(val instanceof Color)) {
+			throw new Error('Light: ambient: must be a Color');
+		}
+
+		this.ambient_ = val;
+	}
+
 	/**
 	 * Makes an object from useful data.
 	 * @return {Object}
@@ -56,17 +67,50 @@ class Light extends Item {
 
 			case PointLight:
 			out.type = 2;
+			break;
 		}
 
-		var position = amc('*', this.mvmatrix(), Vec.homogeneouspos()).tocartesian();
+		var position = amc('*', this.mvmatrix(), Vec.homogeneouspos).tocartesian();
 		out.position = position;
-		out.rotation = this.body.rotation.euler;
 		out.intensity = this.intensity || 0.0;
 		out.ambient = this.ambient;
 		out.diffuse = this.diffuse;
 		out.specular = this.specular;
 
 		return out;
+	}
+
+	get diffuse() {
+		return this.diffuse_;
+	}
+	set diffuse(val) {
+		if (!(val instanceof Color)) {
+			throw new Error('Light: diffuse: must be a Color');
+		}
+
+		this.diffuse_ = val;
+	}
+
+	get intensity() {
+		return this.intensity_ || 0;
+	}
+	set intensity(val) {
+		if (typeof val !== 'number') {
+			throw new Error('Light: intensity: must be a number');
+		}
+
+		this.intensity_ = val;
+	}
+
+	get specular() {
+		return this.specular_;
+	}
+	set specular(val) {
+		if (!(val instanceof Color)) {
+			throw new Error('Light: specular: must be a Color');
+		}
+
+		this.specular_ = val;
 	}
 }
 
@@ -147,11 +191,16 @@ class PointLight extends Light {
 		ambient = new Color(0, 0, 0, 1),
 		diffuse = new Color(1, 1, 1, 1),
 		specular = new Color(1, 1, 1, 1),
-		intensity = 100
+		intensity = 10000
 	} = {}) {
 		super({
 			name,
 			body
 		});
+
+		this.ambient = ambient;
+		this.diffuse = diffuse;
+		this.specular = specular;
+		this.intensity = intensity;
 	}
 }

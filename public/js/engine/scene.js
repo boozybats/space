@@ -92,7 +92,7 @@ class Scene {
 		}
 
 		this.cameras.push(camera);
-		camera.scene = this;
+		camera.scene_ = this;
 	}
 
 	/**
@@ -107,6 +107,7 @@ class Scene {
 		}
 		
 		this.items.push(item);
+		item.scene_ = this;
 	}
  
 	/**
@@ -121,6 +122,7 @@ class Scene {
 		}
 		
 		this.systemitems.push(item);
+		item.scene_ = this;
 	}
 
 	/**

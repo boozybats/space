@@ -1,5 +1,5 @@
 /**
- * Represent matrices in column-major-view: array's position index is
+ * Represent matrices in row-major-view: array's position index is
  * a row number, the inner array's position index is a column number.
  * @this {Mat}
  * @param {Number} a Quantity of a rows
@@ -52,7 +52,7 @@ class Mat {
 	 * @return {Array}
 	 * @method
 	 */
-	array() {
+	columnmajor() {
 		var out = [];
 		var a = this.a,
 			b = this.b;
@@ -328,6 +328,25 @@ class Mat {
 			b = this.b;
 
 		var out = this.transpose().inverse().slice(a - 1, b - 1);
+
+		return out;
+	}
+
+	/**
+	 * Returns an array from matrix in row-major-view.
+	 * @return {Array}
+	 * @method
+	 */
+	rowmajor() {
+		var out = [];
+		var a = this.a,
+			b = this.b;
+
+		for (var i = 0; i < a; i++) {
+			for (var j = 0; j < b; j++) {
+				out.push(this[i][j]);
+			}
+		}
 
 		return out;
 	}

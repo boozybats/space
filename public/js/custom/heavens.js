@@ -1,4 +1,4 @@
-class Heaven extends Sphere {
+class Heaven extends Cube {
 	constructor({
 		id,
 		name = 'asteroid',
@@ -168,7 +168,28 @@ class Heaven extends Sphere {
 
 	static get shader() {
 		var out = new ShaderTemplate(
-			`attribute vec3 a_Position;
+			`#define MAX_LIGHTS 8
+
+			struct Light {
+				float type;
+				float intensity;
+				vec3  position;
+				vec4  ambient;
+				vec4  diffuse;
+				vec4  specular;
+			};
+
+			struct Material {
+				vec4 ambient;
+				vec4 diffuse;
+				vec4 specular;
+				sampler2D ambientmap;
+				sampler2D diffusemap;
+				sampler2D specularmap;
+				sampler2D normalmap;
+			};
+
+			attribute vec3 a_Position;
 			attribute vec3 a_Normal;
 			attribute vec3 a_Tangent;
 			attribute vec3 a_Bitangent;
@@ -177,37 +198,48 @@ class Heaven extends Sphere {
 			uniform mat4 u_MVMatrix;
 			uniform mat4 u_MVPMatrix;
 			uniform mat3 u_MVNMatrix;
+			uniform Material u_Material;
+			uniform Light u_Lights[MAX_LIGHTS];
+
+			varying vec4 v_Color;
 
 			void main(void) {
 				vec4 position4 = u_MVMatrix * vec4(a_Position, 1.0);
-				vec3 position3 = position4.xyz / position4.w;
-
 				gl_Position = u_MVPMatrix * position4;
+
+				vec3 position3 = position4.xyz / position4.w;
+				vec3 normal = normalize(u_MVNMatrix * a_Normal);
+
+				vec4 color = vec4(0.0);
+
+				for (int i = 0; i < MAX_LIGHTS; i++) {
+					Light light = u_Lights[i];
+					if (light.type != 2.0) {
+						continue;
+					}
+
+					float dist = distance(light.position, position3);
+
+					vec3 lightDir = normalize(light.position - position3);
+					float cos = clamp(dot(normal, lightDir), 0.0, 1.0);
+					color += u_Material.diffuse * light.diffuse * cos;
+				}
+
+				v_Color = vec4(
+					min(color.x, u_Material.diffuse.x),
+					min(color.y, u_Material.diffuse.y),
+					min(color.z, u_Material.diffuse.z),
+					min(color.w, u_Material.diffuse.w)
+				);
+				v_Color = u_Lights[0].diffuse;
 			}`,
 
 			`precision mediump float;
 
-			#define MAX_LIGHTS 32
-
-			struct Light {
-				float type;
-				float intensity;
-				vec3  position;
-				vec3  rotation;
-				vec4  ambient;
-				vec4  diffuse;
-				vec4  specular;
-			};
-
-			struct Material {
-				sampler2D ambient;
-				sampler2D diffuse;
-				sampler2D specular;
-				sampler2D normalmap;
-			};
+			varying vec4 v_Color;
 
 			void main(void) {
-				gl_FragColor = vec4(1.0);
+				gl_FragColor = v_Color;
 			}`
 		);
 

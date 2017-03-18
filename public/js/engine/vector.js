@@ -210,7 +210,7 @@ class Vec {
 	 * @method
 	 * @static
 	 */
-	static homogeneousdir() {
+	static get homogeneousdir() {
 		return new Vec4(0, 0, 0, 0);
 	}
 
@@ -220,7 +220,7 @@ class Vec {
 	 * @method
 	 * @static
 	 */
-	static homogeneouspos() {
+	static get homogeneouspos() {
 		return new Vec4(0, 0, 0, 1);
 	}
 

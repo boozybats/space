@@ -10,13 +10,12 @@ function gameplay(images) {
 	var scene = project.createScene('main', true);
 	var camera = new Camera({
 		body: new Body({
-			position: new Vec3(0,0,-5),
+			position: new Vec3(0, 0, 0),
 			rotation: Quaternion.Euler(0, 0, 0)
 		})
 	});
 	scene.appendCamera(camera);
 
-	// make light source follow camera
 	var light = new PointLight({
 		body: new Body({
 			parent: camera.body
@@ -38,10 +37,11 @@ function gameplay(images) {
 		me: true,
 		mouseControl: cursor
 	});
-	//me.instance(scene, true);
-	//me.rotate(new Vec3(0, 1));
-	//me.bindCamera(camera);
-	//me.body.scale = amc('+', new Vec3, me.physic.diameter);
+	me.instance(scene, true);
+	me.rotate(new Vec3(0, 0.05));
+	// make light source follows camera
+	me.bindCamera(camera);
+	me.body.scale = amc('+', new Vec3, me.physic.diameter);
 
 	var facebox = new FaceBox;
 	facebox.instance(scene, true);
@@ -51,7 +51,4 @@ function gameplay(images) {
 		me.id = id;
 		project.requestAnimationFrame();
 	});
-
-	var item = new Sphere;
-	item.instance(scene);
 }

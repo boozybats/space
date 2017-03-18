@@ -169,7 +169,7 @@ function amc_multi(term1, term2) {
 
 		arr = Mat.multi(term1, arr);
 
-		out = new Vec(...arr.array());
+		out = new Vec(...arr.rowmajor());
 	}
 	else if (term1 instanceof Vec && term2 instanceof Mat) {
 		var arr = [term1.array()];
@@ -178,7 +178,7 @@ function amc_multi(term1, term2) {
 
 		arr = Mat.multi(arr, term2);
 
-		out = new Vec(...arr.array());
+		out = new Vec(...arr.rowmajor());
 	}
 	else if ((term1 instanceof Mat && typeof term2 === 'number') ||
 		(typeof term1 === 'number' && term2 instanceof Mat)) {

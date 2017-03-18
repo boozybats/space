@@ -174,7 +174,7 @@ class Project {
 			for (var camera of cameras) {
 				var mvpmatrix = camera.mvpmatrix();
 
-				var allitems = sysitems.concat(items);
+				var allitems = items.concat(sysitems);
 				for (var item of allitems) {
 					draw(item, mvpmatrix, options);
 				}
