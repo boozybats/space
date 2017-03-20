@@ -145,8 +145,8 @@ class DirectionalLight extends Light {
 		name = 'directionallight',
 		body = new Body,
 		ambient = new Color(0, 0, 0, 1),
-		diffuse = new Color(1, 1, 1, 1),
-		specular = new Color(1, 1, 1, 1)
+		diffuse = new Color(255, 255, 255, 1),
+		specular = new Color(255, 255, 255, 1)
 	} = {}) {
 		super({
 			name,
@@ -189,9 +189,9 @@ class PointLight extends Light {
 		name = 'pointlight',
 		body = new Body,
 		ambient = new Color(0, 0, 0, 1),
-		diffuse = new Color(1, 1, 1, 1),
-		specular = new Color(1, 1, 1, 1),
-		intensity = 10000
+		diffuse = new Color(255, 255, 255, 1),
+		specular = new Color(255, 255, 255, 1),
+		intensity = 1000000
 	} = {}) {
 		super({
 			name,

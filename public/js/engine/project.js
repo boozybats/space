@@ -173,6 +173,7 @@ class Project {
 
 			for (var camera of cameras) {
 				var mvpmatrix = camera.mvpmatrix();
+				// console.log(amc('*', mvpmatrix, new Vec4(-1, -1, -1, 1)).tocartesian());
 
 				var allitems = items.concat(sysitems);
 				for (var item of allitems) {
@@ -210,6 +211,7 @@ class Project {
 
 				var VIOBuffer = mesh.VIOBuffer;
 				gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, VIOBuffer);
+
 				gl.drawElements(gl[mesh.drawStyle], VIOBuffer.length, gl.UNSIGNED_SHORT, 0);
 			}
 

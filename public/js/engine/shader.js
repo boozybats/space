@@ -18,11 +18,12 @@ class ShaderTemplate {
 	 * founded, return new constructor Shader with program. Must
 	 * be initialized for item, each item must have own shader.
 	 * Usualy function are called by {@link Item#instance}.
-	 * @param {WebGLContext} gl
+	 * @param {WebGLContext} gl.
+	 * @param {Object} functions Shader enabled functions.
 	 * @return {Shader}
 	 * @method
 	 */
-	initialize(gl) {
+	initialize(gl, functions = {}) {
 		var vertexShader = this.vertexShader,
 			fragmentShader = this.fragmentShader;
 		var vs = gl.createShader(gl.VERTEX_SHADER),
@@ -53,9 +54,35 @@ class ShaderTemplate {
 		gl.detachShader(program, vs);
 		gl.detachShader(program, fs);
 
-		gl.enable(gl.DEPTH_TEST);
-		gl.enable(gl.BLEND);
-		gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+		gl.enable(gl.CULL_FACE);
+		if (typeof functions.cullface !== 'undefined') {
+			gl.cullFace(functions.cullface);
+		}
+		else {
+			gl.cullFace(gl.FRONT);
+		}
+
+		if (functions.depthtest !== false) {
+			gl.enable(gl.DEPTH_TEST);
+		}
+
+		if (functions.blend !== false) {
+			gl.enable(gl.BLEND);
+		}
+
+		if (typeof functions.blendfunc === 'object') {
+			var bf = functions.blendfunc;
+			gl.blendFunc(bf.srcalpha, bf.oneminussrcalpha);
+		}
+		else {
+			gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+		}
+
+		if (typeof functions.polygonoffset === 'object') {
+			var po = functions.polygonoffset;
+			gl.polygonOffset(po.factor, po.units);
+			gl.enable(gl.POLYGON_OFFSET_FILL);
+		}
 
 		var out = new Shader(program);
 		out.template = this;

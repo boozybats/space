@@ -120,9 +120,6 @@ class Heaven extends Cube {
 			curcol = this.physic.color;
 		if (oldcol !== curcol) {
 			_private.color = curcol;
-			this.changeUniforms({
-				u_DiffuseColor: curcol
-			});
 		}
 
 		if (this.mouseControl) {
@@ -146,7 +143,7 @@ class Heaven extends Cube {
 			var cam = this.camera.body;
 			var body = this.body;
 
-			var z = body.scale.z * -6;
+			var z = body.scale.z * 6;
 
 			cam.position = new Vec3(body.position.xy, z);
 		}
@@ -193,13 +190,13 @@ class Heaven extends Cube {
 			attribute vec3 a_Normal;
 			attribute vec3 a_Tangent;
 			attribute vec3 a_Bitangent;
-			attribute vec2 a_UI;
+			attribute vec2 a_UV;
 
 			uniform mat4 u_MVMatrix;
 			uniform mat4 u_MVPMatrix;
 			uniform mat3 u_MVNMatrix;
-			uniform Material u_Material;
 			uniform Light u_Lights[MAX_LIGHTS];
+			uniform Material u_Material;
 
 			varying vec4 v_Color;
 
@@ -222,7 +219,7 @@ class Heaven extends Cube {
 
 					vec3 lightDir = normalize(light.position - position3);
 					float cos = clamp(dot(normal, lightDir), 0.0, 1.0);
-					color += u_Material.diffuse * light.diffuse * cos;
+					color += u_Material.diffuse * light.diffuse * light.intensity * cos / pow(dist, 2.0);
 				}
 
 				v_Color = vec4(
@@ -231,7 +228,6 @@ class Heaven extends Cube {
 					min(color.z, u_Material.diffuse.z),
 					min(color.w, u_Material.diffuse.w)
 				);
-				v_Color = u_Lights[0].diffuse;
 			}`,
 
 			`precision mediump float;

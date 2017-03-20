@@ -485,28 +485,27 @@ class Item {
 	 * item.instance(scene, true);
 	 */
 	instance(scene, isSystem = false) {
-		if ((scene instanceof Scene)) {
-			if (isSystem) {
-				scene.appendSystemItem(this);
-			}
-			else {
-				scene.appendItem(this);
-			}
+		if (!(scene instanceof Scene)) {
+			throw new Error('Item: instance: must be a Scene');
+		}
 
-			this.isInstanced = true;
-			this.scene_ = scene;
-			this.project_ = scene.project;
-			this.webGL_ = this.project.webGLRenderer.webGL;
-
-			if (this.mesh) {
-				this.mesh.shader = this.mesh.shader.initialize(this.webGL);
-				this.mesh.setVIOBuffer(this.webGL, this.mesh.vertexIndices);
-				this.changeAttributes(this.mesh.attributes);
-				this.changeUniforms(this.mesh.uniforms);
-			}
+		if (isSystem) {
+			scene.appendSystemItem(this);
 		}
 		else {
-			console.warn('Item: instance: error');
+			scene.appendItem(this);
+		}
+
+		this.isInstanced = true;
+		this.scene_ = scene;
+		this.project_ = scene.project;
+		this.webGL_ = this.project.webGLRenderer.webGL;
+
+		if (this.mesh) {
+			this.mesh.shader = this.mesh.shader.initialize(this.webGL);
+			this.mesh.setVIOBuffer(this.webGL, this.mesh.vertexIndices);
+			this.changeAttributes(this.mesh.attributes);
+			this.changeUniforms(this.mesh.uniforms);
 		}
 	}
 

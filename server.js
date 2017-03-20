@@ -5,7 +5,7 @@
 	const game_ = require('./game');
 
 	//constants
-	const _listener = 8888;
+	const _listener = 5610;
 	
 	console.log(`Server listener - ${_listener}`);
 

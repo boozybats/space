@@ -31,14 +31,14 @@ function gameplay(images) {
 	cursor = new Cursor;
 	var me = new Heaven({
 		body: new Body({
-			position: new Vec3(0, 0, 5)
+			position: new Vec3(0, 0, -5)
 		}),
 		name: 'me',
 		me: true,
 		mouseControl: cursor
 	});
 	me.instance(scene, true);
-	me.rotate(new Vec3(0, 0.05));
+	me.rotate(new Vec3(0.0, 0.05));
 	// make light source follows camera
 	me.bindCamera(camera);
 	me.body.scale = amc('+', new Vec3, me.physic.diameter);

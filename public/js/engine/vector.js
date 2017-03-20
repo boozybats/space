@@ -343,7 +343,7 @@ class Vec {
 	 */
 	static multi(...vectors) {
 		var vec1 = vectors[0],
-			vec2 = vectors[1];
+			vec2 = vectors[1] || new Vec2;
 		var Type = vec1.size >= vec2.size ? vec1.constructor : vec2.constructor;
 
 		var out = new Type(
@@ -415,7 +415,7 @@ class Vec {
 	 */
 	static sum(...vectors) {
 		var vec1 = vectors[0],
-			vec2 = vectors[1];
+			vec2 = vectors[1] || new Vec2;
 		var Type = vec1.size >= vec2.size ? vec1.constructor : vec2.constructor;
 
 		var out = new Type(

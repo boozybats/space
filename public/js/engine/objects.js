@@ -33,7 +33,7 @@ class Icosahedron extends Item {
 			attributes: {
 				a_Position: mesh.vertices,
 				a_Normal: mesh.normals,
-				a_UI: mesh.uis,
+				a_UV: mesh.uvs,
 				a_Tangent: mesh.tangents,
 				a_Bitangent: mesh.bitangents
 			},
@@ -49,7 +49,7 @@ class Icosahedron extends Item {
 	 * @static
 	 * @example
 	 * var mesh = Icosachedron.mesh();
-	 * mesh;  // {vertices, indices, normals, uis, tangents, bitangents}
+	 * mesh;  // {vertices, indices, normals, uvs, tangents, bitangents}
 	 */
 	static mesh() {
 		// 20 sides, 30 edges, 12 vertices
@@ -65,8 +65,8 @@ class Icosahedron extends Item {
 		var normals = [0, 1, 0];
 		normals.size = 3;
 
-		var uis = [0.5, 1];
-		uis.size = 2;
+		var uvs = [0.5, 1];
+		uvs.size = 2;
 
 		var y0 = 3 / (3 * 2),
 			y1 = 6 / (3 * 2);
@@ -97,7 +97,7 @@ class Icosahedron extends Item {
 				);
 				var normal = vec.normalize();
 
-				var ui = [
+				var uv = [
 					Math.asin(x) / Math.PI + 0.5, // 0.5 + Math.atan2(z, x) / (2 * Math.PI),
 					Math.asin(y) / Math.PI + 0.5 // 0.5 + Math.asin(y) / Math.PI
 				];
@@ -107,28 +107,28 @@ class Icosahedron extends Item {
 
 				vertices.push(...vec.array());
 				normals.push(...normal.array());
-				uis.push(...ui);
+				uvs.push(...uv);
 			}
 		}
 
 		// 4th level
 		vertices.push(0, -1, 0);
 		normals.push(0, -1, 0);
-		uis.push(0.5, 0);
+		uvs.push(0.5, 0);
 
 		var out = {
 			vertices,
 			indices,
 			normals,
-			uis
+			uvs
 		};
 
-		var tb = TB(out);
+		var tbn = TBN(out);
 
-		var tg = tb.tangents;
+		var tg = tbn.tangents;
 		tg.size = 3;
 
-		var btg = tb.bitangents;
+		var btg = tbn.bitangents;
 		btg.size = 3;
 
 		out.tangents = tg;
@@ -208,7 +208,7 @@ class Sphere extends Item {
 			attributes: {
 				a_Position: mesh.vertices,
 				a_Normal: mesh.normals,
-				a_UI: mesh.uis,
+				a_UV: mesh.uvs,
 				a_Tangent: mesh.tangents,
 				a_Bitangent: mesh.bitangents
 			},
@@ -222,29 +222,29 @@ class Sphere extends Item {
 	 * @return {Object}
 	 * @param {Array} vertices
 	 * @param {Array} normals
-	 * @param {Array} uis
+	 * @param {Array} uvs
 	 * @param {Array} indices
 	 * @example
 	 * var mesh = Sphere.mesh();
-	 * mesh;  // {vertices, indices, normals, uis, tangents, bitangents}
+	 * mesh;  // {vertices, indices, normals, uvs, tangents, bitangents}
 	 */
 	static mesh({
 		vertices,
 		normals,
-		uis,
+		uvs,
 		indices
 	} = {}) {
-		var [nvertices, nnormals, nuis, nindices] = [[], [], [], []];
+		var [nvertices, nnormals, nuvs, nindices] = [[], [], [], []];
 		nvertices.size = 3;
 		nnormals.size = 3;
-		nuis.size = 2;
+		nuvs.size = 2;
 
 		for (var i = 0; i < vertices.length; i++) {
 			nvertices.push(vertices[i]);
 			nnormals.push(normals[i]);
 		}
-		for (var i = 0; i < uis.length; i++) {
-			nuis.push(uis[i]);
+		for (var i = 0; i < uvs.length; i++) {
+			nuvs.push(uvs[i]);
 		}
 		for (var i = 0; i < indices.length; i++) {
 			nindices.push(indices[i]);
@@ -290,7 +290,7 @@ class Sphere extends Item {
 			b = amc('+', b, amc('*', bn, bd));
 			c = amc('+', c, amc('*', cn, cd));
 
-			var ui = [];
+			var uv = [];
 			for (var j = 0; j < 3; j++) {
 				var x, y, z;
 
@@ -318,13 +318,13 @@ class Sphere extends Item {
 					Math.asin(x) / Math.PI + 0.5, // 0.5 + Math.atan2(z, x) / (2 * Math.PI),
 					Math.asin(y) / Math.PI + 0.5 // 0.5 + Math.asin(y) / Math.PI
 				];
-				ui.push(...arr);
+				uv.push(...arr);
 			}
 
 			var length = nvertices.length / 3;
 			nvertices.push(...a.array(), ...b.array(), ...c.array());
 			nnormals.push(...an.array(), ...bn.array(), ...cn.array());
-			nuis.push(...ui);
+			nuvs.push(...uv);
 
 			a = length,
 			b = length + 1,
@@ -342,15 +342,15 @@ class Sphere extends Item {
 			vertices: nvertices,
 			normals: nnormals,
 			indices: nindices,
-			uis: nuis
+			uvs: nuvs
 		};
 
-		var tb = TB(out);
+		var tbn = TBN(out);
 
-		var tg = tb.tangents;
+		var tg = tbn.tangents;
 		tg.size = 3;
 
-		var btg = tb.bitangents;
+		var btg = tbn.bitangents;
 		btg.size = 3;
 
 		out.tangents = tg;
@@ -392,67 +392,56 @@ class Cube extends Item {
 		});
 
 		var indices = [
-			0, 1, 2, 2, 3, 0,
-			4, 5, 6, 6, 7, 4,
-			8, 9, 10, 10, 11, 8,
-			12, 13, 14, 14, 15, 12,
-			16, 17, 18, 18, 19, 16,
-			20, 21, 22, 22, 23, 20
+			0, 1, 3, 3, 1, 2,
+			7, 6, 4, 4, 6, 5,
+			11, 10, 8, 8, 10, 9,
+			12, 13, 15, 15, 13, 14,
+			17, 16, 18, 18, 16, 19,
+			20, 21, 23, 23, 21, 22
 		];
 
 		var vertices = [
-			-1, -1, 1, -1, 1, 1,
-			1, 1, 1, 1, -1, 1,
-			-1, -1, -1, -1, 1, -1,
-			1, 1, -1, 1, -1, -1,
-			-1, -1, 1, -1, 1, 1,
-			-1, 1, -1, -1, -1, -1,
-			1, -1, 1, 1, 1, 1,
-			1, 1, -1, 1, -1, -1,
-			-1, -1, 1, -1, -1, -1,
-			1, -1, -1, 1, -1, 1,
-			-1, 1, 1, -1, 1, -1,
-			1, 1, -1, 1, 1, 1
+			-1,-1,1, -1,1,1, 1,1,1, 1,-1,1,
+			-1,-1,-1, -1,1,-1, 1,1,-1, 1,-1,-1,
+			-1,-1,1, -1,1,1, -1,1,-1, -1,-1,-1,
+			1,-1,1, 1,1,1, 1,1,-1, 1,-1,-1,
+			-1,-1,1, -1,-1,-1, 1,-1,-1, 1,-1,1,
+			-1,1,1, -1,1,-1, 1,1,-1, 1,1,1
 		];
 		vertices.size = 3;
 
 		var uvs = [
-			0.0, 0.0, 0.0, 1.0,
-			1.0, 1.0, 1.0, 0.0,
-			0.0, 0.0, 0.0, 1.0,
-			1.0, 1.0, 1.0, 0.0,
-			0.0, 0.0, 0.0, 1.0,
-			1.0, 1.0, 1.0, 0.0,
-			0.0, 0.0, 0.0, 1.0,
-			1.0, 1.0, 1.0, 0.0,
-			0.0, 0.0, 0.0, 1.0,
-			1.0, 1.0, 1.0, 0.0,
-			0.0, 0.0, 0.0, 1.0,
-			1.0, 1.0, 1.0, 0.0
+			0,0, 0,1, 1,1, 1,0,
+			1,0, 1,1, 0,1, 0,0,
+			1,0, 1,1, 0,1, 0,0,
+			0,0, 0,1, 1,1, 1,0,
+			0,1, 0,0, 1,0, 1,1,
+			0,0, 0,1, 1,1, 1,0
 		];
 		uvs.size = 2;
 
-		var normals = [
-			0.0, 0.0, 1.0, 0.0, 0.0, 1.0,
-			0.0, 0.0, 1.0, 0.0, 0.0, 1.0,
-			0.0, 0.0, -1.0, 0.0, 0.0, -1.0,
-			0.0, 0.0, -1.0, 0.0, 0.0, -1.0,
-			-1.0, 0.0, 0.0, -1.0, 0.0, 0.0,
-			-1.0, 0.0, 0.0, -1.0, 0.0, 0.0,
-			1.0, 0.0, 0.0, 1.0, 0.0, 0.0,
-			1.0, 0.0, 0.0, 1.0, 0.0, 0.0,
-			0.0, -1.0, 0.0, 0.0, -1.0, 0.0,
-			0.0, -1.0, 0.0, 0.0, -1.0, 0.0,
-			0.0, 1.0, 0.0, 0.0, 1.0, 0.0,
-			0.0, 1.0, 0.0, 0.0, 1.0, 0.0
-		];
+		var tbn = TBN({
+			indices,
+			vertices,
+			uvs
+		});
+
+		var normals = tbn.normals;
 		normals.size = 3;
+
+		var tangents = tbn.tangents;
+		tangents.size = 3;
+
+		var bitangents = tbn.bitangents;
+		bitangents.size = 3;
 
 		this.mesh = new Mesh({
 			attributes: {
 				a_Position: vertices,
+				a_UV: uvs,
 				a_Normal: normals,
-				a_UV: uvs
+				a_Tangent: tangents,
+				a_Bitangent: bitangents
 			},
 			vertexIndices: indices,
 			shader: Cube.shader
@@ -580,20 +569,20 @@ class UI extends Item {
 		];
 		vertices.size = 3;
 
-		var UI = [
+		var uv = [
 			0, 0,
 			0, 1,
 			1, 1,
 			1, 0
 		];
-		UI.size = 2;
+		uv.size = 2;
 
 		var VI = [0, 1, 2, 2, 3, 0];
 
 		this.mesh = new Mesh({
 			attributes: {
 				a_Position: vertices,
-				a_UI: UI
+				a_UV: uv
 			},
 			vertexIndices: VI,
 			shader: UI.shader
@@ -634,14 +623,14 @@ class UI extends Item {
 	static get Shader() {
 		var out = new Shader(
 			`attribute vec3 a_Position;
-			attribute vec2 a_UI;
+			attribute vec2 a_UV;
 
 			uniform mat4 u_MVMatrix;
 
-			varying vec2 v_UI;
+			varying vec2 v_UV;
 
 			void main(void) {
-				v_UI = a_UI;
+				v_UV = a_UV;
 
 				gl_Position = u_MVMatrix * vec4(a_Position, 1.0);
 			}`,
@@ -653,7 +642,7 @@ class UI extends Item {
 			varying vec2 v_UI;
 
 			void main(void) {
-				vec4 texel = texture2D(u_Texture, v_UI);
+				vec4 texel = texture2D(u_Texture, v_UV);
 
 				gl_FragColor = texel;
 			}`
@@ -664,93 +653,146 @@ class UI extends Item {
 }
 
 /**
- * Generates tangents and bitangents for mesh.
+ * Generates tangents and bitangents and normals for mesh.
  * @param {Array} indices
  * @param {Array} vertices
- * @param {Array} uis
+ * @param {Array} uvs
  * @param {Array} normals
  * @return {Object}
  * @example
- * TB(Icosahedron.mesh());  // {indices, vertices, uis, normals, tangents, bitangents}
+ * TBN(Icosahedron.mesh());  // {indices, vertices, uvs, normals, tangents, bitangents}
  */
-function TB({indices, vertices, uis, normals} = {}) {
-	var tangents = [],
-		bitangents = [];
-
-	for (var i = 0; i < indices.length; i += 3) {
-		var ind0 = indices[i],
-			ind1 = indices[i + 1],
-			ind2 = indices[i + 2];
-
-		var v0 = new Vec3(vertices[ind0 * 3], vertices[ind0 * 3 + 1], vertices[ind0 * 3 + 2]),
-			v1 = new Vec3(vertices[ind1 * 3], vertices[ind1 * 3 + 1], vertices[ind1 * 3 + 2]),
-			v2 = new Vec3(vertices[ind2 * 3], vertices[ind2 * 3 + 1], vertices[ind2 * 3 + 2]);
-		var s0 = uis[ind0 * 2],
-			t0 = uis[ind0 * 2 + 1],
-			s1 = uis[ind1 * 2],
-			t1 = uis[ind1 * 2 + 1],
-			s2 = uis[ind2 * 2],
-			t2 = uis[ind2 * 2 + 1];
-
-		var tb = calcBasis(v0, v1, v2, s0, t0, s1, t1, s2, t2);
-
-		if (tangents[ind0]) {
-			tangents[ind0].push(tb.tangent);
-			bitangents[ind0].push(tb.bitangent);
-		}
-		else {
-			tangents[ind0] = [tb.tangent];
-			bitangents[ind0] = [tb.bitangent];
-		}
-
-		if (tangents[ind1]) {
-			tangents[ind1].push(tb.tangent);
-			bitangents[ind1].push(tb.bitangent);
-		}
-		else {
-			tangents[ind1] = [tb.tangent];
-			bitangents[ind1] = [tb.bitangent];
-		}
-
-		if (tangents[ind2]) {
-			tangents[ind2].push(tb.tangent);
-			bitangents[ind2].push(tb.bitangent);
-		}
-		else {
-			tangents[ind2] = [tb.tangent];
-			bitangents[ind2] = [tb.bitangent];
-		}
+function TBN({indices, vertices, uvs, normals} = {}) {
+	if (!indices || !vertices) {
+		throw new Error('TBN: indices and array must be an arrays');
 	}
 
-	var out = {
-		tangents: [],
-		bitangents: []
-	};
+	var out = {};
 
-	for (var i = 0; i < vertices.length / 3; i++) {
-		var tg = tangents[i];
-		var btg = bitangents[i];
+	if (!normals) {
+		normals = [];
+		var memory = [];
 
-		var tr = new Vec3;
-		var br = new Vec3;
-		for (var j = 0; j < tg.length; j++) {
-			tr = amc('+', tr, tg[j]);
-			br = amc('+', br, btg[j]);
+		for (var i = 0; i < indices.length; i += 3) {
+			var ind0 = indices[i],
+				ind1 = indices[i + 1],
+				ind2 = indices[i + 2];
+
+			var v0 = new Vec3(vertices[ind0 * 3], vertices[ind0 * 3 + 1], vertices[ind0 * 3 + 2]),
+				v1 = new Vec3(vertices[ind1 * 3], vertices[ind1 * 3 + 1], vertices[ind1 * 3 + 2]),
+				v2 = new Vec3(vertices[ind2 * 3], vertices[ind2 * 3 + 1], vertices[ind2 * 3 + 2]);
+
+			var vec0 = new Vec3(
+				v0.x - v1.x,
+				v0.y - v1.y,
+				v0.z - v1.z
+			);
+			var vec1 = new Vec3(
+				v1.x - v2.x,
+				v1.y - v2.y,
+				v1.z - v2.z
+			);
+
+			var N = Vec3.cross(vec0, vec1).normalize();
+
+			if (memory[ind0]) {
+				memory[ind0].push(N);
+			}
+			else {
+				memory[ind0] = [N];
+			}
+			if (memory[ind1]) {
+				memory[ind1].push(N);
+			}
+			else {
+				memory[ind1] = [N];
+			}
+			if (memory[ind2]) {
+				memory[ind2].push(N);
+			}
+			else {
+				memory[ind2] = [N];
+			}
 		}
 
-		tr = amc('/', tr, tg.length);
-		br = amc('/', br, tg.length);
+		for (var i = 0; i < vertices.length / 3; i++) {
+			var normal = Vec.avg(...memory[i]);
+			normals.push(...normal.array());
+		}
 
-		var normal = new Vec3(
-			normals[i * 3],
-			normals[i * 3 + 1],
-			normals[i * 3 + 2]
-		);
-		tr = ortogonalize(normal, tr);
-		br = ortogonalize(normal, br);
+		out.normals = normals;
+	}
 
-		out.tangents.push(...tr.array());
-		out.bitangents.push(...br.array());
+	if (uvs) {
+		out.tangents = [];
+		out.bitangents = [];
+
+		var tangents = [],
+			bitangents = [];
+
+		for (var i = 0; i < indices.length; i += 3) {
+			var ind0 = indices[i],
+				ind1 = indices[i + 1],
+				ind2 = indices[i + 2];
+
+			var v0 = new Vec3(vertices[ind0 * 3], vertices[ind0 * 3 + 1], vertices[ind0 * 3 + 2]),
+				v1 = new Vec3(vertices[ind1 * 3], vertices[ind1 * 3 + 1], vertices[ind1 * 3 + 2]),
+				v2 = new Vec3(vertices[ind2 * 3], vertices[ind2 * 3 + 1], vertices[ind2 * 3 + 2]);
+			var s0 = uvs[ind0 * 2],
+				t0 = uvs[ind0 * 2 + 1],
+				s1 = uvs[ind1 * 2],
+				t1 = uvs[ind1 * 2 + 1],
+				s2 = uvs[ind2 * 2],
+				t2 = uvs[ind2 * 2 + 1];
+
+			var tb = calcBasis(v0, v1, v2, s0, t0, s1, t1, s2, t2);
+
+			if (tangents[ind0]) {
+				tangents[ind0].push(tb.tangent);
+				bitangents[ind0].push(tb.bitangent);
+			}
+			else {
+				tangents[ind0] = [tb.tangent];
+				bitangents[ind0] = [tb.bitangent];
+			}
+
+			if (tangents[ind1]) {
+				tangents[ind1].push(tb.tangent);
+				bitangents[ind1].push(tb.bitangent);
+			}
+			else {
+				tangents[ind1] = [tb.tangent];
+				bitangents[ind1] = [tb.bitangent];
+			}
+
+			if (tangents[ind2]) {
+				tangents[ind2].push(tb.tangent);
+				bitangents[ind2].push(tb.bitangent);
+			}
+			else {
+				tangents[ind2] = [tb.tangent];
+				bitangents[ind2] = [tb.bitangent];
+			}
+		}
+
+		for (var i = 0; i < vertices.length / 3; i++) {
+			var tg = tangents[i];
+			var btg = bitangents[i];
+
+			tr = Vec.avg(...tg);
+			br = Vec.avg(...btg);
+
+			var normal = new Vec3(
+				normals[i * 3],
+				normals[i * 3 + 1],
+				normals[i * 3 + 2]
+			);
+			tr = ortogonalize(normal, tr);
+			br = ortogonalize(normal, br);
+
+			out.tangents.push(...tr.array());
+			out.bitangents.push(...br.array());
+		}
 	}
 
 	return out;
@@ -788,11 +830,19 @@ function TB({indices, vertices, uis, normals} = {}) {
 		return out;
 	}
 
+	function ortogonalize(v0, v1) {
+		var proj = getpoint(v0, amc('*', v0, -1), v1);
+		var res = amc('-', v1, proj);
+		res.normalize();
+
+		return res;
+	}
+
 	function getpoint(a, b, p) {
 		var c = amc('-', p, a),
 			V = amc('-', b, a);
 
-		var d = V.length;
+		var d = V.length();
 		V = V.normalize();
 
 		var t = Vec.dot(V, c);
@@ -808,14 +858,6 @@ function TB({indices, vertices, uis, normals} = {}) {
 		var out = amc('+', a, V);
 
 		return out;
-	}
-
-	function ortogonalize(v0, v1) {
-		var proj = getpoint(v0, amc('*', v0, -1), v1);
-		var res = amc('-', v1, proj);
-		res.normalize();
-
-		return res;
 	}
 }
 
