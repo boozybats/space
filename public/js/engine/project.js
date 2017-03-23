@@ -61,9 +61,10 @@ class Project {
 	 * Binds canvas to project and sets viewport width
 	 * and height, initializes WebGLRenderer.
 	 * @param {Canvas} canvas
+	 * @param {Object} attributes WebGLRendererContext attributes.
 	 * @method
 	 */
-	attachCanvas(canvas) {
+	attachCanvas(canvas, attributes) {
 		if (!(canvas instanceof Canvas)) {
 			throw new Error('Project: attachCanvas: must be a Canvas');
 		}
@@ -75,7 +76,8 @@ class Project {
 		this.viewportHeight = canvas.canvas.height;
 
 		this.webGLRenderer_ = new WebGLRenderer({
-			project: this
+			project: this,
+			attributes
 		});
 	}
 
@@ -202,7 +204,7 @@ class Project {
 					uniforms.u_MVNMatrix = mvmatrix.normalize();
 				}
 
-				var lights = scene.getSceneLights();
+				var lights = scene.getLights();
 				uniforms.u_Lights = lights;
 
 				item.changeUniforms(uniforms);

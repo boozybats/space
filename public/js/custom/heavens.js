@@ -1,4 +1,4 @@
-class Heaven extends Cube {
+class Heaven extends Sphere {
 	constructor({
 		id,
 		name = 'asteroid',
@@ -20,7 +20,7 @@ class Heaven extends Cube {
 			physic,
 			mesh,
 			collider,
-			precision: 2
+			precision: 1
 		});
 
 		this.me = me;
@@ -29,9 +29,13 @@ class Heaven extends Cube {
 		var normalmap = new Image();
 		normalmap.src = 'images/n_heaven.jpg';
 
+		var diffusemap = new Image();
+		diffusemap.src = 'images/diffuse.jpg';
+
 		this.mesh.shader = Heaven.shader;
 		this.mesh.material = new Material({
-			normalmap
+			normalmap,
+			diffusemap
 		});
 	}
 
@@ -143,7 +147,7 @@ class Heaven extends Cube {
 			var cam = this.camera.body;
 			var body = this.body;
 
-			var z = body.scale.z * 6;
+			var z = body.scale.z * -6;
 
 			cam.position = new Vec3(body.position.xy, z);
 		}
@@ -168,13 +172,55 @@ class Heaven extends Cube {
 			`#define MAX_LIGHTS 8
 
 			struct Light {
-				float type;
-				float intensity;
-				vec3  position;
 				vec4  ambient;
 				vec4  diffuse;
 				vec4  specular;
+				vec3  position;
+				float type;
+				float intensity;
 			};
+
+			attribute vec3 a_Position;
+			attribute vec3 a_Normal;
+			attribute vec2 a_UV;
+
+			uniform mat4 u_MVMatrix;
+			uniform mat4 u_MVPMatrix;
+			uniform mat3 u_MVNMatrix;
+			uniform Light u_Lights[MAX_LIGHTS];
+
+			varying vec4 v_LightAmbient[MAX_LIGHTS];
+			varying vec4 v_LightDiffuse[MAX_LIGHTS];
+			varying vec2 v_UV;
+
+			void main(void) {
+				vec4 position4 = u_MVMatrix * vec4(a_Position, 1.0);
+				gl_Position = u_MVPMatrix * position4;
+
+				v_UV = a_UV;
+
+				vec3 position3 = position4.xyz / position4.w;
+				vec3 normal = normalize(u_MVNMatrix * a_Normal);
+
+				for (int i = 0; i < MAX_LIGHTS; i++) {
+					Light light = u_Lights[i];
+					if (light.type != 2.0) {
+						continue;
+					}
+
+					vec3 dir = normalize(light.position - position3);
+					float cosTheta = clamp(dot(normal, dir), 0.0, 1.0);
+
+					float dist = distance(position3, light.position);
+
+					v_LightDiffuse[i] = light.diffuse * light.intensity * cosTheta / pow(dist, 2.0);
+					v_LightAmbient[i] = light.ambient;
+				}
+			}`,
+
+			`precision mediump float;
+
+			#define MAX_LIGHTS 8
 
 			struct Material {
 				vec4 ambient;
@@ -186,56 +232,31 @@ class Heaven extends Cube {
 				sampler2D normalmap;
 			};
 
-			attribute vec3 a_Position;
-			attribute vec3 a_Normal;
-			attribute vec3 a_Tangent;
-			attribute vec3 a_Bitangent;
-			attribute vec2 a_UV;
-
-			uniform mat4 u_MVMatrix;
-			uniform mat4 u_MVPMatrix;
-			uniform mat3 u_MVNMatrix;
-			uniform Light u_Lights[MAX_LIGHTS];
 			uniform Material u_Material;
 
-			varying vec4 v_Color;
+			varying vec4 v_LightAmbient[MAX_LIGHTS];
+			varying vec4 v_LightDiffuse[MAX_LIGHTS];
+			varying vec2 v_UV;
 
 			void main(void) {
-				vec4 position4 = u_MVMatrix * vec4(a_Position, 1.0);
-				gl_Position = u_MVPMatrix * position4;
-
-				vec3 position3 = position4.xyz / position4.w;
-				vec3 normal = normalize(u_MVNMatrix * a_Normal);
+				vec4 diffuseTex = texture2D(u_Material.diffusemap, v_UV);
 
 				vec4 color = vec4(0.0);
 
 				for (int i = 0; i < MAX_LIGHTS; i++) {
-					Light light = u_Lights[i];
-					if (light.type != 2.0) {
-						continue;
-					}
-
-					float dist = distance(light.position, position3);
-
-					vec3 lightDir = normalize(light.position - position3);
-					float cos = clamp(dot(normal, lightDir), 0.0, 1.0);
-					color += u_Material.diffuse * light.diffuse * light.intensity * cos / pow(dist, 2.0);
+					vec4 ambient = u_Material.ambient * v_LightAmbient[i];
+					vec4 diffuse = diffuseTex * v_LightDiffuse[i];
+					color += ambient + diffuse;
 				}
 
-				v_Color = vec4(
-					min(color.x, u_Material.diffuse.x),
-					min(color.y, u_Material.diffuse.y),
-					min(color.z, u_Material.diffuse.z),
-					min(color.w, u_Material.diffuse.w)
+				color = vec4(
+					min(color.x, diffuseTex.x),
+					min(color.y, diffuseTex.y),
+					min(color.z, diffuseTex.z),
+					min(color.w, diffuseTex.w)
 				);
-			}`,
 
-			`precision mediump float;
-
-			varying vec4 v_Color;
-
-			void main(void) {
-				gl_FragColor = v_Color;
+				gl_FragColor = color;
 			}`
 		);
 

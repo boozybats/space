@@ -193,7 +193,7 @@ class Scene {
 	 * var scene = new Scene();
 	 * scene.getSceneLights();  // Object {pointLights: {position: ..., ambient: ...}, directionalLights: ...}
 	 */
-	getSceneLights() {
+	getLights() {
 		var out = [];
 
 		var directionalLights = this.directionalLights;

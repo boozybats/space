@@ -425,7 +425,8 @@ class Item {
 
 			for (var i in out) {
 				if (out.hasOwnProperty(i)) {
-					var regexp = new RegExp(`^${key}[(\\d+)]`, '');
+					var nkey = key.replace(/([\.\[\]])/g, '\\$1');
+					var regexp = new RegExp(`^${nkey}\\[(\\d+)\\]`, '');
 					var match = i.match(regexp);
 
 					if (match) {
@@ -598,21 +599,22 @@ class Item {
 	 */
 	nullifyUniform(key, out) {
 		var uniform = out[key];
-		console.log(key);
+		uniform.isActive = false;
 
+		var value;
 		switch (uniform.type) {
 			case 'mat':
 			switch (uniform.method) {
 				case 'uniformMatrix4fv':
-				uniform.value = DEFAULT_VALUES.mat4;
+				value = DEFAULT_VALUES.mat4;
 				break;
 
 				case 'uniformMatrix3fv':
-				uniform.value = DEFAULT_VALUES.mat3;
+				value = DEFAULT_VALUES.mat3;
 				break;
 
 				case 'uniformMatrix2fv':
-				uniform.value = DEFAULT_VALUES.mat2;
+				value = DEFAULT_VALUES.mat2;
 				break;
 			}
 			break;
@@ -620,39 +622,44 @@ class Item {
 			case 'vec':
 			switch (uniform.method) {
 				case 'uniform4fv':
-				uniform.value = DEFAULT_VALUES.vec4;
+				value = DEFAULT_VALUES.vec4;
 				break;
 
 				case 'uniform3fv':
-				uniform.value = DEFAULT_VALUES.vec3;
+				value = DEFAULT_VALUES.vec3;
 				break;
 
 				case 'uniform2fv':
-				uniform.value = DEFAULT_VALUES.vec2;
+				value = DEFAULT_VALUES.vec2;
 				break;
 			}
 			break;
 
 			case 'col':
-			uniform.value = DEFAULT_VALUES.col;
+			value = DEFAULT_VALUES.col;
 			break;
 
 			case 'qua':
-			uniform.value = DEFAULT_VALUES.qua;
+			value = DEFAULT_VALUES.qua;
 			break;
 
 			case 'eul':
-			uniform.value = DEFAULT_VALUES.eul;
+			value = DEFAULT_VALUES.eul;
 			break;
 
 			case 'img':
-			uniform.value = DEFAULT_VALUES.img;
+			value = DEFAULT_VALUES.img;
 			break;
 
 			case 'num':
-			uniform.value = DEFAULT_VALUES.num;
+			value = DEFAULT_VALUES.num;
 			break;
 		}
+
+		uniform.value = value;
+		this.updateUniform(uniform);
+
+		delete out[key];
 	}
 
 	/**

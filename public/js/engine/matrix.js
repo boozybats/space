@@ -759,7 +759,7 @@ class Mat4 extends Mat {
 			x, 0, 0, 0,
 			0, y, 0, 0,
 			0, 0, (far + near) / (far - near), d,
-			0, 0, -2 * far * near / (far - near), 0
+			0, 0, 2 * far * near / (far - near), 0
 		]);
 
 		return out;
@@ -850,5 +850,5 @@ class Mat4 extends Mat {
  * @method isNum
  */
 function isNum(a) {
-	return typeof a === 'number';
+	return !isNaN(a) && typeof a === 'number';
 }

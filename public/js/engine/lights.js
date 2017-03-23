@@ -191,7 +191,7 @@ class PointLight extends Light {
 		ambient = new Color(0, 0, 0, 1),
 		diffuse = new Color(255, 255, 255, 1),
 		specular = new Color(255, 255, 255, 1),
-		intensity = 1000000
+		intensity = 2e+6
 	} = {}) {
 		super({
 			name,

@@ -7,7 +7,7 @@
  * @type {Object}
  */
 const ws = {
-	socket: new WebSocket(`ws://localhost:8889`),
+	socket: new WebSocket(`ws://localhost:5611`),
 	handlers: {},
 	set: (name, callback) => {
 		ws.handlers[name] = callback;

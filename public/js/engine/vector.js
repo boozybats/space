@@ -813,42 +813,42 @@ class Vec {
 	 * @return {Vec3} [1, 0, 0]
 	 */
 	static get right() {
-		return [1, 0, 0];
+		return new Vec3(1, 0, 0);
 	}
 
 	/**
 	 * @return {Vec3} [-1, 0, 0]
 	 */
 	static get left() {
-		return [-1, 0, 0];
+		return new Vec3(-1, 0, 0);
 	}
 
 	/**
 	 * @return {Vec3} [0, 1, 0]
 	 */
 	static get up() {
-		return [0, 1, 0];
+		return new Vec3(0, 1, 0);
 	}
 
 	/**
 	 * @return {Vec3} [0, -1, 0]
 	 */
 	static get down() {
-		return [0, -1, 0];
+		return new Vec3(0, -1, 0);
 	}
 
 	/**
 	 * @return {Vec3} [0, 0, 1]
 	 */
 	static get front() {
-		return [0, 0, 1];
+		return new Vec3(0, 0, 1);
 	}
 
 	/**
 	 * @return {Vec3} [0, 0, -1]
 	 */
 	static get back() {
-		return [0, 0, -1];
+		return new Vec3(0, 0, -1);
 	}
 }
 

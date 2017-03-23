@@ -1,3 +1,5 @@
+// counterclock-wise indices
+
 /**
  * Creates item with icosahedron's mesh.
  * @this {Icosahedron}
@@ -52,69 +54,56 @@ class Icosahedron extends Item {
 	 * mesh;  // {vertices, indices, normals, uvs, tangents, bitangents}
 	 */
 	static mesh() {
-		// 20 sides, 30 edges, 12 vertices
-		var indices = [0, 1, 2, 0, 2, 3, 0, 3, 4, 0, 4, 5, 0, 5, 1,
-			1, 6, 2, 2, 7, 3, 3, 8, 4, 4, 9, 5, 5, 10, 1,
-			6, 2, 7, 7, 3, 8, 8, 4, 9, 9, 5, 10, 10, 1, 6,
-			11, 10, 9, 11, 9, 8, 11, 8, 7, 11, 7, 6, 11, 6, 10];
-			
-		// 1st level
-		var vertices = [0, 1, 0];
+		// 20 sides, 30 edges, 12 vertices (in the original figure)
+
+		// size in engine units for x and y coordinates
+		var size = 2;
+		// distance between central and additional levels
+		var smadis = 1 / 4 * size;
+		// distance between first and second levels
+		var bigdis = 2 / 4 * size;
+		// vertices count in one edge (level)
+		var count = 5;
+		// distance between vertices on edge (x-level) (in radians, 2*PI = 360 degrees).
+		var angdis = 2 * Math.PI / count;
+		// second edge have x-offset relative to first level (half of distance between vertices)
+		var offset = angdis / 2;
+		/*** begin point in radians where must be started first vertex. Set to PI
+		to simplify work with uvs (vertex corresponds to begin point in uvs [0, 0]) */
+		var begpoi = -Math.PI;
+		// texture copactiy: how much vertices contains one texture
+		var texcop = 5.5;
+		// texture distance between two vertices ("count / textcop" - occupied space).
+		// count / textcop / count = 1 / textcop
+		var texdis = 1 / texcop;
+
+		/*** Best way to generate indices - hardcore them, no problems
+		with face culling. */
+		var indices = [
+			0,1,3, 2,3,5, 4,5,7, 6,7,9, 8,9,10,
+			11,14,12, 13,16,14, 15,18,16, 17,20,18, 19,21,20,
+			14,3,12, 16,5,14, 18,7,16, 20,9,18, 21,10,20,
+			1,12,3, 3,14,5, 5,16,7, 7,18,9, 9,20,10
+		];
+
+		var vertices = [];
 		vertices.size = 3;
-
-		var normals = [0, 1, 0];
+		var normals = [];
 		normals.size = 3;
-
-		var uvs = [0.5, 1];
+		var uvs = [];
 		uvs.size = 2;
 
-		var y0 = 3 / (3 * 2),
-			y1 = 6 / (3 * 2);
-		// increase number if 5 vertices
-		var degint = 360 / 5;
-		var degoffset = degint / 2;
+		// top and bottom central vertices
+		var top = [0, -1, 0],
+			bot = [0,  1, 0];
 
-		// 4 levels of vertices (1 vertex, 5 vertices, 5 vertices, 1 vertex)
-		// 2nd and 3rd levels
 		for (var i = 0; i < 2; i++) {
 			for (var j = 0; j < 5; j++) {
-				// 2 levels myst be on different x-positions on half of length
-				if (i == 1) {
-					var rad = Math.DTR(degint * j + degoffset);
-				}
-				else if (i === 0) {
-					var rad = Math.DTR(degint * j);
-				}
-
-				var x = Math.cos(rad);
-				var y = 1 - (y0 + y1 * i);
-				var z = Math.sin(rad);
-
-				var vec = new Vec3(
-					x,
-					y,
-					z
-				);
-				var normal = vec.normalize();
-
-				var uv = [
-					Math.asin(x) / Math.PI + 0.5, // 0.5 + Math.atan2(z, x) / (2 * Math.PI),
-					Math.asin(y) / Math.PI + 0.5 // 0.5 + Math.asin(y) / Math.PI
-				];
-
-				var dis = 1 - Math.sqrt(Math.pow(vec.x, 2) + Math.pow(vec.y, 2) + Math.pow(vec.z, 2));
-				vec = Vec.sum(vec, normal.multi(dis));
-
-				vertices.push(...vec.array());
-				normals.push(...normal.array());
-				uvs.push(...uv);
+				generateCenter(j, i);
+				generateVertex(j, i);
 			}
+			generateVertex(0, i, 1);
 		}
-
-		// 4th level
-		vertices.push(0, -1, 0);
-		normals.push(0, -1, 0);
-		uvs.push(0.5, 0);
 
 		var out = {
 			vertices,
@@ -135,6 +124,67 @@ class Icosahedron extends Item {
 		out.bitangents = btg;
 
 		return out;
+
+		/**
+		 * Genearets central vertex by index and level, pushes values in arrays.
+		 * @param  {Number} index 0-4 index number of vertex on edge.
+		 * @param  {Number} lvl   0-1 height level of edge (only 2 levels).
+		 * @method
+		 * @private
+		 */
+		function generateCenter(index, lvl) {
+			// define central vertex by level, for first - top vertex, for second - bottom
+			var central = lvl == 0 ? top : bot;
+			vertices.push(...central);
+			normals.push(...central);
+
+			// for first level add offset as half of vertice length, for second full length
+			var offsetx = (lvl + 1) * 0.5 * texdis;
+			uvs.push(offsetx + index * texdis, lvl);
+		}
+
+		/**
+		 * Generates vertex on edge by index and level, pushes values in arrays.
+		 * @param  {Number} index 0-4 index number of vertex on edge.
+		 * @param  {Number} lvl   0-1 height level of edge (only 2 levels).
+		 * @param {Number} uvoffset Adds offset to uv (needs to last vertex,
+		 * so texture will not be corrupted on uv-map).
+		 * @method
+		 * @private
+		 */
+		function generateVertex(index, lvl, uvoffset = 0) {
+			// vertices values must be between -1 and 1
+			/*** edges start y-position is small distance from center and
+			big position if level is second, subtract 1 to make interval
+			[-1, 1] from [0, 2] */
+			var y = smadis + lvl * bigdis - 1;
+
+			/*** begin point - where starts first vertex, index order * angle distance -
+			current vertex position on edge, level * offset - offset for second level. */
+			var angle = begpoi + index * angdis + lvl * offset;
+
+			// x value is cos, z is sin
+			var x = Math.cos(angle),
+				z = Math.sin(angle);
+
+			var vec = new Vec3(x, y, z);
+			var normal = vec.normalize();
+
+			/*** align point to sphere coordinates system (with radius = 1):
+			subtract vector length from sphere radius and add error to current
+			vector. */
+			var dis = 1 - vec.length();
+			vec = amc('+', vec, amc('*', normal, dis));
+
+			vertices.push(...vec.array());
+			normals.push(...normal.array());
+
+			var uv = [
+				uvoffset + 0.5 + Math.atan2(vec.z, vec.x) / (2 * Math.PI),
+				0.5 + Math.asin(vec.y) / Math.PI
+			];
+			uvs.push(...uv);
+		}
 	}
 
 	/**
@@ -234,6 +284,7 @@ class Sphere extends Item {
 		uvs,
 		indices
 	} = {}) {
+		// transforms old the less detailed sphere
 		var [nvertices, nnormals, nuvs, nindices] = [[], [], [], []];
 		nvertices.size = 3;
 		nnormals.size = 3;
@@ -269,6 +320,11 @@ class Sphere extends Item {
 				vertices[i2 * 3 + 1],
 				vertices[i2 * 3 + 2]
 			);
+
+			// uvs x-coordinates to define is it must be added one
+			var uv0 = uvs[i0 * 2];
+			var uv1 = uvs[i1 * 2];
+			var uv2 = uvs[i2 * 2];
 
 			// define middlepoints of triangle's edges
 			var a = Vec.avg(v0, v1),
@@ -315,8 +371,8 @@ class Sphere extends Item {
 				}
 
 				var arr = [
-					Math.asin(x) / Math.PI + 0.5, // 0.5 + Math.atan2(z, x) / (2 * Math.PI),
-					Math.asin(y) / Math.PI + 0.5 // 0.5 + Math.asin(y) / Math.PI
+					0.5 + Math.atan2(z, x) / (2 * Math.PI),
+					0.5 + Math.asin(y) / Math.PI
 				];
 				uv.push(...arr);
 			}
@@ -731,9 +787,9 @@ function TBN({indices, vertices, uvs, normals} = {}) {
 			bitangents = [];
 
 		for (var i = 0; i < indices.length; i += 3) {
-			var ind0 = indices[i],
+			var ind0 = indices[i + 2],
 				ind1 = indices[i + 1],
-				ind2 = indices[i + 2];
+				ind2 = indices[i];
 
 			var v0 = new Vec3(vertices[ind0 * 3], vertices[ind0 * 3 + 1], vertices[ind0 * 3 + 2]),
 				v1 = new Vec3(vertices[ind1 * 3], vertices[ind1 * 3 + 1], vertices[ind1 * 3 + 2]),
