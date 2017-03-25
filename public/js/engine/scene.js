@@ -8,7 +8,6 @@
  * @param {Color} options.skyBoxColor
  * @param {String} options.skyBoxType
  * @class
- * @property {Number} lastShaderId The last used shader's id.
  * @property {Array} cameras
  * @property {Array} directionalLights
  * @property {Array} pointLights
@@ -18,11 +17,11 @@
 
 class Scene {
 	constructor({
-		name,
+		name = 'scene',
 		project,
 		skyBoxColor = new Color(0, 0, 0, 1),
 		skyBoxType = 'fill'
-	}) {
+	} = {}) {
 		this.name = name;
 		this.project = project;
 		this.skyBoxColor = skyBoxColor;

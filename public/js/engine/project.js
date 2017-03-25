@@ -25,10 +25,27 @@ class Project {
 
 		/**
 		 * @private
-		 * @type {Number}
 		 */
+		this.fakescene = new Scene({
+			project: this
+		});
+
+		this.lastShaderId = undefined;
+
 		this.oldtime = 0;
 		this.requestAnimationFrame = this.requestAnimationFrame.bind(this);
+	}
+
+	get transparentImage() {
+		return this.transparentImage_;
+	}
+
+	set transparentImage(val) {
+		if (!(val instanceof Image)) {
+			throw new Error('Project: transparentImage: must be an image');
+		}
+
+		this.transparentImage_ = val;
 	}
 
 	/**
@@ -58,6 +75,49 @@ class Project {
 	}
 
 	/**
+	 * Antialiasing end point, starts drawning.
+	 * @method
+	 */
+	aaend() {
+		if (!this.antialias) {
+			return;
+		}
+
+		var renderer = this.webGLRenderer,
+			gl = renderer.webGL;
+		var item = this.antialias.item;
+
+    	gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+
+		this.defaultviewport();
+		this.clearScene();
+
+    	item.update();
+
+		var VIOBuffer = item.mesh.VIOBuffer;
+		gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, VIOBuffer);
+
+		gl.drawElements(gl[item.mesh.drawStyle], VIOBuffer.length, gl.UNSIGNED_SHORT, 0);
+	}
+
+	/**
+	 * Antialiasing end point, stores drawn elements.
+	 * @method
+	 */
+	aastart() {
+		if (!this.antialias) {
+			return;
+		}
+
+		var renderer = this.webGLRenderer,
+			gl = renderer.webGL;
+		var buffer = this.antialias.buffer;
+
+    	gl.bindFramebuffer(gl.FRAMEBUFFER, buffer);
+    	gl.viewport(0, 0, buffer.viewportWidth, buffer.viewportHeight);
+	}
+
+	/**
 	 * Binds canvas to project and sets viewport width
 	 * and height, initializes WebGLRenderer.
 	 * @param {Canvas} canvas
@@ -72,13 +132,14 @@ class Project {
 		this.canvas_ = canvas;
 		canvas.project_ = this;
 
-		this.viewportWidth = canvas.canvas.width;
-		this.viewportHeight = canvas.canvas.height;
-
 		this.webGLRenderer_ = new WebGLRenderer({
 			project: this,
 			attributes
 		});
+
+		this.viewportWidth = canvas.canvas.width;
+		this.viewportHeight = canvas.canvas.height;
+		this.defaultviewport();
 	}
 
 	get canvas() {
@@ -97,9 +158,13 @@ class Project {
 	 * var project = new Project(options);
 	 * project.clearScene('fill', new Color(255, 100, 0, 1));
 	 */
-	clearScene(skyBoxType, skyBoxColor) {
+	clearScene() {
 		var renderer = this.webGLRenderer,
-			gl = renderer.webGL;
+			gl = renderer.webGL,
+			scene = this.currentScene;
+
+		var skyBoxType = scene.skyBoxType,
+			skyBoxColor = scene.skyBoxColor;
 
 		switch(skyBoxType) {
 			case 'fill':
@@ -111,7 +176,6 @@ class Project {
 			break;
 		}
 
-		gl.viewport(0, 0, this.viewportWidth, this.viewportHeight);
 		gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 	}
 
@@ -145,6 +209,12 @@ class Project {
 		return this.currentScene_;
 	}
 
+	defaultviewport() {
+		var gl = this.webGLRenderer.webGL;
+
+		gl.viewport(0, 0, this.viewportWidth, this.viewportHeight);
+	}
+
 	/**
 	 * Detaches canvas from project.
 	 * @method
@@ -173,15 +243,19 @@ class Project {
 				sysitems = scene.systemitems,
 				items = scene.items;
 
+			self.aastart();
+
+			self.clearScene();
 			for (var camera of cameras) {
 				var mvpmatrix = camera.mvpmatrix();
-				// console.log(amc('*', mvpmatrix, new Vec4(-1, -1, -1, 1)).tocartesian());
 
 				var allitems = items.concat(sysitems);
 				for (var item of allitems) {
 					draw(item, mvpmatrix, options);
 				}
 			}
+
+    		self.aaend();
 		});
 
 		function draw(item, mvpmatrix, options) {
@@ -257,12 +331,121 @@ class Project {
 	}
 
 	/**
+	 * Initializes variables for antialias engines.
+	 * @param {String} type Method's name.
+	 * @method
+	 */
+	setantialias(type) {
+		var renderer = this.webGLRenderer;
+
+		/*** webglrenderer must be initialized cause antialias
+		needs a framebuffer */
+		if (!renderer) {
+			console.warn('Project: setantialias: webGLRenderer must be initialized');
+			return;
+		}
+
+		var shader, buffer, texture;
+
+		/*** defines shader, framebuffer and buffer's texture
+		if method is unknown then disable antialias */
+		switch (type) {
+			case 'FXAAx2':
+			FXAAx2();
+			break;
+
+			case 'FXAAx4':
+			FXAAx4();
+			break;
+
+			default:
+			this.antialias = null;
+			return;
+		}
+
+		// screen item, takes texture
+		var item = new UI;
+		item.mesh.shader = shader;
+		item.changeUniforms({
+			u_Texture: texture,
+			u_Pixel: new Vec2(1 / this.viewportWidth, 1 / this.viewportHeight)
+		});
+		item.instance(this.fakescene);
+
+		this.antialias = {
+			item,
+			buffer
+		};
+
+		function FXAAx2() {
+			shader = new ShaderTemplate(
+				`attribute vec3 a_Position;
+				attribute vec2 a_UV;
+
+				varying vec2 v_UV;
+
+				void main() {
+					gl_Position = vec4(a_Position, 1.0);
+
+					v_UV = a_UV;
+				}`,
+				`precision highp float;
+
+				uniform vec2 u_Pixel;
+				uniform sampler2D u_Texture;
+
+				varying vec2 v_UV;
+
+				void main() {
+					vec4 O = texture2D(u_Texture, v_UV);
+
+					gl_FragColor = O;
+				}`
+			);
+
+			var frame = renderer.createframebuffer(2);
+			buffer = frame.buffer;
+			texture = frame.texture;
+		}
+
+		function FXAAx4() {
+			shader = new ShaderTemplate(
+				`attribute vec3 a_Position;
+				attribute vec2 a_UV;
+
+				varying vec2 v_UV;
+
+				void main() {
+					gl_Position = vec4(a_Position, 1.0);
+
+					v_UV = a_UV;
+				}`,
+				`precision highp float;
+
+				uniform vec2 u_Pixel;
+				uniform sampler2D u_Texture;
+
+				varying vec2 v_UV;
+
+				void main() {
+					vec4 O = texture2D(u_Texture, v_UV);
+
+					gl_FragColor = O;
+				}`
+			);
+
+			var frame = renderer.createframebuffer(4);
+			buffer = frame.buffer;
+			texture = frame.texture;
+		}
+	}
+
+	/**
 	 * Updates all layer-functions and clears scene on each function
 	 * @method
 	 */
 	update() {
 		var layers = this.layers;
-		var scene = this.currentScene;
 
 		var olddate = this.olddate || new Date().getTime(),
 			newdate = new Date().getTime(),
@@ -270,8 +453,6 @@ class Project {
 		this.olddate = newdate;
 
 		for (var i = layers.length - 1; i >= 0; i--) {
-			this.clearScene(scene.skyBoxType, scene.skyBoxColor);
-
 			var layer = layers[i];
 			layer({deltaTime});
 		}

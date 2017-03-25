@@ -20,7 +20,7 @@ class Heaven extends Sphere {
 			physic,
 			mesh,
 			collider,
-			precision: 1
+			precision: 3
 		});
 
 		this.me = me;
@@ -103,7 +103,7 @@ class Heaven extends Sphere {
 		}
 
 		var sizeint = _private.sizeint;
-		if (false && sizeint) {
+		if (sizeint) {
 			var body = this.body;
 			var scale = amc('+', this.body.scale, sizeint);
 			body.scale = scale;

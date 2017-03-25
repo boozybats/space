@@ -119,12 +119,8 @@ class FaceBox extends UI {
 				vec2 res = vec2(1.0 / u_Resolution.x, 1.0 / u_Resolution.y);
 
 				vec4 O = pixel(v_Position.xy);
-				vec4 N = pixel(vec2(v_Position.x, v_Position.y + res.y));
-				vec4 E = pixel(vec2(v_Position.x + res.x, v_Position.y));
-				vec4 S = pixel(vec2(v_Position.x, v_Position.y - res.y));
-				vec4 W = pixel(vec2(v_Position.x - res.x, v_Position.y));
 
-				gl_FragColor = (O + N + E + S + W) / 5.0;
+				gl_FragColor = O;
 			}`
 		);
 

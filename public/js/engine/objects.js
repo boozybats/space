@@ -285,21 +285,11 @@ class Sphere extends Item {
 		indices
 	} = {}) {
 		// transforms old the less detailed sphere
-		var [nvertices, nnormals, nuvs, nindices] = [[], [], [], []];
+		var [nvertices, nnormals, nuvs, nindices] = [vertices.slice(),
+			normals.slice(), uvs.slice(), indices.slice()];
 		nvertices.size = 3;
 		nnormals.size = 3;
 		nuvs.size = 2;
-
-		for (var i = 0; i < vertices.length; i++) {
-			nvertices.push(vertices[i]);
-			nnormals.push(normals[i]);
-		}
-		for (var i = 0; i < uvs.length; i++) {
-			nuvs.push(uvs[i]);
-		}
-		for (var i = 0; i < indices.length; i++) {
-			nindices.push(indices[i]);
-		}
 
 		// break all triangles on 4 triangles
 		for (var i = 0; i < indices.length; i += 3) {
@@ -321,10 +311,18 @@ class Sphere extends Item {
 				vertices[i2 * 3 + 2]
 			);
 
-			// uvs x-coordinates to define is it must be added one
-			var uv0 = uvs[i0 * 2];
-			var uv1 = uvs[i1 * 2];
-			var uv2 = uvs[i2 * 2];
+			var uv0 = new Vec2(
+				uvs[i0 * 2],
+				uvs[i0 * 2 + 1]
+			);
+			var uv1 = new Vec2(
+				uvs[i1 * 2],
+				uvs[i1 * 2 + 1]
+			);
+			var uv2 = new Vec2(
+				uvs[i2 * 2],
+				uvs[i2 * 2 + 1]
+			);
 
 			// define middlepoints of triangle's edges
 			var a = Vec.avg(v0, v1),
@@ -374,6 +372,12 @@ class Sphere extends Item {
 					0.5 + Math.atan2(z, x) / (2 * Math.PI),
 					0.5 + Math.asin(y) / Math.PI
 				];
+
+				// if coordinates repeat than add 1 to x coordinate
+				if ((uv0.x >= 1 || uv1.x >= 1 || uv2.x >= 1) && (arr[0] >= 0 && arr[0] < 0.5)) {
+					arr[0] += 1;
+				}
+
 				uv.push(...arr);
 			}
 
@@ -649,16 +653,15 @@ class UI extends Item {
 		return this.position_;
 	}
 	set position(val) {
-		if (val instanceof Vec) {
-			var x = (val.x) / RESOLUTION_WIDTH * 2 - 1;
-			var y = -(val.y) / RESOLUTION_HEIGHT * 2 + 1;
+		if (!(val instanceof Vec)) {
+			throw new Error('UI: position: must be a Vec');
+		}
 
-			this.body.position = new Vec3(x, y, 0);
-			this.position_ = val;
-		}
-		else {
-			console.warn('Cursor: position: error');
-		}
+		var x = (val.x) / RESOLUTION_WIDTH * 2 - 1;
+		var y = -(val.y) / RESOLUTION_HEIGHT * 2 + 1;
+
+		this.body.position = new Vec3(x, y, 0);
+		this.position_ = val;
 	}
 
 	/**

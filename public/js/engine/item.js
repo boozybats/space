@@ -180,12 +180,10 @@ class Item {
 	 * var img = new Image();
 	 * img.src = './favouriteImage.jpg';
 	 * 
-	 * var index = item.addTexture(img);  // 0
+	 * var index = item.addImage(img);  // 0
 	 */
-	addTexture(image) {
+	addImage(image) {
 		var gl = this.webGL;
-		var shader = this.mesh.shader;
-		var ind = shader.texturesCount++;
 
 		// if image didn't load yet then temporarily replace it with system picture
 		var buffer = gl.createTexture();
@@ -204,8 +202,23 @@ class Item {
 		// update onload event (if it was yet)
 		image.src = image.src;
 
-		shader.textures[ind] = buffer;
-		return ind;
+		var index = this.addTexture(buffer);
+
+		return index;
+	}
+
+	/**
+	 * Adds texture buffer to shader.
+	 * @param {WebGLBuffer} buffer
+	 * @method
+	 */
+	addTexture(buffer) {
+		var shader = this.mesh.shader;
+
+		var index = shader.texturesCount++;
+		shader.textures[index] = buffer;
+
+		return index;
 	}
 
 	/**
@@ -312,8 +325,8 @@ class Item {
 		var shader = this.mesh.shader,
 			program = this.mesh.program;
 
-		if (this.scene.lastShaderID !== shader.id) {
-			this.scene.lastShaderID = shader.id;
+		if (this.project.lastShaderID !== shader.id) {
+			this.project.lastShaderID = shader.id;
 			gl.useProgram(program);
 		}
 
@@ -345,7 +358,7 @@ class Item {
 	 * {@link Item.changeUniforms}.
 	 * @param  {String} key Uniform name
 	 * @param  {Mat | Vec | Color | Euler | Quaternion |
-	 * Image | Number | Array | Object} val
+	 * Image | WebGLTexture | Number | Array | Object} val
 	 * @param  {Object} out Rewritable object
 	 * @method
 	 * @example
@@ -366,8 +379,8 @@ class Item {
 		var shader = this.mesh.shader,
 			program = this.mesh.program;
 
-		if (this.scene.lastShaderID != shader.id) {
-			this.scene.lastShaderID = shader.id;
+		if (this.project.lastShaderID != shader.id) {
+			this.project.lastShaderID = shader.id;
 			gl.useProgram(program);
 		}
 
@@ -406,7 +419,13 @@ class Item {
 		}
 		else if (value instanceof Image) {
 			method = 'uniform1i';
-			type = 'img';
+			type = 'tex';
+			location = getlocation();
+			counter = this.addImage(value);
+		}
+		else if (value instanceof WebGLTexture) {
+			method = 'uniform1i';
+			type = 'tex';
 			location = getlocation();
 			counter = this.addTexture(value);
 		}
@@ -601,7 +620,7 @@ class Item {
 		var uniform = out[key];
 		uniform.isActive = false;
 
-		var value;
+		var value, count;
 		switch (uniform.type) {
 			case 'mat':
 			switch (uniform.method) {
@@ -647,8 +666,8 @@ class Item {
 			value = DEFAULT_VALUES.eul;
 			break;
 
-			case 'img':
-			value = DEFAULT_VALUES.img;
+			case 'tex':
+			count = DEFAULT_VALUES.tex;
 			break;
 
 			case 'num':
@@ -656,6 +675,7 @@ class Item {
 			break;
 		}
 
+		uniform.count = count;
 		uniform.value = value;
 		this.updateUniform(uniform);
 
@@ -751,8 +771,8 @@ class Item {
 			uniforms = shader.uniforms,
 			textures = shader.textures;
 
-		if (this.scene.lastShaderID != shader.id) {
-			this.scene.lastShaderID = shader.id;
+		if (this.project.lastShaderID != shader.id) {
+			this.project.lastShaderID = shader.id;
 			gl.useProgram(program);
 		}
 
@@ -831,7 +851,7 @@ class Item {
 			gl[method](location, new Float32Array(value.array()));
 			break;
 
-			case 'img':
+			case 'tex':
 			value = counter;
 			case 'num':
 			gl[method](location, value);
@@ -860,6 +880,6 @@ const DEFAULT_VALUES = {
 	col: new Color(0, 0, 0, 0),
 	qua: new Quaternion(0, 0, 0, 0),
 	eul: new Euler(0, 0, 0),
-	img: new Image,
+	tex: 0,
 	num: 0
 };

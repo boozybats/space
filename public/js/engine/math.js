@@ -17,6 +17,40 @@ Math.RTD = (rad) => rad * 180 / Math.PI;
 Math.DTR = (deg) => deg * Math.PI / 180;
 
 /**
+ * If number is degree of two then returns true
+ * else returns false.
+ * @param  {Number}  num
+ * @return {Boolean}
+ * @method  isPowerOfTwo
+ * @memberOf Math
+ */
+Math.isPowerOfTwo = function(num) {
+	var c = 2;
+	while (num > c) {
+		c *= 2;
+	}
+
+	return num == c;
+}
+
+/**
+ * Returns the nearest number of power of two
+ * after sended number.
+ * @param  {Number}  num
+ * @return {Number}
+ * @method  ceilPowerOfTwo
+ * @memberOf Math
+ */
+Math.ceilPowerOfTwo = function(num) {
+	var c = 2;
+	while (num > c) {
+		c *= 2;
+	}
+
+	return c;
+}
+
+/**
  * Gives available to mathematical calculations with
  * {@link Mat} and {@link Vec}.
  * +, -, *, /: {@link Mat}, {@link Vec}, Number
@@ -278,6 +312,9 @@ function amc_equality(term1, term2) {
 	}
 	else if (term1 instanceof Image && term2 instanceof Image) {
 		out = term1.src === term2.src;
+	}
+	else if (term1 instanceof WebGLTexture && term2 instanceof WebGLTexture) {
+		out = false;
 	}
 	else {
 		out = term1 === term2;

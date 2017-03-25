@@ -6,7 +6,7 @@ var canvas;
 var cursor;
 
 loader({
-	transparent: 'images/default/transparent.jpg'
+	transparent: 'images/default/transparent.png'
 }, images => {
 	// REQUEST ANIMATION FRAME
 	window.requestAnimationFrame = window.requestAnimationFrame ||

@@ -17,7 +17,7 @@ class WebGLRenderer {
 	constructor({
 		project,
 		attributes = {
-			antialias: true,
+			antialias: false,
 			alpha: true,
 			willReadFrequently: false,
 			storage: 'persistent',
@@ -58,8 +58,8 @@ class WebGLRenderer {
 		}
 		
 		this.project = project;
-		this.canvas = canvas;
-		this.webGL = gl;
+		this.canvas_ = canvas;
+		this.webGL_ = gl;
 	}
 
 	get project() {
@@ -71,5 +71,73 @@ class WebGLRenderer {
 		}
 
 		this.project_ = val; 
+	}
+
+	get canvas() {
+		return this.canvas_;
+	}
+
+	/**
+	 * Creates framebuffer for antialiasing.
+	 * @method
+	 */
+	createframebuffer(multiplier) {
+		var canvas = this.canvas,
+			width = canvas.width,
+			height = canvas.height;
+
+		var sizex = multiplier * width,  // Math.ceilPowerOfTwo(multiplier * width),
+			sizey = multiplier * height;  //Math.ceilPowerOfTwo(multiplier * height);
+		console.log(sizex, sizey);
+
+		var gl = this.webGL;
+		var buffer = gl.createFramebuffer();
+		gl.bindFramebuffer(gl.FRAMEBUFFER, buffer);
+		buffer.viewportWidth = sizex;
+		buffer.viewportHeight = sizey;
+
+		var texture = gl.createTexture();
+		gl.bindTexture(gl.TEXTURE_2D, texture);
+		gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, sizex, sizey, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
+		// gl.generateMipmap(gl.TEXTURE_2D);
+		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+
+		var renderbuffer = gl.createRenderbuffer();
+		gl.bindRenderbuffer(gl.RENDERBUFFER, renderbuffer);
+		gl.renderbufferStorage(gl.RENDERBUFFER, gl.DEPTH_COMPONENT16, sizex, sizey);
+
+		gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, texture, 0);
+		gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.RENDERBUFFER, renderbuffer);
+
+		var status = gl.checkFramebufferStatus(gl.FRAMEBUFFER);
+		if (status !== gl.FRAMEBUFFER_COMPLETE) {
+			throw new error('WebGLRenderer: createframebuffer: unavailabe to create framebuffer');
+		}
+
+		gl.bindTexture(gl.TEXTURE_2D, null);
+		gl.bindRenderbuffer(gl.RENDERBUFFER, null);
+		gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+
+		var out = {
+			buffer,
+			texture
+		};
+
+		return out;
+	}
+
+	get frameBuffer() {
+		return this.frameBuffer_;
+	}
+
+	get frameTexture() {
+		return this.frameTexture_;
+	}
+
+	get webGL() {
+		return this.webGL_;
 	}
 }
