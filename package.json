@@ -1,0 +1,10 @@
+{
+	"devDependencies": {
+		"fs": "*",
+		"url": "*",
+		"path": "*",
+		"http": "*",
+		"ws": "*",
+		"ip": "*"
+	}
+}

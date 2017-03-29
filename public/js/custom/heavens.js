@@ -8,9 +8,9 @@ class Heaven extends Sphere {
 				Fe: 50 * Math.pow(10, 5)
 			}
 		}),
+		me = false,
 		mesh,
 		collider,
-		me = false,
 		mouseControl
 	} = {}) {
 		super({
@@ -20,7 +20,7 @@ class Heaven extends Sphere {
 			physic,
 			mesh,
 			collider,
-			precision: 3
+			precision: 1
 		});
 
 		this.me = me;
@@ -30,7 +30,7 @@ class Heaven extends Sphere {
 		normalmap.src = 'images/n_heaven.jpg';
 
 		var diffusemap = new Image();
-		diffusemap.src = 'images/diffuse.jpg';
+		diffusemap.src = 'images/d_heaven.jpg';
 
 		this.mesh.shader = Heaven.shader;
 		this.mesh.material = new Material({
@@ -261,5 +261,18 @@ class Heaven extends Sphere {
 		);
 
 		return out;
+	}
+
+	uptodate(data) {
+		this.body = new Body({
+			position: new Vec3(...data.position),
+			rotation: new Quaternion(...data.rotation)
+		});
+
+		if (!this.physic.matter.compare(data.matter)) {
+			this.physic = new Physic({
+				matter: new Matter(data.matter)
+			});
+		}
 	}
 }
