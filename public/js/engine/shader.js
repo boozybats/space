@@ -19,7 +19,7 @@ class ShaderTemplate {
 	 * be initialized for item, each item must have own shader.
 	 * Usualy function are called by {@link Item#instance}.
 	 * @param {WebGLContext} gl.
-	 * @param {Object} functions Shader enabled functions.
+	 * @param {Object} functions Shader enabled functions (DEPTH_TEST, CULL_FACE).
 	 * @return {Shader}
 	 * @method
 	 */

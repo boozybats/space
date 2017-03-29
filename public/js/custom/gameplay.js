@@ -4,9 +4,13 @@ function gameplay(images) {
 	var project = new Project({
 		transparentImage: images.transparent
 	});
-	project.initialize();
 	project.attachCanvas(canvas);
-	project.setantialias('FXAAx2');
+	project.initializeWebGLRenderer({
+		attributes: {
+			antialias: 'FXAAx2'
+		}
+	});
+	project.initialize();
 
 	var scene = project.createScene('main', true);
 	var camera = new Camera;
@@ -32,9 +36,9 @@ function gameplay(images) {
 	});
 	me.instance(scene, true);
 	me.rotate(new Vec3(0, 0.5));
+	me.body.scale = amc('+', new Vec3, me.physic.diameter);
 	// make light source follows camera
 	me.bindCamera(camera);
-	me.body.scale = amc('+', new Vec3, me.physic.diameter);
 
 	var facebox = new FaceBox;
 	facebox.instance(scene, true);
