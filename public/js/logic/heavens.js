@@ -44,7 +44,7 @@ class Heaven extends Sphere {
 	 * @param  {Camera} camera
 	 */
 	bindCamera(camera) {
-		/** @private */ this.camera = camera;
+		this.camera = camera;
 	}
 
 	get core() {
@@ -270,9 +270,7 @@ class Heaven extends Sphere {
 		});
 
 		if (!this.physic.matter.compare(data.matter)) {
-			this.physic = new Physic({
-				matter: new Matter(data.matter)
-			});
+			this.physic.init_matter(data.matter);
 		}
 	}
 }

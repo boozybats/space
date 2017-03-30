@@ -61,7 +61,7 @@ function gameplay(images) {
 	facebox.private.env_heaven = me.public;
 
 	// get "id" from server and start project
-	server.getid(id => {
+	Server.player.defineId(function(id) {
 		me.id = id;
 		project.requestAnimationFrame();
 	});

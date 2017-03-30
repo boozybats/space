@@ -2,7 +2,7 @@
  * WebSocket's wrap, holds WebSocket in parameter "socket",
  * binds callback by handler name (function "set"), callback
  * can be removed (function "remove"), sends json object to
- * server-side
+ * server-side.
  * 
  * @type {Object}
  */
