@@ -1,3 +1,6 @@
+const Quaternion = require('./quaternion');
+const RTD        = require('./math').RTD;
+
 /**
  * Eulers angles define three turns of the system by
  * x, y and z coordinates. Store value between 0 and
@@ -17,7 +20,7 @@ class Euler {
 		if (typeof x !== 'number' ||
 			typeof y !== 'number' ||
 			typeof z !== 'number') {
-			throw new Error('Euler: xyz must be a numbers');
+			x = y = z = 0;
 		}
 
 		while(x >= 360) {
@@ -71,7 +74,7 @@ class Euler {
 	static compare(eul0, eul1) {
 		var out = true;
 
-		if (typeof eul0 === 'undefined' || typeof eul1 === 'undefined') {
+		if (!(eul0 instanceof Euler) || !(eul1 instanceof Euler)) {
 			out = false;
 		}
 		else {
@@ -97,7 +100,7 @@ class Euler {
 	 */
 	multi(num) {
 		if (typeof num !== 'number') {
-			throw new Error('Euler: multi: must be a number');
+			num = 1;
 		}
 
 		var x = this.x * num,
@@ -145,7 +148,7 @@ class Euler {
 			w = args[3];
 		}
 		else {
-			throw new Error('Euler: Quaternion: must be a Quaternion or xyzw numbers');
+			x = y = z = w = 0;
 		}
 
 		var m = [];
@@ -190,9 +193,9 @@ class Euler {
 		}
 
 		var out = new Euler(
-			Math.RTD(vec.x),
-			Math.RTD(vec.y),
-			Math.RTD(vec.z)
+			RTD(vec.x),
+			RTD(vec.y),
+			RTD(vec.z)
 		);
 
 		return out;
@@ -220,3 +223,5 @@ class Euler {
 		return this.z_;
 	}
 }
+
+module.exports = Euler;

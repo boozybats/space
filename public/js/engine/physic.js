@@ -341,6 +341,14 @@ class Physic {
 		return out;
 	}
 
+	toJSON() {
+		var out = {};
+
+		out.matter = this.matter.matter;
+
+		return out;
+	}
+
 	get velocity() {
 		return this.velocity_;
 	}

@@ -1,10 +1,16 @@
-const ws_ = require('./ws');
+const ws_    = require('../ws');
+const Player = require('../classes/player');
 
-const _storage = global.storages.players;
+const _players = global.storages.players;
 
 ws_.set('player', response => {
-	var data = response.data,
-		method = response.method;
+	var data = response.data;
+
+	if (typeof data !== 'object') {
+		return;
+	}
+
+	var method = data.method;
 
 	switch (method) {
 		case 'getId':
@@ -15,20 +21,16 @@ ws_.set('player', response => {
 			ip: response.ip
 		});
 
-		_storage.set(id, player);
+		_players.set(id, player);
 
 		response.answer(id);
 
 		break;
 
-		case 'continueSession':
-		if (!data) {
-			return;
-		}
-		
+		case 'continueSession':		
 		var id = data.id;
 
-		response.answer(!!_storage.get(id));
+		response.answer(!!_players.get(id));
 
 		break;
 	}
@@ -46,15 +48,5 @@ function GUID() {
 	}
 	else {
 		return GUID();
-	}
-}
-
-class Player {
-	constructor({
-		id,
-		ip
-	} = {}) {
-		this.id = id;
-		this.ip = ip;
 	}
 }

@@ -61,8 +61,14 @@ function gameplay(images) {
 	facebox.private.env_heaven = me.public;
 
 	// get "id" from server and start project
-	Server.player.defineId(function(id) {
+	Server.player.defineId(id => {
 		me.id = id;
-		project.requestAnimationFrame();
+
+		Server.heavens.instance(response => {
+			var data = response.data;
+			me.uptodate(data);
+
+			project.requestAnimationFrame();
+		});
 	});
 }

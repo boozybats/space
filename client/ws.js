@@ -71,11 +71,11 @@ function GUID() {
 	}
 	var key = `${path()}-${path()}-${path()}`;
 	if (~GUIDs.indexOf(key)) {
-		GUIDs.push(key);
-		return key;
+		return GUID();
 	}
 	else {
-		return GUID();
+		GUIDs.push(key);
+		return key;
 	}
 }
 

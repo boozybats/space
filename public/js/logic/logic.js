@@ -20,10 +20,8 @@ class Logic extends Empty {
 	}
 
 	onupdate() {
-		server.items(response => {
+		Server.items.getAll(data => {
 			// data with all existing items
-			var data = response.data;
-
 			for (var id in data) {
 				if (data.hasOwnProperty(id)) {
 					var wrap = data[id];
@@ -40,6 +38,5 @@ class Logic extends Empty {
 				}
 			}
 		});
-
 	}
 }

@@ -30,7 +30,7 @@ Server.player.getId = function(callback) {
 		handler: 'player',
 		data: {
 			method: 'getId'
-		}
+		},
 		callback
 	});
 }

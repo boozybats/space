@@ -1,9 +1,21 @@
-const Storage = require('./storage');
+const Storage = require('../storage');
 
 global.storages = {
-	players: new Storage(),
-	items: new Storage()
+	players: new Storage,
+	items: new Storage
 };
 
-require('./player');
-require('./items');
+global.verification = function(id, ip) {
+	var player = global.storages.players.get(id);
+	if (!player) {
+		return false;
+	}
+
+	var pip = player.ip;
+
+	return pip === ip;
+}
+
+require('./holders/player');
+require('./holders/items');
+require('./holders/heavens');

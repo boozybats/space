@@ -1,11 +1,11 @@
-const vector_ = require('./vector');
 const Quaternion = require('./Quaternion');
+const vector_    = require('./vector');
 const Vec3 = vector_.Vec3;
 
 /**
  * Stores position, rotation, scale vectors.
  * Can have a parent-body. When calling method
- * {@link Item#mvmatrix} in {@link Item} calculations
+ * {@link Body#mvmatrix} in {@link Item} calculations
  * will be relative to parent-bodies.
  * Stores children-array.
  * @this {Body}
@@ -24,11 +24,13 @@ class Body {
 	constructor({
 		position = new Vec3,
 		rotation = new Quaternion,
-		scale = new Vec3(1, 1, 1)
+		scale = new Vec3(1, 1, 1),
+		parent
 	} = {}) {
 		this.position = position;
 		this.rotation = rotation;
 		this.scale = scale;
+		this.parent = parent;
 	}
 
 	get position() {
@@ -63,6 +65,31 @@ class Body {
 
 		this.scale_ = val;
 	}
+
+	get parent() {
+		return this.parent_;
+	}
+	set parent(val) {
+		if (val && typeof val !== 'number') {
+			return;
+		}
+
+		this.parent_ = val;
+	}
+
+	toJSON() {
+		var out = {};
+
+		out.position = this.position.array();
+		out.rotation = this.rotation.array();
+		out.scale = this.scale.array();
+
+		if (this.parent) {
+			out.parent = this.parent;
+		}
+
+		return out;
+	}
 }
 
-module.extends = Body;
+module.exports = Body;

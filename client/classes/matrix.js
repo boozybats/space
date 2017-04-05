@@ -852,3 +852,8 @@ class Mat4 extends Mat {
 function isNum(a) {
 	return !isNaN(a) && typeof a === 'number';
 }
+
+exports.Mat  = Mat;
+exports.Mat2 = Mat2;
+exports.Mat3 = Mat3;
+exports.Mat4 = Mat4;

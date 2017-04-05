@@ -63,6 +63,10 @@ ws.socket.onopen = function() {
 
 // redirects request to handler-functions if exists
 ws.socket.onmessage = function(response) {
+	if (!response.isTrusted) {
+		return;
+	}
+	
 	response = response.data;
 	if (typeof response === 'string') {
 		try {
@@ -71,7 +75,7 @@ ws.socket.onmessage = function(response) {
 			var name = json.handler;
 
 			if (json.GUID) {
-				json.answer = (data, callback) => {
+				json.answer = function(data, callback) {
 					ws.send({
 						data,
 						callback,

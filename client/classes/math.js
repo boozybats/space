@@ -3,52 +3,16 @@
  * @param  {Number} rad
  * @return {Number}
  * @method RTD
- * @memberOf Math
  */
-Math.RTD = (rad) => rad * 180 / Math.PI;
+var RTD = (rad) => rad * 180 / Math.PI;
 
 /**
  * Converts degrees to radians.
  * @param  {Number} deg
  * @return {Number}
  * @method DTR
- * @memberOf Math
  */
-Math.DTR = (deg) => deg * Math.PI / 180;
-
-/**
- * If number is degree of two then returns true
- * else returns false.
- * @param  {Number}  num
- * @return {Boolean}
- * @method  isPowerOfTwo
- * @memberOf Math
- */
-Math.isPowerOfTwo = function(num) {
-	var c = 2;
-	while (num > c) {
-		c *= 2;
-	}
-
-	return num == c;
-}
-
-/**
- * Returns the nearest number of power of two
- * after sended number.
- * @param  {Number}  num
- * @return {Number}
- * @method  ceilPowerOfTwo
- * @memberOf Math
- */
-Math.ceilPowerOfTwo = function(num) {
-	var c = 2;
-	while (num > c) {
-		c *= 2;
-	}
-
-	return c;
-}
+var DTR = (deg) => deg * Math.PI / 180;
 
 /**
  * Gives available to mathematical calculations with
@@ -322,3 +286,7 @@ function amc_equality(term1, term2) {
 
 	return out;
 }
+
+exports.amc = amc;
+exports.DTR = DTR;
+exports.RTD = RTD;

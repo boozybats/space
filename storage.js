@@ -1,7 +1,6 @@
-class Storage() {
+class Storage {
 	constructor() {
-		this.data_array = [];
-		this.data_object = {};
+		this.data = {};
 	}
 
 	each(callback) {
@@ -9,16 +8,11 @@ class Storage() {
 			return;
 		}
 
-		var array = this.data_array;
-		for (var i = 0; i < array.length; i++) {
-			callback(item, i, array);
-		}
-
-		var object = this.data_object;
-		for (var key in object) {
-			if (this.data_object.hasOwnProperty(key)) {
-				var item = this.data_object[key];
-				callback(item, key, object);
+		var data = this.data;
+		for (var key in data) {
+			if (data.hasOwnProperty(key)) {
+				var item = data[key];
+				callback(item, key, data);
 			}
 		}
 	}
@@ -30,13 +24,10 @@ class Storage() {
 
 		var out = [];
 
-		for (var item of this.data_array) {
-			bust(item);
-		}
-
-		for (var key in this.data_object) {
-			if (this.data_object.hasOwnProperty(key)) {
-				bust(this.data_object[key]);
+		var data = this.data;
+		for (var key in data) {
+			if (data.hasOwnProperty(key)) {
+				bust(data[key]);
 			}
 		}
 
@@ -52,13 +43,24 @@ class Storage() {
 	}
 
 	get(key) {
-		return this.data_object[key];
+		return this.data[key];
 	}
 
 	length() {
-		var length = this.data_array.length;
-		for (var key in this.data_object) {
-			if (this.data_object.hasOwnProperty(key)) {
+		var length = 0;
+		for (var key in this.data) {
+			if (this.data.hasOwnProperty(key)) {
+				length++;
+			}
+		}
+
+		return length;
+	}
+
+	numberkeyLength() {
+		var length = 0;
+		for (var key in this.data) {
+			if (this.data.hasOwnProperty(key) && ~~key == key) {
 				length++;
 			}
 		}
@@ -67,11 +69,11 @@ class Storage() {
 	}
 
 	push(data) {
-		this.data_array.push(data);
+		this.data[this.numberkeyLength()] = data;
 	}
 
 	set(key, data) {
-		this.data_object[key] = data;
+		this.data[key] = data;
 	}
 }
 

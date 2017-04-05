@@ -1,4 +1,5 @@
 const Euler = require('./euler');
+const DTR   = require('./math').DTR;
 
 /**
  * A system of hypercomplex numbers that forms a vector
@@ -22,7 +23,7 @@ class Quaternion {
 			typeof y !== 'number' ||
 			typeof z !== 'number' ||
 			typeof w !== 'number') {
-			x = 0, y = 0, z = 0, w = 0;
+			x = y = z = w = 0;
 		}
 
 		this.x_ = x;
@@ -58,7 +59,7 @@ class Quaternion {
 	static compare(quat1, quat2) {
 		var out = true;
 
-		if (typeof quat1 === 'undefined' || typeof quat2 === 'undefined') {
+		if ((!quat1 instanceof Quaternion) || (!quat2 instanceof Quaternion)) {
 			out = false;
 		}
 		else {
@@ -86,7 +87,7 @@ class Quaternion {
 	static dif(quat1, quat2) {
 		if (!(quat1 instanceof Quaternion) ||
 			!(quat2 instanceof Quaternion)) {
-			throw new Error('Quaternion: dif: must be a Quaternions');
+			quat1 = quat2 = new Quaternion;
 		}
 
 		var euler1 = quat1.euler,
@@ -131,12 +132,12 @@ class Quaternion {
 			yaw = args[2];
 		}
 		else {
-			throw new Error('Quaternion: Euler: must be a Euler or xyz numbers');
+			roll = pitch = yaw = 0;
 		}
 
-		var nroll = Math.DTR(roll),
-			npitch = Math.DTR(pitch),
-			nyaw = Math.DTR(yaw);
+		var nroll = DTR(roll),
+			npitch = DTR(pitch),
+			nyaw = DTR(yaw);
 
 		var sr, sp, sy, cr, cp, cy;
 
@@ -192,7 +193,7 @@ class Quaternion {
 	static sum(quat1, quat2) {
 		if (!(quat1 instanceof Quaternion) ||
 			!(quat2 instanceof Quaternion)) {
-			throw new Error('Quaternion: sum: must be a Quaternions');
+			quat1 = quat2 = new Quaternion;
 		}
 
 		var euler1 = quat1.euler,
@@ -234,3 +235,5 @@ class Quaternion {
 		return this.w_;
 	}
 }
+
+module.exports = Quaternion;

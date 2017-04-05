@@ -1,5 +1,6 @@
 const Server = {
 	id: null,
+	player: {},
 	items: {},
-	player: {}
+	heavens: {}
 };

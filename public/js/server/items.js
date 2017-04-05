@@ -1,5 +1,5 @@
 Server.items.getAll = function(callback) {
-	if (!server.id) {
+	if (!Server.id) {
 		return;
 	}
 
@@ -7,14 +7,27 @@ Server.items.getAll = function(callback) {
 		handler: 'items',
 		data: {
 			method: 'getAll',
-			data: {
-				id: Server.id
-			},
-			callback: function(response) {
-				var data = response.data;
+			id: Server.id
+		},
+		callback: function(response) {
+			var data = response.data;
 
-				callback(data);
-			}
+			callback(data);
+		}
+	});
+}
+
+Server.items.setData = function(data) {
+	if (!Server.id) {
+		return;
+	}
+
+	ws.send({
+		handler: 'items',
+		data: {
+			method: 'setItemData',
+			id: Server.id,
+			item: data
 		}
 	});
 }

@@ -153,16 +153,20 @@ class Heaven extends Sphere {
 		}
 
 		if (this.me) {
-			var body = this.body;
-			var position = this.private.position;
-			var scale = this.private.scale;
-			if (!position || !amc('=', position, body.position) || !amc('=', scale, body.scale)) {
-				this.private.position = body.position;
-				this.private.scale = body.scale;
+			// does data has been changed since last update?
+			var isChanged = false;
 
-				/*server.mydata({
-					body: body
-				});*/
+			var oldbody = _private.body;
+			if (!oldbody || !amc('=', oldbody.position, this.body.position)) {
+				isChanged = true;
+
+				_private.body = {
+					position: this.body.position
+				};
+			}
+
+			if (isChanged) {
+				this.updateOnServer();
 			}
 		}
 	}
@@ -263,14 +267,20 @@ class Heaven extends Sphere {
 		return out;
 	}
 
-	uptodate(data) {
-		this.body = new Body({
-			position: new Vec3(...data.position),
-			rotation: new Quaternion(...data.rotation)
-		});
-
-		if (!this.physic.matter.compare(data.matter)) {
-			this.physic.init_matter(data.matter);
+	updateOnServer() {
+		if (!this.id) {
+			if (Server.id) {
+				this.id = Server.id;
+			}
+			else {
+				throw new Error('Forsaken ID');
+			}
 		}
+
+		Server.items.setData(this.toJSON());
+	}
+
+	uptodate(data) {
+		console.log(data);
 	}
 }
