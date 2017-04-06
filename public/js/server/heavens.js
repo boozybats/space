@@ -1,4 +1,4 @@
-Server.heavens.instance = function(callback) {
+Server.heavens.getData = function(callback) {
 	if (!Server.id) {
 		return;
 	}
@@ -6,7 +6,7 @@ Server.heavens.instance = function(callback) {
 	ws.send({
 		handler: 'heavens',
 		data: {
-			method: 'instance',
+			method: 'getData',
 			id: Server.id
 		},
 		callback

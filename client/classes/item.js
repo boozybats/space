@@ -1,6 +1,3 @@
-const Body   = require('./body');
-const Physic = require('./physic');
-
 class Item {
 	constructor({
 		id,
@@ -97,3 +94,6 @@ class Item {
 }
 
 module.exports = Item;
+
+const Body   = require('./body');
+const Physic = require('./physic');

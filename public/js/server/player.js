@@ -1,3 +1,25 @@
+Server.player.ondistribution = function(callback) {
+	ws.set('player', response => {
+		var data = response.data;
+
+		if (typeof data !== 'object') {
+			return;
+		}
+
+		var method = data.method;
+
+		switch (method) {
+			case 'update':
+			if (typeof data.items === 'object') {
+				var items = data.items.data;
+				callback(items);
+			}
+
+			break;
+		}
+	});
+}
+
 Server.player.defineId = function(callback) {
 	var id = cookie.read('id');
 

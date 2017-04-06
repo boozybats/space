@@ -1,6 +1,3 @@
-const Euler = require('./euler');
-const DTR   = require('./math').DTR;
-
 /**
  * A system of hypercomplex numbers that forms a vector
  * space of dimension four over the field of real numbers.
@@ -237,3 +234,6 @@ class Quaternion {
 }
 
 module.exports = Quaternion;
+
+const Euler = require('./euler');
+const DTR   = require('./math').DTR;

@@ -19,24 +19,25 @@ class Logic extends Empty {
 		return out;
 	}
 
-	onupdate() {
-		Server.items.getAll(data => {
-			// data with all existing items
-			for (var id in data) {
-				if (data.hasOwnProperty(id)) {
-					var wrap = data[id];
+	updateItems(data) {
+		if (typeof data !== 'object') {
+			return;
+		}
+		
+		// data with all existing items
+		for (var i = data.length; i--;) {
+			var wrap = data[i];
+			var id = wrap.id;
 
-					// try find existing item on scene
-					var item = scene.findItem(id);
+			// try find existing item on scene
+			var item = scene.findItem(id);
 
-					if (item) {
-						item.uptodate(wrap.data);
-					}
-					else {
-						this.createitem(wrap.type, wrap.data);
-					}
-				}
+			if (item) {
+				item.uptodate(wrap.data);
 			}
-		});
+			else {
+				this.createitem(wrap.type, wrap.data);
+			}
+		}
 	}
 }

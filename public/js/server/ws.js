@@ -61,6 +61,10 @@ ws.socket.onopen = function() {
 	ws.ready = true;
 }
 
+ws.socket.onclose = function() {
+	ws.ready = false;
+}
+
 // redirects request to handler-functions if exists
 ws.socket.onmessage = function(response) {
 	if (!response.isTrusted) {

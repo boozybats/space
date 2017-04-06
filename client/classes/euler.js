@@ -1,6 +1,3 @@
-const Quaternion = require('./quaternion');
-const RTD        = require('./math').RTD;
-
 /**
  * Eulers angles define three turns of the system by
  * x, y and z coordinates. Store value between 0 and
@@ -151,34 +148,35 @@ class Euler {
 			x = y = z = w = 0;
 		}
 
-		var m = [];
 		var xx = x * x, x2 = x * 2,
 			yy = y * y, y2 = y * 2,
 			zz = z * z, z2 = z * 2,
 			ww = w * w, w2 = w * 2,
 			L = xx + yy + zz + ww;
 
-		m[0] = (ww + xx - yy - zz) / L;
-		m[1] = (x2 * y + w2 * z) / L;
-		m[2] = (x2 * z - w2 * y) / L;
-		m[4] = (x2 * y - w2 * z) / L;
-		m[5] = (ww + yy - xx - zz) / L;
-		m[6] = (y2 * z + w2 * x) / L;
-		m[10] = (ww + zz - xx - yy) / L;
+		var m = [
+			(ww + xx - yy - zz) / L,
+			(x2 * y + w2 * z) / L,
+			(x2 * z - w2 * y) / L,
+			(x2 * y - w2 * z) / L,
+			(ww + yy - xx - zz) / L,
+			(y2 * z + w2 * x) / L,
+			(ww + zz - xx - yy) / L
+		];
 
 		var vec, xyDist = Math.sqrt(m[0] * m[0] + m[1] * m[1]);
 
 		if (xyDist > Number.EPSILON) {
-			if (m[10] > 0) {
+			if (m[6] > 0) {
 				vec = new Vec3(
-					Math.atan2(m[6], m[10]),
+					Math.atan2(m[5], m[6]),
 					Math.atan2(m[1], m[0]),
 					Math.atan2(-m[2], xyDist)
 				);
 			}
 			else {
 				vec = new Vec3(
-					-Math.atan2(m[6], -m[10]),
+					-Math.atan2(m[5], -m[6]),
 					-Math.atan2(m[1], -m[0]),
 					-Math.atan2(m[2], -xyDist)
 				);
@@ -187,7 +185,7 @@ class Euler {
 		else {
 			vec = new Vec3(
 				0,
-				Math.atan2(-m[4], m[5]),
+				Math.atan2(-m[3], m[4]),
 				Math.atan2(-m[2], xyDist)
 			);
 		}
@@ -225,3 +223,8 @@ class Euler {
 }
 
 module.exports = Euler;
+
+const Quaternion = require('./quaternion');
+const RTD        = require('./math').RTD;
+const Vector     = require('./vector');
+const Vec3       = Vector.Vec3;

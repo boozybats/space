@@ -1,6 +1,3 @@
-const Euler = require('./euler');
-const amc   = require('./math').amc;
-
 /**
  * Vector contains 2-4 values by keys x, y, z and w.
  * @this {Vec}
@@ -1126,3 +1123,6 @@ exports.Vec  = Vec;
 exports.Vec2 = Vec2;
 exports.Vec3 = Vec3;
 exports.Vec4 = Vec4;
+
+const Euler = require('./euler');
+const amc   = require('./math').amc;
