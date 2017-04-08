@@ -18,20 +18,6 @@ ws_.set('items', response => {
 	}
 
 	switch (method) {
-		case 'getAll':
-		var out = [];
-		var id = data.id;
-
-		_items.each(item => {
-			if (item.id !== id) {
-				out.push(item.toJSON());
-			}
-		});
-
-		response.answer(out);
-
-		break;
-
 		case 'setData':
 		var id = data.id
 

@@ -18,14 +18,23 @@ ws_.set('heavens', response => {
 	}
 
 	switch (method) {
-		case 'instance':
-		var heaven = new Heaven;
-		heaven.randomData(0);
+		case 'getData':
+		var item = _items.get(id);
 
-		_items.set(id, heaven);
+		if (!item) {
+			item = instance(id);
+			_items.set(id, item);
+		}
 
-		response.answer(heaven.toJSON());
+		response.answer(item.toJSON());
 
 		break;
+	}
+
+	function instance() {
+		var heaven = new Heaven;
+		heaven.generateData(0);
+
+		return heaven;
 	}
 });

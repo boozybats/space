@@ -31,6 +31,8 @@ function gameplay(images) {
 
 	// game logic item, needs to complete functions on each frame
 	var logic = new Logic(scene);
+	// each data distribution from server are using in logic
+	Server.player.ondistribution(logic.updateItems);
 
 	/**
 	 * Determine player's object, bind cursor, scale
@@ -64,7 +66,7 @@ function gameplay(images) {
 	Server.player.defineId(id => {
 		me.id = id;
 
-		Server.heavens.instance(response => {
+		Server.heavens.getData(response => {
 			var data = response.data;
 			me.uptodate(data);
 

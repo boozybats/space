@@ -27,10 +27,19 @@ ws_.set('player', response => {
 
 		break;
 
-		case 'continueSession':		
+		case 'continueSession':	
 		var id = data.id;
 
-		response.answer(!!_players.get(id));
+		var result;
+		var player = _players.get(id);
+		if (player) {
+			result = player.ip === response.ip;
+		}
+		else {
+			result = false;
+		}
+
+		response.answer(result);
 
 		break;
 	}
@@ -49,4 +58,17 @@ function GUID() {
 	else {
 		return GUID();
 	}
+}
+
+function getItemsData() {
+	var out = [];
+	var id = data.id;
+
+	_items.each(item => {
+		if (item.id !== id) {
+			out.push(item.toJSON());
+		}
+	});
+
+	response.answer(out);
 }

@@ -16,6 +16,7 @@ global.verification = function(id, ip) {
 	return pip === ip;
 }
 
+require('./distribution');
 require('./holders/player');
 require('./holders/items');
 require('./holders/heavens');

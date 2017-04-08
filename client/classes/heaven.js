@@ -1,15 +1,11 @@
-const generator = require('./generator');
-const Item      = require('./item');
-const Body      = require('./body');
-const Physic    = require('./physic');
-const Matter    = require('./matter');
+const Item = require('./item');
 
 class Heaven extends Item {
 	constructor() {
 		super();
 	}
 
-	randomData(lvl) {
+	generateData(lvl) {
 		this.physic = new Physic({
 			matter: new Matter({
 				Fe: generator.playerSize(lvl)
@@ -17,7 +13,6 @@ class Heaven extends Item {
 		});
 
 		var arr = generator.playerPosition(lvl);
-		console.log(typeof (new Body));
 		this.body = new Body({
 			position: new Vec3(...arr)
 		});
@@ -25,3 +20,10 @@ class Heaven extends Item {
 }
 
 module.exports = Heaven;
+
+const generator = require('./generator');
+const Body      = require('./body');
+const Physic    = require('./physic');
+const Matter    = require('./matter');
+const Vector    = require('./vector');
+const Vec3      = Vector.Vec3;

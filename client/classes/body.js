@@ -1,7 +1,3 @@
-const Quaternion = require('./quaternion');
-const vector_    = require('./vector');
-const Vec3 = vector_.Vec3;
-
 /**
  * Stores position, rotation, scale vectors.
  * Can have a parent-body. When calling method
@@ -91,3 +87,7 @@ class Body {
 }
 
 module.exports = Body;
+
+const Quaternion = require('./quaternion');
+const Vector     = require('./vector');
+const Vec3       = Vector.Vec3;

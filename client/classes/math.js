@@ -290,3 +290,17 @@ function amc_equality(term1, term2) {
 exports.amc = amc;
 exports.DTR = DTR;
 exports.RTD = RTD;
+
+const Matrix     = require('./matrix');
+const Mat        = Matrix.Mat;
+const Mat2       = Matrix.Mat2;
+const Mat3       = Matrix.Mat3;
+const Mat4       = Matrix.Mat4;
+const Vector     = require('./vector');
+const Vec        = Vector.Vec;
+const Vec2       = Vector.Vec2;
+const Vec3       = Vector.Vec3;
+const Vec4       = Vector.Vec4;
+const Quaternion = require('./quaternion');
+const Euler      = require('./euler');
+const Body       = require('./body');

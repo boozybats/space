@@ -857,3 +857,9 @@ exports.Mat  = Mat;
 exports.Mat2 = Mat2;
 exports.Mat3 = Mat3;
 exports.Mat4 = Mat4;
+
+const Vector = require('./vector');
+const Vec    = Vector.Vec;
+const Vec2   = Vector.Vec2;
+const Vec3   = Vector.Vec3;
+const Vec4   = Vector.Vec4;
