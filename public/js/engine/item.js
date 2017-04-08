@@ -54,12 +54,6 @@ class Item {
 		 */
 		this.isInstanced = false;
 		/**
-		 * Stores last results of {@link Item#mvmatrix} calculations.
-		 * @type {Array}
-		 * @private
-		 */
-		this.matmem = [];
-		/**
 		 * A variable environment that can be obtained by external methods.
 		 * @type {Object}
 		 * @private
@@ -449,7 +443,7 @@ class Item {
 					var match = i.match(regexp);
 
 					if (match) {
-						var ind = ~~match[1];
+						var ind = parseInt(match[1], 10);
 
 						if (ind >= length) {
 							this.nullifyUniform(i, out);
@@ -527,76 +521,6 @@ class Item {
 			this.changeAttributes(this.mesh.attributes);
 			this.changeUniforms(this.mesh.uniforms);
 		}
-	}
-
-	/**
-	 * Returns {@link Mat4} modified by {@link Body}'s position,
-	 * rotation and scale, also include relation of body's
-	 * parents.
-	 * @return {Mat4}
-	 * @method
-	 */
-	mvmatrix() {
-		var matS, matR, matT, matU, mvmatrix;
-		var body = this.body;
-
-		/**
-		 * matrix memory contains data about last calculated
-		 * matrix, it needs to save memory, so it's returning
-		 * already calculated values
-		 */
-		var memory = this.matmem,
-			level = 0;  // level means "Parent's body number"
-		/**
-		 * if previous levels wasn't equal with memory
-		 * when multiply existing mvmatrix on memory cells instead
-		 * of writing all mvmatrix as value
-		 */
-		var isBreaked = false;  
-
-		// go through cicle until item have a parent
-		do {
-			if (!memory[level]) {
-				memory[level] = {};
-			}
-			var cell = memory[level];
-
-			if (amc('=', body.position, cell.position) &&
-				amc('=', body.rotation, cell.rotation) &&
-				amc('=', body.scale, cell.scale)) {
-				if (isBreaked) {
-					mvmatrix = amc('*', cell.matrix, mvmatrix);
-				}
-				else {
-					mvmatrix = cell.unity;
-				}
-			}
-			else {
-				isBreaked = true;
-
-				cell.position = body.position;
-				cell.rotation = body.rotation;
-				cell.scale = body.scale;
-
-				matS = Mat4.scale(body.scale);
-				matR = Mat4.rotate(body.rotation);
-				matT = Mat4.translate(body.position);
-
-				// matrix from this level only
-				matU = amc('*', matT, matR, matS);
-				cell.matrix = matU;
-
-				// result matrix from first level to this
-				mvmatrix = mvmatrix ? amc('*', matU, mvmatrix) : matU;
-				cell.unity = mvmatrix;
-			}
-
-			body = body.parent;
-			level++;
-		}
-		while(body);
-
-		return mvmatrix;
 	}
 
 	/**
@@ -756,6 +680,22 @@ class Item {
 
 	get scene() {
 		return this.scene_;
+	}
+
+	toJSON() {
+		var out = {};
+
+		out.id = this.id;
+
+		if (this.body) {
+			out.body = this.body.toJSON();
+		}
+
+		if (this.physic) {
+			out.physic = this.physic.toJSON();
+		}
+
+		return out;
 	}
 
 	/**

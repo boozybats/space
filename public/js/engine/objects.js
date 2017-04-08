@@ -712,6 +712,25 @@ class UI extends Item {
 }
 
 /**
+ * An empty item
+ * @this{Empty}
+ * @class
+ */
+class Empty extends Item {
+	constructor({
+		id,
+		name = 'empty',
+		body = new Body
+	} = {}) {
+		super(
+			id,
+			name,
+			body
+		);
+	}
+}
+
+/**
  * Generates tangents and bitangents and normals for mesh.
  * @param {Array} indices
  * @param {Array} vertices

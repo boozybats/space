@@ -196,14 +196,13 @@ class Scene {
 		var out = [];
 
 		var directionalLights = this.directionalLights;
-		var pointLights = this.pointLights;
-
-		for (var light of directionalLights) {
-			out.push(light.data());
+		for (var i = directionalLights.length; i--;) {
+			out.push(directionalLights[i].data());
 		}
 
-		for (var light of pointLights) {
-			out.push(light.data());
+		var pointLights = this.pointLights;
+		for (var i = pointLights.length; i--;) {
+			out.push(pointLights[i].data());
 		}
 
 		return out;
@@ -227,15 +226,15 @@ class Scene {
 			throw new Error('Scene: removeItem: must be an Item');
 		}
 
-		var ind = this.items.indexOf(item);
-		if (ind >= 0) {
-			this.items.splice(ind, 1);
+		var index = this.items.indexOf(item);
+		if (~index) {
+			this.items.splice(index, 1);
 		}
 		else {
-			var ind = this.systemitems.indexOf(item);
+			var index = this.systemitems.indexOf(item);
 
-			if (ind >= 0) {
-				this.systemitems.splice(ind, 1);
+			if (~index) {
+				this.systemitems.splice(index, 1);
 			}
 		}
 	}
@@ -253,16 +252,16 @@ class Scene {
 		var constructor = light.constructor;
 		switch(constructor) {
 			case DirectionalLight:
-			var ind = this.directionalLights.indexOf(light);
-			if (ind >= 0) {
-				this.directionalLights.splice(ind, 1);
+			var index = this.directionalLights.indexOf(light);
+			if (~index) {
+				this.directionalLights.splice(index, 1);
 			}
 			break;
 
 			case PointLight:
-			var ind = this.pointLights.indexOf(light);
-			if (ind >= 0) {
-				this.pointLights.splice(ind, 1);
+			var index = this.pointLights.indexOf(light);
+			if (~index) {
+				this.pointLights.splice(index, 1);
 			}
 			break;
 		}

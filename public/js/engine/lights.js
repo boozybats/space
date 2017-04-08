@@ -12,12 +12,13 @@
  * @property {Body} body
  */
 
-class Light extends Item {
+class Light {
 	constructor({
 		name = 'light',
 		body = new Body
 	} = {}) {
-		super({name, body});
+		this.name = name;
+		this.body = body;
 	}
 
 	get body() {
@@ -70,7 +71,7 @@ class Light extends Item {
 			break;
 		}
 
-		var position = amc('*', this.mvmatrix(), Vec.homogeneouspos).tocartesian();
+		var position = amc('*', this.body.mvmatrix(), Vec.homogeneouspos).tocartesian();
 		out.position = position;
 		out.intensity = this.intensity || 0.0;
 		out.ambient = this.ambient;

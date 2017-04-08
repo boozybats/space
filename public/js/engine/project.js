@@ -220,7 +220,7 @@ class Project {
 				}
 
 				if (item.body) {
-					var mvmatrix = item.mvmatrix();
+					var mvmatrix = item.body.mvmatrix();
 					uniforms.u_MVMatrix = mvmatrix;
 					uniforms.u_MVNMatrix = mvmatrix.normalize();
 				}

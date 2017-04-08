@@ -247,7 +247,8 @@ class Physic {
 	init_matter(matter) {
 		this.matter = new Matter(matter);
 
-		/** private */ this.pure_volume = this.matter.volume;
+		/** private */
+		this.pure_volume = this.matter.volume;
 		this.diameter = this.Diameter();
 		this.mass = this.MassTotal();
 	}
@@ -340,6 +341,14 @@ class Physic {
 		return out;
 	}
 
+	toJSON() {
+		var out = {};
+
+		out.matter = this.matter.matter;
+
+		return out;
+	}
+
 	get velocity() {
 		return this.velocity_;
 	}
@@ -374,7 +383,7 @@ class Matter {
 		this.volume_ = 0;
 		this.layers_ = [];
 		this.substances_ = [];
-		this.substances_obj_ = matter;
+		this.matter = matter;
 
 		if (matter) {
 			for (var i in matter) {
@@ -404,7 +413,7 @@ class Matter {
 	compare(matter) {
 		var result = true;
 
-		var oldmatter = this.substances_obj_;
+		var oldmatter = this.matter;
 		Object.keys(oldmatter).concat(Object.keys(matter)).forEach((a) => {
 			if (matter[a] !== oldmatter[a]) {
 				result = false;

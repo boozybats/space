@@ -8,9 +8,9 @@ class Heaven extends Sphere {
 				Fe: 50 * Math.pow(10, 5)
 			}
 		}),
+		me = false,
 		mesh,
 		collider,
-		me = false,
 		mouseControl
 	} = {}) {
 		super({
@@ -20,7 +20,7 @@ class Heaven extends Sphere {
 			physic,
 			mesh,
 			collider,
-			precision: 3
+			precision: 1
 		});
 
 		this.me = me;
@@ -30,7 +30,7 @@ class Heaven extends Sphere {
 		normalmap.src = 'images/n_heaven.jpg';
 
 		var diffusemap = new Image();
-		diffusemap.src = 'images/diffuse.jpg';
+		diffusemap.src = 'images/d_heaven.jpg';
 
 		this.mesh.shader = Heaven.shader;
 		this.mesh.material = new Material({
@@ -44,7 +44,7 @@ class Heaven extends Sphere {
 	 * @param  {Camera} camera
 	 */
 	bindCamera(camera) {
-		/** @private */ this.camera = camera;
+		this.camera = camera;
 	}
 
 	get core() {
@@ -153,16 +153,20 @@ class Heaven extends Sphere {
 		}
 
 		if (this.me) {
-			var body = this.body;
-			var position = this.private.position;
-			var scale = this.private.scale;
-			if (!position || !amc('=', position, body.position) || !amc('=', scale, body.scale)) {
-				this.private.position = body.position;
-				this.private.scale = body.scale;
+			// does data has been changed since last update?
+			var isChanged = false;
 
-				/*server.mydata({
-					body: body
-				});*/
+			var oldbody = _private.body;
+			if (!oldbody || !amc('=', oldbody.position, this.body.position)) {
+				isChanged = true;
+
+				_private.body = {
+					position: this.body.position
+				};
+			}
+
+			if (isChanged) {
+				this.updateOnServer();
 			}
 		}
 	}
@@ -261,5 +265,22 @@ class Heaven extends Sphere {
 		);
 
 		return out;
+	}
+
+	updateOnServer() {
+		if (!this.id) {
+			if (Server.id) {
+				this.id = Server.id;
+			}
+			else {
+				throw new Error('Forsaken ID');
+			}
+		}
+
+		Server.items.setData(this.toJSON());
+	}
+
+	uptodate(data) {
+		console.log(data);
 	}
 }

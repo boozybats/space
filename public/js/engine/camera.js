@@ -20,17 +20,15 @@
  * required values
 */
 
-class Camera extends Item {
+class Camera {
 	constructor({
 		name = 'camera',
 		body = new Body,
 		deepOffset = DEFAULT_NEARFIELD, 
 		projectionMatrix = DEFAULT_PERSPECTIVE
 	} = {}) {
-		super({
-			name,
-			body
-		});
+		this.name = name;
+		this.body = body;
 		this.deepOffset = deepOffset;
 		this.projectionMatrix = projectionMatrix;
 		
@@ -40,6 +38,17 @@ class Camera extends Item {
 		 * @private
 		 */
 		this.matmem = [];
+	}
+
+	get body() {
+		return this.body_;
+	}
+	set body(val) {
+		if (!(val instanceof Body)) {
+			throw new Error('Camera: body: must be a Body');
+		}
+
+		this.body_ = val;
 	}
 
 	get deepOffset() {
@@ -62,6 +71,17 @@ class Camera extends Item {
 		}
 
 		this.projectionMatrix_ = val;
+	}
+
+	get name() {
+		return this.name_;
+	}
+	set name(val) {
+		if (typeof val !== 'string') {
+			throw new Error('Camera: name: must be a string');
+		}
+
+		this.name_ = val;
 	}
 
 	/**
@@ -98,7 +118,7 @@ class Camera extends Item {
 	 * @method
 	 */
 	mvpmatrix() {
-		var cammvm = this.mvmatrix();
+		var cammvm = this.body.mvmatrix();
 
 		var pos = amc('*', cammvm, Vec.homogeneouspos).tocartesian();
 		var N = amc('*', cammvm, Camera.forward),
