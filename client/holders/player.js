@@ -1,9 +1,10 @@
-const ws_    = require('../ws');
+const ws     = require('../ws');
 const Player = require('../classes/player');
 
 const _players = global.storages.players;
+const _items   = global.storages.items;
 
-ws_.set('player', response => {
+ws.set('player', response => {
 	var data = response.data;
 
 	if (typeof data !== 'object') {
@@ -17,11 +18,13 @@ ws_.set('player', response => {
 		var id = GUID();
 
 		var player = new Player({
-			id: id,
-			ip: response.ip
+			id: id
 		});
 
-		_players.set(id, player);
+		var client = ws.getClient(response.ip);
+		client.setPlayer(player);
+
+		appendPlayer(id, player);
 
 		response.answer(id);
 
@@ -32,8 +35,8 @@ ws_.set('player', response => {
 
 		var result;
 		var player = _players.get(id);
-		if (player) {
-			result = player.ip === response.ip;
+		if (player && player.client) {
+			result = player.client.ip === response.ip;
 		}
 		else {
 			result = false;
@@ -48,7 +51,7 @@ ws_.set('player', response => {
 var GUIDs = [];
 function GUID() {
 	function path() {
-		return parseInt((Math.random() * 9999999999).toFixed(0), 10);
+		return ((Math.random() * 9999999999).toFixed(0) - 0);
 	}
 	var key = path();
 	if (GUIDs.indexOf(key) === -1) {
@@ -57,6 +60,14 @@ function GUID() {
 	}
 	else {
 		return GUID();
+	}
+}
+
+function appendPlayer(id, player) {
+	_players.set(id, player);
+	player.onremove = function() {
+		var handler = _players.remove(id);
+		ws.removeEvent(handler);
 	}
 }
 

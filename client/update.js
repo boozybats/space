@@ -1,22 +1,22 @@
-const FPS = 1000 / 60;
-const callbacks = [];
+const Storage = require('../storage');
+var FPS = 1000 / 60;
+
+// callbacks will be executed by each frame
+const callbacks = new Storage;
+callbacks.filter = function(data) {
+	return (typeof data === 'function');
+}
 
 ;(function() {
 	setInterval(() => {
-		for (var i = callbacks.length; i--;) {
-			callbacks[i]();
-		}
+		callbacks.each(callback => {
+			callback();
+		});
 	}, FPS);
 })();
 
 function push(callback) {
-	if (typeof callback !== 'function') {
-		return;
-	}
-
-	var index = callbacks.push(callback) - 1;
-
-	return index;
+	return callbacks.push(callback);
 }
 
 exports.push = push;

@@ -443,7 +443,7 @@ class Item {
 					var match = i.match(regexp);
 
 					if (match) {
-						var ind = parseInt(match[1], 10);
+						var ind = match[1] - 0;
 
 						if (ind >= length) {
 							this.nullifyUniform(i, out);

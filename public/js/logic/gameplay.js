@@ -66,8 +66,7 @@ function gameplay(images) {
 	Server.player.defineId(id => {
 		me.id = id;
 
-		Server.heavens.getData(response => {
-			var data = response.data;
+		Server.heavens.getData(data => {
 			me.uptodate(data);
 
 			project.requestAnimationFrame();

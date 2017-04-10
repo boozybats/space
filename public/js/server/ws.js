@@ -9,11 +9,23 @@
 const ws = {
 	socket: new WebSocket(`ws://localhost:5611`),
 	handlers: {},
-	set: (name, callback) => {
-		ws.handlers[name] = callback;
+	set: function(name, callback) {
+		if (typeof callback === 'function') {
+			ws.handlers[name] = callback;
+
+			return true;
+		}
+
+		return false;
 	},
-	remove: (name) => {
-		delete ws.handlers[name];
+	remove: function(name) {
+		if (ws.handlers[name]) {
+			delete ws.handlers[name];
+
+			return true;
+		}
+
+		return false;
 	},
 	/**
 	 * Sends json to server-side, if callback selected then generates
@@ -25,33 +37,43 @@ const ws = {
 	 * @param {*} data
 	 * @param {Function} callback
 	 */
-	send: (options = {
+	send: function(options = {
 		handler,
 		data,
 		callback
-	}) => {
+	}) {
 		if (ws.ready) {
+			if (typeof options !== 'object') {
+				console.warn('Corrupted websocket request: "options" must be an object');
+				return false;
+			}
+
 			var wrap = {
 				handler: options.handler,
 				data: options.data
 			};
 
 			if (typeof options.callback === 'function') {
-				var guid = GUID();
-				wrap.GUID = guid;
-
-				ws.set(guid, response => {
-					GUIDs.splice(GUIDs.indexOf(guid), 1);
-					ws.remove(guid);
+				var ansname = `${options.handler}-answer`;
+				ws.set(ansname, response => {
+					ws.remove(ansname);
 					options.callback(response);
 				});
 			}
 
-			ws.socket.send(JSON.stringify(wrap));
+			try {
+				ws.socket.send(JSON.stringify(wrap));
+				return true;
+			}
+			catch (err) {
+				if (err) {
+					return false;
+				}
+			}
 		}
 		else {
 			setTimeout(function() {
-				ws.send(options)
+				ws.send(options);
 			}, 100);
 		}
 	}
@@ -75,39 +97,25 @@ ws.socket.onmessage = function(response) {
 	if (typeof response === 'string') {
 		try {
 			var json = JSON.parse(response);
-
-			var name = json.handler;
-
-			if (json.GUID) {
-				json.answer = function(data, callback) {
-					ws.send({
-						data,
-						callback,
-						handler: json.GUID
-					});
-				}
-			}
-
-			if (ws.handlers[name]) {
-				ws.handlers[name](json);
+		}
+		catch(err) {
+			if (err) {
+				return;
 			}
 		}
-		catch(e) {
-		}
-	}
-}
 
-const GUIDs = [];
-function GUID() {
-	function path() {
-		return (Math.random() * 8999 + 1000).toFixed(0);
-	}
-	var key = `${path()}-${path()}-${path()}`;
-	if (GUIDs.indexOf(key) === -1) {
-		GUIDs.push(key);
-		return key;
-	}
-	else {
-		return GUID();
+		var name = json.handler;
+
+		json.answer = function(data, callback) {
+			ws.send({
+				data: data,
+				callback: callback,
+				handler: `${name}-answer`
+			});
+		}
+
+		if (ws.handlers[name]) {
+			ws.handlers[name](json);
+		}
 	}
 }

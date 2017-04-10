@@ -1,8 +1,35 @@
+/**
+ * Stores elements in object, filter can be setted by {@Storage#filter},
+ * remove event by {@Storage#onremove}.
+ * @class
+ */
 class Storage {
 	constructor() {
-		this.data = {};
+		this.data     = {};
+		this.filter   = function() {};
+		this.onremove = function() {};
 	}
 
+	/**
+	 * Returns array with numberic-keys elements in data leading in order.
+	 * @return {Array}
+	 */
+	array() {
+		var out = [];
+		var length = this.numberkeyLength;
+
+		for (var i = 0; i < length; i++) {
+			out.push(this.data[i]);
+		}
+
+		return out;
+	}
+
+	/**
+	 * Goes through all elements and stop cycling if callback is
+	 * returning "false".
+	 * @param  {Function} callback
+	 */
 	each(callback) {
 		if (typeof callback !== 'function') {
 			return;
@@ -12,11 +39,31 @@ class Storage {
 		for (var key in data) {
 			if (data.hasOwnProperty(key)) {
 				var item = data[key];
-				callback(item, key, data);
+				var result = callback(item, key, data);
+
+				if (result === false) {
+					break;
+				}
 			}
 		}
 	}
 
+	get filter() {
+		return this.filter_;
+	}
+	set filter(val) {
+		if (typeof val !== 'function') {
+			val = function() {};
+		}
+
+		this.filter_ = val;
+	}
+
+	/**
+	 * Goes through all elements and adds to array if callback returns positive
+	 * value. Sends element, key-position, and data-array to callback.
+	 * @param  {Function} callback
+	 */
 	find(callback) {
 		if (typeof callback !== 'function') {
 			return;
@@ -57,23 +104,82 @@ class Storage {
 		return length;
 	}
 
+	/**
+	 * Returns length of object as it's array.
+	 * @return {Number}
+	 */
 	numberkeyLength() {
 		var length = 0;
-		for (var key in this.data) {
-			if (this.data.hasOwnProperty(key) && ~~key == key) {
-				length++;
-			}
+		while (typeof this.data[length] !== 'undefined') {
+			length++;
 		}
 
 		return length;
 	}
 
-	push(data) {
-		this.data[this.numberkeyLength()] = data;
+	get onremove() {
+		return this.onremove_;
+	}
+	set onremove(val) {
+		if (typeof val !== 'function') {
+			val = function() {};
+		}
+
+		this.onremove_ = val;
+	}
+
+	/**
+	 * Equal to native "push"-function for array, but returns element's
+	 * key-position.
+	 * @return {Number}
+	 */
+	push() {
+		var args = arguments;
+
+		var index = this.numberkeyLength(), result;
+		for (var i = 0; i < args.length; i++) {
+			var value = args[i];
+
+			result = true;
+			if (this.filter) {
+				result = this.filter(value);
+			}
+
+			if (result) {
+				this.data[index++] = value;
+			}
+		}
+
+		return index;
+	}
+
+	remove(key) {
+		var data = this.data[key];
+
+		if (this.onremove) {
+			this.onremove(data, key, this.data);
+		}
+
+		if (typeof data !== 'undefined') {
+			delete this.data[key];
+			
+			return true;
+		}
+
+		return false;
 	}
 
 	set(key, data) {
-		this.data[key] = data;
+		var result = true;
+		if (this.filter) {
+			result = this.filter(data);
+		}
+
+		if (result) {
+			this.data[key] = data;
+		}
+
+		return result;
 	}
 }
 

@@ -9,6 +9,12 @@ Server.heavens.getData = function(callback) {
 			method: 'getData',
 			id: Server.id
 		},
-		callback
+		callback: function(response) {
+			if (typeof response !== 'object') {
+				return;
+			}
+
+			callback(response.data);
+		}
 	});
 }

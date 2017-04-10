@@ -1,7 +1,9 @@
 const ws_    = require('../ws');
 const Heaven = require('../classes/heaven');
+const Player = require('../classes/player');
 
-const _items = global.storages.items;
+const _players = global.storages.players;
+const _items   = global.storages.items;
 
 ws_.set('heavens', response => {
 	var data = response.data;
@@ -23,7 +25,6 @@ ws_.set('heavens', response => {
 
 		if (!item) {
 			item = instance(id);
-			_items.set(id, item);
 		}
 
 		response.answer(item.toJSON());
@@ -31,9 +32,23 @@ ws_.set('heavens', response => {
 		break;
 	}
 
-	function instance() {
-		var heaven = new Heaven;
+	function instance(id) {
+		var player = _players.get(id);
+		if (!(player instanceof Player) || typeof player.items !== 'object') {
+			return;
+		}
+
+		var heaven = new Heaven({
+			id
+		});
+		player.items.heaven = heaven;
+
 		heaven.generateData(0);
+		heaven.onremove = function() {
+			_items.remove(id);
+		}
+
+		_items.set(id, heaven);
 
 		return heaven;
 	}

@@ -281,6 +281,5 @@ class Heaven extends Sphere {
 	}
 
 	uptodate(data) {
-		console.log(data);
 	}
 }

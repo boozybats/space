@@ -1,8 +1,7 @@
-class Logic extends Empty {
+class Logic {
 	constructor(scene) {
-		super();
-
-		this.instance(scene, true);
+		this.updateItems = this.updateItems.bind(this);
+		this.scene = scene;
 	}
 
 	createitem(type, data) {
@@ -16,16 +15,19 @@ class Logic extends Empty {
 			break;
 		}
 
-		return out;
+		return item;
 	}
 
 	updateItems(data) {
+		return;
 		if (typeof data !== 'object') {
 			return;
 		}
+
+		var scene = this.scene;
 		
 		// data with all existing items
-		for (var i = data.length; i--;) {
+		for (var i = 0; i < data.length; i++) {
 			var wrap = data[i];
 			var id = wrap.id;
 

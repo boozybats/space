@@ -1,26 +1,21 @@
+const Matter = require('./matter');
+
 class Physic {
 	constructor({
 		matter
 	}) {
-		this.matter = matter;
+		this.initMatter(matter);
 	}
 
-	get matter() {
-		return this.matter_;
-	}
-	set matter(val) {
-		if (val && !(val instanceof Matter)) {
-			this.matter_ = new Matter;
-		}
-
-		this.matter_ = val;
+	initMatter(matter) {
+		this.matter = new Matter(matter);
 	}
 
 	toJSON() {
 		var out = {};
 
 		if (this.matter) {
-			out.matter = this.matter.substances;
+			out.matter = this.matter.data;
 		}
 
 		return out;
@@ -28,5 +23,3 @@ class Physic {
 }
 
 module.exports = Physic;
-
-const Matter = require('./matter');

@@ -1,10 +1,18 @@
 const Item = require('./item');
 
 class Heaven extends Item {
-	constructor() {
-		super();
+	constructor({
+		id
+	}) {
+		super({
+			id
+		});
 	}
 
+	/**
+	 * Sets new body, physic
+	 * @param  {Number} lvl Item's level
+	 */
 	generateData(lvl) {
 		this.physic = new Physic({
 			matter: new Matter({
@@ -16,6 +24,13 @@ class Heaven extends Item {
 		this.body = new Body({
 			position: new Vec3(...arr)
 		});
+	}
+
+	toJSON() {
+		var json = super.toJSON();
+		json.type = 'heaven';
+
+		return json;
 	}
 }
 

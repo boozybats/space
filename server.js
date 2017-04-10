@@ -1,6 +1,5 @@
 const http_ = require('http');
 const page_ = require('./page');
-require('./client/client');
 
 const _listener = 5610;
 
@@ -13,3 +12,6 @@ var server = http_.createServer(onRequest);
 server.listen(_listener);
 
 console.log('Server is running');
+
+// client-side script initialization
+require('./client/client');

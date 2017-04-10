@@ -1,3 +1,6 @@
+const Body   = require('./body');
+const Physic = require('./physic');
+
 class Item {
 	constructor({
 		id,
@@ -7,6 +10,8 @@ class Item {
 		this.id = id;
 		this.body = body;
 		this.physic = physic;
+
+		this.onremove = function() {};
 	}
 
 	get id() {
@@ -14,7 +19,7 @@ class Item {
 	}
 	set id(val) {
 		if (typeof val !== 'number') {
-			this.id_ = -1;
+			val = -1;
 		}
 
 		this.id_ = val;
@@ -25,7 +30,7 @@ class Item {
 	}
 	set body(val) {
 		if (val && !(val instanceof Body)) {
-			this.body_ = new Body;
+			val = new Body;
 		}
 
 		this.body_ = val;
@@ -36,14 +41,36 @@ class Item {
 	}
 	set physic(val) {
 		if (val && !(val instanceof Physic)) {
-			this.physic_ = new Physic;
+			val = new Physic;
 		}
 
 		this.physic_ = val;
 	}
 
+	get onremove() {
+		return this.onremove_;
+	}
+	set onremove(val) {
+		if (typeof val !== 'function') {
+			val = function() {};
+		}
+
+		this.onremove_ = val;
+	}
+
+	// Just initializes "onremove"-function.
+	remove() {
+		this.onremove();
+	}
+
+	/**
+	 * Converts available item's data to object and stringify it.
+	 * @return {String} JSON
+	 */
 	toJSON() {
 		var out = {};
+
+		out.id = this.id;
 
 		if (this.body) {
 			out.body = this.body.toJSON();
@@ -56,6 +83,10 @@ class Item {
 		return out;
 	}
 
+	/**
+	 * Updates item data by sended data.
+	 * @param  {Object} data
+	 */
 	uptodate(data) {
 		if (typeof data !== 'object') {
 			return;
@@ -69,13 +100,16 @@ class Item {
 			var body = data.body;
 
 			if (body.position instanceof Array) {
-				this.body.position = new Vec3(...body.position);
+				var pos = body.position;
+				this.body.position = new Vec3(pos[0], pos[1], pos[2]);
 			}
 			if (body.rotation instanceof Array) {
-				this.body.rotation = new Quaternion(...body.rotation);
+				var rot = body.rotation;
+				this.body.rotation = new Quaternion(rot[0], rot[1], rot[2], rot[3]);
 			}
 			if (body.scale instanceof Array) {
-				this.body.position = new Vec3(...body.scale);
+				var sca = body.scale;
+				this.body.position = new Vec3(sca[0], sca[1], sca[2]);
 			}
 		}
 
@@ -87,13 +121,10 @@ class Item {
 			var physic = data.physic;
 
 			if (typeof physic.matter === 'object') {
-				this.physic.matter = physic.matter;
+				this.physic.initMatter(physic.matter);
 			}
 		}
 	}
 }
 
 module.exports = Item;
-
-const Body   = require('./body');
-const Physic = require('./physic');

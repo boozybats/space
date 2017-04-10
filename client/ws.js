@@ -1,9 +1,16 @@
-const ws_ = require('ws');
-const ip_ = require('ip');
+const Storage = require('../storage');
+const ws_     = require('ws');
+const ip_     = require('ip');
 
 const _listener = 5611;
-const _handlers = {};
-const _clients = {};
+
+// Handlers is callback function, requests from front end redirects into handler
+const _handlers = new Storage;
+_handlers.filter = function(data) {
+	return (typeof data === 'function');
+}
+// Storage with all connected users
+const _clients = new Storage;
 
 console.log(`Websocket listener - ${_listener}`);
 
@@ -12,58 +19,20 @@ var server = new ws_.Server({port: _listener});
 server.on('connection', ws => {
 	// Нужно поменять на нормальный ip, когда буду выкладывать на боевой хост
 	var ip = GUID();  //ip_.address();
-	_clients[ip] = ws;
+
+	// Initialize new user
+	connect(ws, ip);
 
 	ws.on('message', response => {
-		if (typeof response === 'string') {
-			try {
-				var json = JSON.parse(response);
-
-				if (typeof json !== 'object') {
-					return;
-				}
-
-				var name = json.handler;
-				json.ip = ip;
-
-				if (json.GUID) {
-					json.answer = function(data, callback) {
-						send({
-							ip,
-							data,
-							callback,
-							handler: json.GUID
-						});
-					}
-				}
-
-				if (_handlers[name]) {
-					_handlers[name](json);
-				}
-			}
-			catch(e) {}
-		}
+		message(ip, response);
 	});
 
 	ws.on('close', () => {
-		delete _clients[ip];
+		close(ip);
 	});
 });
 
-function set(name, callback) {
-	if (typeof callback !== 'function') {
-		return;
-	}
-
-	_handlers[name] = function(response) {
-		callback(response);
-	};
-}
-
-function remove(name) {
-	delete _handlers[name];
-}
-
+// Generates unique string, ex: '1234-5678-9101-1121'
 var GUIDs = [];
 function GUID() {
 	var key = `${path()}-${path()}-${path()}-${path()}`;
@@ -80,36 +49,159 @@ function GUID() {
 	}
 }
 
+// Sets handler
+function set(name, callback) {
+	_handlers.set(name, response => {
+		callback(response);
+	});
+}
+
+// Removs handler
+function remove(name) {
+	_handlers.remove(name);
+}
+
 function send({
 	ip,
 	handler,
 	data,
 	callback
 } = {}) {
-	if (typeof handler !== 'string' || !_clients[ip]) {
+	var client = _clients.get(ip);
+	if (typeof handler !== 'string' || !client) {
 		return;
 	}
 
 	var wrap = {
-		handler,
+		handler: handler,
 		data: data
 	};
 
-	if (typeof callback === 'function') {
-		var guid = GUID();
-		wrap.GUID = guid;
+	client.setHandler(`${handler}-answer`, callback);
 
-		set(guid, response => {
-			GUIDs.splice(GUIDs.indexOf(guid), 1);
-			remove(guid);
-			callback(response);
+	try {
+		client.websocket.send(JSON.stringify(wrap));
+	}
+	catch (err) {
+		if (err) {
+			close(ip);
+			return false;
+		}
+	}
+
+	return true;
+}
+
+// Is called when new user connected to websockets
+function connect(ws, ip) {
+	var client = new Client({
+		websocket: ws,
+		ip: ip
+	});
+	_clients.set(ip, client);
+}
+
+// Is called by message from front end
+function message(ip, response) {
+	if (typeof response !== 'string') {
+		return;
+	}
+
+	try {
+		var json = JSON.parse(response);
+	}
+	catch(err) {
+		if (err) {
+			return;
+		}
+	}
+
+	if (typeof json !== 'object') {
+		return;
+	}
+
+	var name = json.handler;
+
+	json.ip = ip;
+
+	// Sends back a request to front end
+	json.answer = function(data, callback) {
+		send({
+			ip: ip,
+			data: data,
+			callback: callback,
+			handler: `${name}-answer`
 		});
 	}
 
-	_clients[ip].send(JSON.stringify(wrap));
+	// Defines is it answer or regular handler
+	// Client's handlers is answers, ws hadnlers is new requests
+	if (client.isHandler(name)) {
+		client.execHandler(name, json);
+	}
+	else if (_handlers.get(name)) {
+		var handler = _handlers.get(name);
+		handler(json);
+	}
 }
 
-//exports
-exports.set = set;
-exports.remove = remove;
-exports.send = send;
+// Is called when any port is closing
+function close(ip) {
+	_clients.remove(ip);
+
+	for (var i = events.close.length; i--;) {
+		var event = events.close[i];
+		if (typeof event === 'function') {
+			event();
+		}
+	}
+}
+
+// Websocket's events, ex: 'close', 'connect', ...
+var events = {
+	close: new Storage
+};
+events.close.filter = function(data) {
+	return (typeof data === 'function');
+}
+
+// Adds event to websocket
+function addEvent(handler, callback) {
+	var event = events[handler];
+	if (!event) {
+		return;
+	}
+
+	var index = event.push(callback);
+
+	return index;
+}
+
+function removeEvent(handler, index) {
+	var event = events[handler];
+	if (!event) {
+		return;
+	}
+
+	var result = event.remove(index);
+
+	return result;
+}
+
+function getClient(ip) {
+	return _clients.get(ip);
+}
+
+// exports
+var exp = {
+	addEvent: addEvent,
+	removeEvent: removeEvent,
+	getClient: getClient,
+	set: set,
+	remove: remove,
+	send: send
+};
+
+module.exports = exp;
+
+const Client  = require('./classes/client');
