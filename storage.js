@@ -6,8 +6,10 @@
 class Storage {
 	constructor() {
 		this.data     = {};
-		this.filter   = function() {};
-		this.onremove = function() {};
+		this.filter   = null;
+		this.onremove = null;
+
+		this.numberkeyLength_ = 0;
 	}
 
 	/**
@@ -53,7 +55,9 @@ class Storage {
 	}
 	set filter(val) {
 		if (typeof val !== 'function') {
-			val = function() {};
+			val = function() {
+				return true;
+			}
 		}
 
 		this.filter_ = val;
@@ -93,7 +97,7 @@ class Storage {
 		return this.data[key];
 	}
 
-	length() {
+	get length() {
 		var length = 0;
 		for (var key in this.data) {
 			if (this.data.hasOwnProperty(key)) {
@@ -108,13 +112,8 @@ class Storage {
 	 * Returns length of object as it's array.
 	 * @return {Number}
 	 */
-	numberkeyLength() {
-		var length = 0;
-		while (typeof this.data[length] !== 'undefined') {
-			length++;
-		}
-
-		return length;
+	get numberkeyLength() {
+		return this.numberkeyLength_;
 	}
 
 	get onremove() {
@@ -131,12 +130,13 @@ class Storage {
 	/**
 	 * Equal to native "push"-function for array, but returns element's
 	 * key-position.
+	 * P.S. Slow process
 	 * @return {Number}
 	 */
 	push() {
 		var args = arguments;
 
-		var index = this.numberkeyLength(), result;
+		var index = this.numberkeyLength, result;
 		for (var i = 0; i < args.length; i++) {
 			var value = args[i];
 
@@ -146,6 +146,7 @@ class Storage {
 			}
 
 			if (result) {
+				this.numberkeyLength_++;
 				this.data[index++] = value;
 			}
 		}
@@ -160,13 +161,13 @@ class Storage {
 			this.onremove(data, key, this.data);
 		}
 
-		if (typeof data !== 'undefined') {
-			delete this.data[key];
-			
-			return true;
+		if (typeof data === 'undefined') {
+			return false;
 		}
 
-		return false;
+		delete this.data[key];
+
+		return true;
 	}
 
 	set(key, data) {
