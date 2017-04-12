@@ -3,14 +3,13 @@ const ws_     = require('ws');
 const ip_     = require('ip');
 
 const _listener = 5611;
+const _clients = global.storages.clients;
 
 // Handlers is callback function, requests from front end redirects into handler
 const _handlers = new Storage;
 _handlers.filter = function(data) {
 	return (typeof data === 'function');
 }
-// Storage with all connected users
-const _clients = new Storage;
 
 console.log(`Websocket listener - ${_listener}`);
 
@@ -56,7 +55,7 @@ function set(name, callback) {
 	});
 }
 
-// Removs handler
+// Removes handler
 function remove(name) {
 	_handlers.remove(name);
 }

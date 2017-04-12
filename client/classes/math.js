@@ -54,7 +54,7 @@ function amc(operand, ...terms) {
 		break;
 
 		default:
-		console.warn('arifmetic error');
+		console.log('arifmetic error');
 	}
 
 	if (terms.length > 2) {

@@ -303,8 +303,8 @@ class Project {
 	update() {
 		var layers = this.layers;
 
-		var olddate = this.olddate || new Date().getTime(),
-			newdate = new Date().getTime(),
+		var olddate = this.olddate || Date.now(),
+			newdate = Date.now(),
 			deltaTime = newdate - olddate;
 		this.olddate = newdate;
 

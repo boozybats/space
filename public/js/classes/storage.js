@@ -182,5 +182,3 @@ class Storage {
 		return result;
 	}
 }
-
-module.exports = Storage;

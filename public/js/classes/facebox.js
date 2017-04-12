@@ -13,8 +13,6 @@ class FaceBox extends UI {
 			height: RESOLUTION_MIN
 		});
 
-		this.startTime_ = new Date().getTime() / 1000;
-
 		this.mesh.shader = FaceBox.shader;
 		this.changeUniforms({
 			u_Mouse: new Vec2,

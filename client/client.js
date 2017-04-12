@@ -1,24 +1,24 @@
 const Storage = require('../storage');
-const Item    = require('./classes/item');
+const Client  = require('./classes/client');
 const Player  = require('./classes/player');
+const Item    = require('./classes/item');
 
-// All items, include npc
-var items = new Storage;
-items.filter = function(data) {
-	return (data instanceof Item);
-}
-
+// Storage with all connected users
+var clients = new Storage;
+clients = (data => data instanceof Client);
 /* All players connected to server with initialized "id", must be binded
 to client */
 var players = new Storage;
-players.filter = function(data) {
-	return (data instanceof Player);
-}
+players = (data => data instanceof Player);
+// All items, include npc
+var items = new Storage;
+items = (data => data instanceof Item);
 
 // Gives access to storages in global variable
 global.storages = {
-	items,
-	players
+	clients: clients,
+	players: players,
+	items: items
 };
 
 /**
@@ -47,3 +47,13 @@ require('./distribution');
 require('./holders/player');
 require('./holders/items');
 require('./holders/heavens');
+
+const update = require('./update');
+
+// Eraser of expired handlers
+update.push(function({
+	time,
+	client
+}) {
+	client.removeExpiredHandlers(time);
+}, 'clients');
