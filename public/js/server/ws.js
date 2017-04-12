@@ -33,12 +33,11 @@ const ws = {
 	 * @param {*} data
 	 * @param {Function} callback
 	 */
-	send: function(options = {
-		handler,
-		data,
-		callback,
-		callback_lifetime
-	}) {
+	send: function(options) {
+		if (typeof options !== 'object') {
+			return false;
+		}
+
 		// Send message later when websocket will be loaded
 		if (!ws.ready) {
 			setTimeout(function() {
@@ -63,7 +62,7 @@ const ws = {
 		var callback = options.callback;
 		if (typeof callback === 'function') {
 			wrap.answer = ws.client.setHandler(callback, {
-				lifetime: callback_lifetime
+				lifetime: options.callbackLifetime
 			});
 		}
 
@@ -132,3 +131,11 @@ ws.socket.onmessage = function(response) {
 		}
 	}
 }
+
+// Eraser of expired handlers
+var update = new Update;
+update.push(function({
+	time
+}) {
+	ws.client.removeExpiredHandlers(time);
+}, 'main');

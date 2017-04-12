@@ -35,7 +35,7 @@ server.on('connection', ws => {
 // Generates unique string, ex: '1234-5678-9101-1121'
 var GUIDs = [];
 function GUID() {
-	var key = `${path()}-${path()}-${path()}-${path()}`;
+	var key = `${path()}.${path()}.${path()}.${path()}`;
 	if (~GUIDs.indexOf(key)) {
 		return GUID();
 	}
@@ -45,7 +45,7 @@ function GUID() {
 	}
 
 	function path() {
-		return (Math.random() * 8999 + 1000).toFixed(0);
+		return (Math.random() * 255).toFixed(0);
 	}
 }
 
@@ -61,51 +61,31 @@ function remove(name) {
 	_handlers.remove(name);
 }
 
-function send({
-	ip,
-	handler,
-	data,
-	callback,
-	callback_lifetime
-} = {}) {
+// Sends message to front end
+function send(options) {
+	if (typeof options !== 'object') {
+		console.log(`ws: send: "options" must be an object, type: ${typeof options}, value: ${options}`);
+		return false;
+	}
+
+	var ip = options.ip;
+
 	var client = getClient(ip);
 	if (!client) {
-		return;
+		console.log(`ws: send: undeclared user, ip: ${ip}`);
+		return false;
 	}
 
-	// Data to send to front end
-	var wrap = {
-		handler: handler,
-		data: data
-	};
+	var result = client.send(options);
 
-	// If needs a callback from front enmd than set answer-callback
-	if (typeof callback === 'function') {
-		wrap.answer = client.setHandler(callback, {
-			lifetime: callback_lifetime
-		});
+	if (result) {
+		return true;
 	}
+	else {
+		close(ip);
 
-	try {
-		client.websocket.send(JSON.stringify(wrap));
+		return false;
 	}
-	catch (err) {
-		if (err) {
-			close(ip);
-			return false;
-		}
-	}
-
-	return true;
-}
-
-// Is called when new user connected to websockets
-function connect(ws, ip) {
-	var client = new Client({
-		websocket: ws,
-		ip: ip
-	});
-	_clients.set(ip, client);
 }
 
 // Is called by message from front end
@@ -132,6 +112,11 @@ function message(ip, response) {
 
 	// Define client to answer-function
 	var client = getClient(ip);
+	if (!client) {
+		console.log(`ws: message: undeclared user, ip: ${ip}`);
+		return;
+	}
+
 	// Name of handler
 	var name = json.handler;
 
@@ -140,9 +125,9 @@ function message(ip, response) {
 	if (typeof answer !== 'undefined') {
 		json.answer = function(data, callback) {
 			client.send({
+				handler: answer,
 				data: data,
-				callback: callback,
-				handler: answer
+				callback: callback
 			});
 		}
 	}
@@ -157,8 +142,18 @@ function message(ip, response) {
 	}
 	else if (_handlers.get(name)) {
 		var handler = _handlers.get(name);
+
 		handler(json);
 	}
+}
+
+// Is called when new user connected to websockets
+function connect(ws, ip) {
+	var client = new Client({
+		websocket: ws,
+		ip: ip
+	});
+	_clients.set(ip, client);
 }
 
 // Is called when any port is closing

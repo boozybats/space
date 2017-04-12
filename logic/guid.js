@@ -14,7 +14,7 @@ function GUID() {
 }
 
 function clear(id) {
-	var index = GUIDs.indexOf(key);
+	var index = GUIDs.indexOf(id);
 	if (~index) {
 		delete GUIDs[index];
 	}

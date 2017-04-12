@@ -31,7 +31,8 @@ Server.player.getId = function(callback) {
 		data: {
 			method: 'getId'
 		},
-		callback
+		callback: callback,
+		callbackLifetime: Infinity
 	});
 }
 
@@ -42,6 +43,7 @@ Server.player.continueSession = function(id, callback) {
 			method: 'continueSession',
 			id: id
 		},
-		callback
-	})
+		callback: callback,
+		callbackLifetime: Infinity
+	});
 }

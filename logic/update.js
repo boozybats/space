@@ -12,9 +12,9 @@ const callbacks = {
 	players: new Storage,
 	main: new Storage
 };
-callback.main.filter = (data => typeof data === 'function');
-callback.clients.filter = (data => typeof data === 'function');
-callback.players.filter = (data => typeof data === 'function');
+callbacks.main.filter = (data => typeof data === 'function');
+callbacks.clients.filter = (data => typeof data === 'function');
+callbacks.players.filter = (data => typeof data === 'function');
 
 /* Setup update function by frequency, all added callbacks will be called once
 per frame. Can be selected area of update:
@@ -22,9 +22,9 @@ main - call once per update
 players - call for each player every update
 This method optimizes process of updating server's data. */
 ;(function() {
-	var o_time = Date.new();
+	var o_time = Date.now();
 	setInterval(() => {
-		var n_time = Date.new();
+		var n_time = Date.now();
 		var delta = n_time - o_time;
 
 		if (callbacks.clients.numberkeyLength > 0) {
@@ -63,7 +63,7 @@ This method optimizes process of updating server's data. */
 })();
 
 function push(callback, area = 'main') {
-	var arr = callback[area];
+	var arr = callbacks[area];
 	if (!arr) {
 		return false;
 	}
@@ -74,7 +74,7 @@ function push(callback, area = 'main') {
 }
 
 function remove(index, area = 'main') {
-	var arr = callback[area];
+	var arr = callbacks[area];
 	if (!arr) {
 		return false;
 	}

@@ -53,20 +53,12 @@ class Player {
 	}
 
 	// Calls client's send-function
-	send({
-		handler,
-		data,
-		callback
-	}) {
+	send(options) {
 		if (!this.client) {
 			return;
 		}
 
-		this.client.send({
-			handler: handler,
-			data: data,
-			callback: callback
-		});
+		this.client.send(options);
 	}
 }
 

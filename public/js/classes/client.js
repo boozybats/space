@@ -14,12 +14,12 @@ class Client {
 
 	// Executes handler and remove, is called by answer
 	execHandler(key, data) {
-		if (this.isHandler(key)) {
+		if (!this.isHandler(key)) {
 			return false;
 		}
 
 		var handler = this.handlers[key];
-		handler(data);
+		handler.callback(data);
 
 		this.removeHandler(key);
 
@@ -32,7 +32,7 @@ class Client {
 
 	removeExpiredHandlers(date) {
 		for (var i = 0; i < this.handlers.length; i++) {
-			if (this.isHandler(i)) {
+			if (!this.isHandler(i)) {
 				continue;
 			}
 
@@ -60,15 +60,15 @@ class Client {
 
 	// Sets answer-callback
 	setHandler(callback, {
-		lifetime = 2000
+		lifetime = 15000
 	}) {
 		if (typeof callback !== 'function') {
-			console.log(`Client: setHandler: can not set not a function to callback, type: ${typeof callback}, value: ${callback}, lifetime: ${lifetime}`);
+			console.warn('Client: setHandler: "callback" must be a function');
 			return false;
 		}
 		else if (typeof lifetime !== 'number') {
-			console.log(`Client: setHandler: "lifetime" must be a number, now is "${typeof lifetime}" with value ${lifetime}, function: ${callback.toString()}`);
-			lifetime = 2000;
+			console.warn('Client: setHandler: "lifetime" must be a number');
+			lifetime = 15000;
 		}
 
 		var handler = new Handler({
@@ -96,6 +96,7 @@ class Handler {
 		lifetime = 0,
 		startLifetime = 0
 	}) {
+		this.callback = callback;
 		this.lifetime = lifetime;
 		this.startLifetime = startLifetime;
 	}

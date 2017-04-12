@@ -112,19 +112,35 @@ class Client {
 	send({
 		handler,
 		data,
-		callback
+		callback,
+		callbackLifetime
 	} = {}) {
-		return ws.send({
-			ip: this.ip,
+		// Data to send to front end
+		var wrap = {
 			handler: handler,
-			data: data,
-			callback: callback
-		});
+			data: data
+		};
+
+		// If needs a callback from front enmd than set answer-callback
+		if (typeof callback === 'function') {
+			wrap.answer = this.setHandler(callback, {
+				lifetime: callbackLifetime
+			});
+		}
+
+		try {
+			this.websocket.send(JSON.stringify(wrap));
+		}
+		catch (err) {
+			if (err) {
+				return false;
+			}
+		}
 	}
 
 	// Sets answer-callback
 	setHandler(callback, {
-		lifetime = 2000
+		lifetime = 15000
 	}) {
 		if (typeof callback !== 'function') {
 			console.log(`Client: setHandler: can not set not a function to callback, type: ${typeof callback}, value: ${callback}, lifetime: ${lifetime}`);
@@ -132,7 +148,7 @@ class Client {
 		}
 		else if (typeof lifetime !== 'number') {
 			console.log(`Client: setHandler: "lifetime" must be a number, now is "${typeof lifetime}" with value ${lifetime}, function: ${callback.toString()}`);
-			lifetime = 2000;
+			lifetime = 15000;
 		}
 
 		var handler = new Handler({
@@ -171,6 +187,7 @@ class Handler {
 		lifetime = 0,
 		startLifetime = 0
 	}) {
+		this.callback = callback;
 		this.lifetime = lifetime;
 		this.startLifetime = startLifetime;
 	}

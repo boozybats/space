@@ -2,18 +2,17 @@ const Storage = require('../classes/storage');
 const Client  = require('../classes/client');
 const Player  = require('../classes/player');
 const Item    = require('../classes/item');
-const update  = require('../logic/update');
 
 // Storage with all connected users
 var clients = new Storage;
-clients = (data => data instanceof Client);
+clients.filter = (data => data instanceof Client);
 /* All players connected to server with initialized "id", must be binded
 to client */
 var players = new Storage;
-players = (data => data instanceof Player);
+players.filter = (data => data instanceof Player);
 // All items, include npc
 var items = new Storage;
-items = (data => data instanceof Item);
+items.filter = (data => data instanceof Item);
 
 // Gives access to storages in global variable
 global.storages = {
@@ -48,6 +47,8 @@ require('./distribution');
 require('./holders/player');
 require('./holders/items');
 require('./holders/heavens');
+
+const update  = require('../logic/update');
 
 // Eraser of expired handlers
 update.push(function({
