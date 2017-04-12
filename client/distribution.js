@@ -1,4 +1,4 @@
-const update = require('./update');
+const update = require('../logic/update');
 const items  = require('./methods/items');
 
 const _players = global.storages.players;

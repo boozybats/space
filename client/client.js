@@ -1,7 +1,8 @@
-const Storage = require('../storage');
-const Client  = require('./classes/client');
-const Player  = require('./classes/player');
-const Item    = require('./classes/item');
+const Storage = require('../classes/storage');
+const Client  = require('../classes/client');
+const Player  = require('../classes/player');
+const Item    = require('../classes/item');
+const update  = require('../logic/update');
 
 // Storage with all connected users
 var clients = new Storage;
@@ -47,8 +48,6 @@ require('./distribution');
 require('./holders/player');
 require('./holders/items');
 require('./holders/heavens');
-
-const update = require('./update');
 
 // Eraser of expired handlers
 update.push(function({

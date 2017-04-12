@@ -1,4 +1,4 @@
-const Storage = require('../storage');
+const Storage = require('../classes/storage');
 
 const _clients = global.storages.clients;
 const _players = global.storages.players;

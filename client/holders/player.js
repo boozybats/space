@@ -1,5 +1,6 @@
 const ws     = require('../ws');
-const Player = require('../classes/player');
+const Player = require('../../classes/player');
+const guid   = require('../../logic/guid');
 
 const _players = global.storages.players;
 const _items   = global.storages.items;
@@ -15,7 +16,7 @@ ws.set('player', response => {
 
 	switch (method) {
 		case 'getId':
-		var id = GUID();
+		var id = guid.gen();
 
 		appendPlayer(id, response.ip);
 
@@ -34,21 +35,6 @@ ws.set('player', response => {
 	}
 });
 
-var GUIDs = [];
-function GUID() {
-	function path() {
-		return ((Math.random() * 9999999999).toFixed(0) - 0);
-	}
-	var key = path();
-	if (GUIDs.indexOf(key) === -1) {
-		GUIDs.push(key);
-		return key;
-	}
-	else {
-		return GUID();
-	}
-}
-
 function appendPlayer(id, ip) {
 	var player = new Player({
 		id: id
@@ -60,6 +46,7 @@ function appendPlayer(id, ip) {
 	_players.set(id, player);
 	player.onremove = function() {
 		_players.remove(id);
+		guid.clear(id);
 	}
 }
 

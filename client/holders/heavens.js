@@ -1,6 +1,6 @@
 const ws_    = require('../ws');
-const Heaven = require('../classes/heaven');
-const Player = require('../classes/player');
+const Heaven = require('../../classes/heaven');
+const Player = require('../../classes/player');
 
 const _players = global.storages.players;
 const _items   = global.storages.items;

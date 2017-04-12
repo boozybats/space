@@ -36,7 +36,7 @@ class Heaven extends Item {
 
 module.exports = Heaven;
 
-const generator = require('./generator');
+const generator = require('../logic/generator');
 const Body      = require('./body');
 const Physic    = require('./physic');
 const Matter    = require('./matter');

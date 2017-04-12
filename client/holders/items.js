@@ -1,5 +1,5 @@
 const ws_  = require('../ws');
-const Item = require('../classes/item');
+const Item = require('../../classes/item');
 
 const _items = global.storages.items;
 

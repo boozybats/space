@@ -1,7 +1,3 @@
-const Quaternion = require('./quaternion');
-const Vector     = require('./vector');
-const Vec3       = Vector.Vec3;
-
 class Body {
 	constructor({
 		position = new Vec3,
@@ -74,3 +70,7 @@ class Body {
 }
 
 module.exports = Body;
+
+const Quaternion = require('./quaternion');
+const Vector     = require('./vector');
+const Vec3       = Vector.Vec3;

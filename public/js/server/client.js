@@ -2,62 +2,24 @@
  * User's connection to websocket.
  */
 class Client {
-	constructor({
-		ip,
-		websocket
-	} = {}) {
-		this.ip = ip;
-		this.websocket = websocket;
-
-		// Handlers is storage for ANSWER-callbacks by front end
+	constructor({} = {}) {
+		// Handlers is storage for ANSWER-callbacks by server
 		this.handlers = [];
 
 		/* Free handlers array contains numbers of empty array-positions,
 		it needs for optimization: handlers array will not be inifnite big,
 		freehandlers will fill empty key-positions */
 		this.freehandlers = [];
-
-		// If websocket closed than remove client
-		var self = this;
-		var handler = ws.addEvent('close', ip => {
-			ws.removeEvent('close', handler);
-
-			if (ip === self.ip) {
-				self.remove();
-			}
-		});
 	}
 
-	get ip() {
-		return this.ip_;
-	}
-	set ip(val) {
-		if (typeof val !== 'string') {
-			val = '0.0.0.0';
-		}
-
-		this.ip_ = val;
-	}
-
-	get websocket() {
-		return this.websocket_;
-	}
-	set websocket(val) {
-		if (typeof val !== 'object') {
-			console.log(`Client: websocket: wrong websocket, ip: ${this.ip}, type: ${typeof val}`);
-		}
-
-		this.websocket_ = val;
-	}
-
-	// Executes handler and remove, is called by answer.
+	// Executes handler and remove, is called by answer
 	execHandler(key, data) {
-		if (!this.isHandler(key)) {
+		if (this.isHandler(key)) {
 			return false;
 		}
 
 		var handler = this.handlers[key];
-		handler.callback(data);
+		handler(data);
 
 		this.removeHandler(key);
 
@@ -68,29 +30,9 @@ class Client {
 		return (this.handlers[key] instanceof Handler);
 	}
 
-	get player() {
-		return this.player_;
-	}
-
-	set player(val) {
-		if (!val || val instanceof Player) {
-			this.player_ = val;
-		}
-	}
-
-	remove() {
-		if (typeof this.onremove === 'function') {
-			this.onremove();
-		}
-
-		if (this.player) {
-			this.player.remove();
-		}
-	}
-
 	removeExpiredHandlers(date) {
 		for (var i = 0; i < this.handlers.length; i++) {
-			if (!this.isHandler(i)) {
+			if (this.isHandler(i)) {
 				continue;
 			}
 
@@ -107,7 +49,6 @@ class Client {
 
 	removeHandler(key) {
 		if (!this.isHandler(key)) {
-			console.log(`Client: removeHandler: can not delete nonexistent handler, key: ${key}, value: ${this.handlers[key]}`);
 			return false;
 		}
 
@@ -115,21 +56,6 @@ class Client {
 		this.freehandlers.push(key);
 
 		return true;
-	}
-
-	/* Completes "send"-function from websocket-script, but automaticly
-	sends "ip" */
-	send({
-		handler,
-		data,
-		callback
-	} = {}) {
-		return ws.send({
-			ip: this.ip,
-			handler: handler,
-			data: data,
-			callback: callback
-		});
 	}
 
 	// Sets answer-callback
@@ -160,17 +86,6 @@ class Client {
 		}
 
 		return index;
-	}
-
-	// Binds player to client
-	setPlayer(player) {
-		if (!(player instanceof Player)) {
-			console.log(`Client: setPlayer: "player" must be a Player class, type ${typeof player}, value: ${player}`);
-			return;
-		}
-
-		this.player = player;
-		player.client = this;
 	}
 }
 
@@ -218,8 +133,3 @@ class Handler {
 		this.startLifetime_ = val;
 	}
 }
-
-module.exports = Client;
-
-const ws     = require('../ws');
-const Player = require('./player');

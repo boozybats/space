@@ -1,6 +1,7 @@
-const Storage = require('../storage');
 const ws_     = require('ws');
 const ip_     = require('ip');
+const Storage = require('../classes/storage');
+const Client  = require('../classes/client');
 
 const _listener = 5611;
 const _clients = global.storages.clients;
@@ -64,7 +65,8 @@ function send({
 	ip,
 	handler,
 	data,
-	callback
+	callback,
+	callback_lifetime
 } = {}) {
 	var client = getClient(ip);
 	if (!client) {
@@ -79,7 +81,9 @@ function send({
 
 	// If needs a callback from front enmd than set answer-callback
 	if (typeof callback === 'function') {
-		wrap.answer = client.setHandler(callback);
+		wrap.answer = client.setHandler(callback, {
+			lifetime: callback_lifetime
+		});
 	}
 
 	try {
@@ -159,6 +163,7 @@ function message(ip, response) {
 
 // Is called when any port is closing
 function close(ip) {
+	getClient(ip).remove();
 	_clients.remove(ip);
 
 	events.close.each(event => {
@@ -212,5 +217,3 @@ var exp = {
 };
 
 module.exports = exp;
-
-const Client  = require('./classes/client');

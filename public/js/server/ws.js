@@ -36,7 +36,8 @@ const ws = {
 	send: function(options = {
 		handler,
 		data,
-		callback
+		callback,
+		callback_lifetime
 	}) {
 		// Send message later when websocket will be loaded
 		if (!ws.ready) {
@@ -61,7 +62,9 @@ const ws = {
 		// If needs a callback from server than set answer-callback
 		var callback = options.callback;
 		if (typeof callback === 'function') {
-			wrap.answer = ws.client.setHandler(callback);
+			wrap.answer = ws.client.setHandler(callback, {
+				lifetime: callback_lifetime
+			});
 		}
 
 		try {

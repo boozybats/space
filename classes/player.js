@@ -1,6 +1,3 @@
-const Storage = require('../../storage');
-const Heaven  = require('./heaven');
-
 class Player {
 	constructor({
 		id
@@ -75,4 +72,6 @@ class Player {
 
 module.exports = Player;
 
+const Storage  = require('./storage');
+const Heaven   = require('./heaven');
 const Client   = require('./client');

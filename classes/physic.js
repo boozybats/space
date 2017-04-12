@@ -1,5 +1,3 @@
-const Matter = require('./matter');
-
 class Physic {
 	constructor({
 		matter
@@ -23,3 +21,5 @@ class Physic {
 }
 
 module.exports = Physic;
+
+const Matter = require('./matter');
