@@ -1,30 +1,44 @@
-const Storage = require('../../Storage');
-
 /**
  * User's connection to websocket.
  */
 class Client {
 	constructor({
-		websocket,
-		ip
+		ip,
+		websocket
 	} = {}) {
 		this.ip = ip;
 		this.websocket = websocket;
 
 		// Handlers is storage for ANSWER-callbacks by front end
-		var handlers = new Storage;
-		handlers.filter = function(data) {
-			return (typeof data === 'function');
-		}
-		this.handlers_ = handlers;
+		this.handlers = [];
+
+		/* Free handlers array contains numbers of empty array-positions,
+		it needs for optimization: handlers array will not be inifnite big,
+		freehandlers will fill empty key-positions */
+		this.freehandlers = [];
 
 		// If websocket closed than remove client
 		var self = this;
-		ws.addEvent('close', ip => {
+		var handler = ws.addEvent('close', ip => {
+			ws.removeEvent('close', handler);
+
 			if (ip === self.ip) {
 				self.remove();
 			}
 		});
+
+		this.anonymousfunction = function() {};
+	}
+
+	get ip() {
+		return this.ip_;
+	}
+	set ip(val) {
+		if (typeof val !== 'string') {
+			val = '0.0.0.0';
+		}
+
+		this.ip_ = val;
 	}
 
 	get websocket() {
@@ -32,33 +46,28 @@ class Client {
 	}
 	set websocket(val) {
 		if (typeof val !== 'object') {
-			var ip = this.ip;
-			console.warn(`Wrong websocket, ip: ${ip}, type: ${typeof val}`);
+			console.warn(`Wrong websocket, ip: ${this.ip}, type: ${typeof val}`);
 		}
 
 		this.websocket_ = val;
 	}
 
 	// Executes handler and remove, is called by answer.
-	execHandler(name, data) {
-		var handler = this.handlers.get(name);
+	execHandler(key, data) {
+		var handler = this.handlers.get(key);
 		if (!handler) {
 			return false;
 		}
 
 		handler(data);
 
-		this.removeHandler(name);
+		this.removeHandler(key);
 
 		return true;
 	}
 
-	get handlers() {
-		return this.handlers_;
-	}
-
-	isHandler(name) {
-		return !!this.handlers.get(name);
+	isHandler(key) {
+		return (typeof this.handlers[key] !== 'undefined');
 	}
 
 	get player() {
@@ -72,17 +81,24 @@ class Client {
 	}
 
 	remove() {
-		if (this.player) {
-			this.player.remove();
-		}
-
 		if (typeof this.onremove === 'function') {
 			this.onremove();
 		}
+
+		if (this.player) {
+			this.player.remove();
+		}
 	}
 
-	removeHandler(name) {
-		return this.handler.remove(name);
+	removeHandler(key) {
+		if (typeof this.handlers[key] !== 'function') {
+			return false;
+		}
+
+		this.handlers[key] = this.anonymousfunction;
+		this.freehandlers.push(key);
+
+		return true;
 	}
 
 	/* Completes "send"-function from websocket-script, but automaticly
@@ -101,8 +117,21 @@ class Client {
 	}
 
 	// Sets answer-callback
-	setHandler(name, callback) {
-		return this.handlers.set(name, callback);
+	setHandler(callback) {
+		if (typeof callback !== 'function') {
+			return false;
+		}
+
+		var index = this.freehandlers[0];
+		if (typeof index === 'number') {
+			this.handlers[index] = callback;
+			this.freehandlers.splice(0, 1);
+		}
+		else {
+			index = this.handlers.push(callback) - 1;
+		}
+
+		return index;
 	}
 
 	// Binds player to client

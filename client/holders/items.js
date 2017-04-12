@@ -18,19 +18,5 @@ ws_.set('items', response => {
 	}
 
 	switch (method) {
-		case 'setData':
-		var id = data.id
-
-		var item = _items.find(function(item) {
-			if (item.id === id) {
-				return true;
-			}
-		})[0];
-
-		if (item) {
-			item.uptodate(data.item);
-		}
-
-		break;
 	}
 });

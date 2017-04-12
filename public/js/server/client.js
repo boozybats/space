@@ -3,7 +3,7 @@
  */
 class Client {
 	constructor({} = {}) {
-		// Handlers is storage for ANSWER-callbacks by front end
+		// Handlers is storage for ANSWER-callbacks by server
 		this.handlers = [];
 
 		/* Free handlers array contains numbers of empty array-positions,

@@ -47,12 +47,12 @@ class Player {
 	}
 
 	remove() {
+		this.onremove();
+
 		var heaven = this.items.get('heaven');
 		if (heaven instanceof Heaven) {
 			heaven.remove();
 		}
-
-		this.onremove();
 	}
 
 	// Calls client's send-function

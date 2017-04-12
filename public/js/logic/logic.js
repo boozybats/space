@@ -19,7 +19,6 @@ class Logic {
 	}
 
 	updateItems(data) {
-		return;
 		if (typeof data !== 'object') {
 			return;
 		}

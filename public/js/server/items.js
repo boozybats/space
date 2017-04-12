@@ -1,5 +1,5 @@
 Server.items.getAll = function(callback) {
-	if (!Server.id) {
+	if (typeof Server.id !== 'number') {
 		return;
 	}
 

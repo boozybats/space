@@ -29,11 +29,11 @@ global.storages = {
  */
 global.verification = function(id, ip) {
 	var player = players.get(id);
-	if (!player) {
+	if (!player || !player.client) {
 		return false;
 	}
 
-	var pip = player.ip;
+	var pip = player.client.ip;
 
 	return pip === ip;
 }

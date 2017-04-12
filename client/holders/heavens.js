@@ -41,7 +41,7 @@ ws_.set('heavens', response => {
 		var heaven = new Heaven({
 			id
 		});
-		player.items.heaven = heaven;
+		player.items.set('heaven', heaven);
 
 		heaven.generateData(0);
 		heaven.onremove = function() {

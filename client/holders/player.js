@@ -17,14 +17,7 @@ ws.set('player', response => {
 		case 'getId':
 		var id = GUID();
 
-		var player = new Player({
-			id: id
-		});
-
-		var client = ws.getClient(response.ip);
-		client.setPlayer(player);
-
-		appendPlayer(id, player);
+		appendPlayer(id, response.ip);
 
 		response.answer(id);
 
@@ -33,14 +26,7 @@ ws.set('player', response => {
 		case 'continueSession':	
 		var id = data.id;
 
-		var result;
-		var player = _players.get(id);
-		if (player && player.client) {
-			result = player.client.ip === response.ip;
-		}
-		else {
-			result = false;
-		}
+		var result = getPlayer(id, response.ip);
 
 		response.answer(result);
 
@@ -63,12 +49,32 @@ function GUID() {
 	}
 }
 
-function appendPlayer(id, player) {
+function appendPlayer(id, ip) {
+	var player = new Player({
+		id: id
+	});
+
+	var client = ws.getClient(ip);
+	client.setPlayer(player);
+
 	_players.set(id, player);
 	player.onremove = function() {
-		var handler = _players.remove(id);
-		ws.removeEvent(handler);
+		_players.remove(id);
 	}
+}
+
+function getPlayer(id, ip) {
+	var result;
+
+	var player = _players.get(id);
+	if (player && player.client) {
+		result = (player.client.ip === ip);
+	}
+	else {
+		result = false;
+	}
+
+	return result;
 }
 
 function getItemsData() {

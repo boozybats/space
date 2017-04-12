@@ -123,8 +123,9 @@ ws.socket.onmessage = function(response) {
 		if (ws.client.isHandler(name)) {
 			ws.client.execHandler(name, json);
 		}
-		else if (ws.handlers[name]) {
-			ws.handlers[name](json);
+		else if (ws.handlers.get(name)) {
+			var handler = ws.handlers.get(name);
+			handler(json);
 		}
 	}
 }

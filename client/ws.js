@@ -67,17 +67,21 @@ function send({
 	data,
 	callback
 } = {}) {
-	var client = _clients.get(ip);
-	if (typeof handler !== 'string' || !client) {
+	var client = getClient(ip);
+	if (!client) {
 		return;
 	}
 
+	// Data to send to front end
 	var wrap = {
 		handler: handler,
 		data: data
 	};
 
-	client.setHandler(`${handler}-answer`, callback);
+	// If needs a callback from front enmd than set answer-callback
+	if (typeof callback === 'function') {
+		wrap.answer = client.setHandler(callback);
+	}
 
 	try {
 		client.websocket.send(JSON.stringify(wrap));
@@ -120,18 +124,27 @@ function message(ip, response) {
 		return;
 	}
 
-	var name = json.handler;
-
+	// Add to data in callbacks ip (needs sometime)
 	json.ip = ip;
 
+	// Define client to answer-function
+	var client = getClient(ip);
+	// Name of handler
+	var name = json.handler;
+
 	// Sends back a request to front end
-	json.answer = function(data, callback) {
-		send({
-			ip: ip,
-			data: data,
-			callback: callback,
-			handler: `${name}-answer`
-		});
+	var answer = json.answer;
+	if (typeof answer !== 'undefined') {
+		json.answer = function(data, callback) {
+			client.send({
+				data: data,
+				callback: callback,
+				handler: answer
+			});
+		}
+	}
+	else {
+		json.answer = function() {};
 	}
 
 	// Defines is it answer or regular handler
@@ -149,12 +162,9 @@ function message(ip, response) {
 function close(ip) {
 	_clients.remove(ip);
 
-	for (var i = events.close.length; i--;) {
-		var event = events.close[i];
-		if (typeof event === 'function') {
-			event();
-		}
-	}
+	events.close.each(event => {
+		event(ip);
+	});
 }
 
 // Websocket's events, ex: 'close', 'connect', ...
@@ -172,7 +182,7 @@ function addEvent(handler, callback) {
 		return;
 	}
 
-	var index = event.push(callback);
+	var index = event.push(callback) - 1;
 
 	return index;
 }

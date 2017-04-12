@@ -1,5 +1,5 @@
 Server.heavens.getData = function(callback) {
-	if (!Server.id) {
+	if (typeof Server.id !== 'number') {
 		return;
 	}
 
