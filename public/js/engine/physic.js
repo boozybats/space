@@ -97,7 +97,7 @@ class Phys {
 	 * @param {number} V1 Start volume
 	 * @return {number} R
 	 */
-	static layer_height(V0, V1 = 0) {
+	static layerHeight(V0, V1 = 0) {
 		var V = V0 + V1;
 		var R = Math.pow(V / (4/3 * Math.PI), 1/3);
 		var R1 = Math.pow(V1 / (4/3 * Math.PI), 1/3);
@@ -113,7 +113,7 @@ class Phys {
 	 * @param {number} R Start radius
 	 * @return {number} V
 	 */
-	static layer_volume(h, R = 0) {
+	static layerVolume(h, R = 0) {
 		var l = R + h;
 		var V = 4/3 * Math.PI * Math.pow(l, 3);
 		var V1 = 4/3 * Math.PI * Math.pow(R, 3);
@@ -163,7 +163,9 @@ class Phys {
 /**
  * Physic of object, generates diameter, pressure, temperature
  * and e.t.c by matter. Contains info about velocity, acceleration,
- * gravity power, ...
+ * gravity power, etc.
+ * Physic must have a matter because all parameters calculated relative
+ * on this.
  *
  * D - diameter
  * F - force
@@ -188,53 +190,36 @@ class Phys {
 
 class Physic {
 	constructor({
-		matter,
-		velocity = new Vec3
+		matter = new Matter
 	} = {}) {
-		this.velocity = velocity;
-		this.init_matter(matter);
-	}
+		this.matter = matter;
 
-	get body() {
-		return this.body_;
-	}
-	set body(val) {
-		if (!(val instanceof Body)) {
-			throw new Error('Physic: body: must be a Body');
-		}
-
-		this.body_ = val;
+		/** @private */
+		this.pureVolume = this.matter.volume;
+		this.diameter = this.matter.diameter;
+		this.mass = this.MassTotal();
 	}
 
 	get color() {
-		return this.matter.color_;
+		return this.matter.color;
 	}
 
 	get diameter() {
 		return this.diameter_;
 	}
 	set diameter(val) {
-		if (typeof val === 'number') {
-			this.diameter_ = val;
-			this.maxspeed = val * 0.4;
+		if (val && typeof val !== 'number') {
+			throw new Error('Physic: diameter: must be a number');
 		}
-	}
 
-	Diameter() {
-		var out = 0;
-
-		this.matter.each_layer(layer => {
-			out += layer.height;
-		});
-		out *= 2;
-
-		return out;
+		this.diameter_ = val;
+		this.maxspeed_ = val * 0.4;
 	}
 
 	Density(R) {
 		var out = 0;
 
-		this.matter.each_layer((layer, radius) => {
+		this.matter.each((layer, radius) => {
 			if (radius >= R) {
 				out = layer.density;
 				return false;
@@ -242,15 +227,6 @@ class Physic {
 		});
 
 		return out;
-	}
-
-	init_matter(matter) {
-		this.matter = new Matter(matter);
-
-		/** private */
-		this.pure_volume = this.matter.volume;
-		this.diameter = this.Diameter();
-		this.mass = this.MassTotal();
 	}
 
 	get lastLayer() {
@@ -275,7 +251,7 @@ class Physic {
 		var out = 0;
 
 		var self = this;
-		this.matter.each_layer((layer, radius) => {
+		this.matter.each((layer, radius) => {
 			if (radius >= R) {
 				var m0 = (radius - R) / layer.height * layer.mass;
 				var sibling = self.matter.nextSibling(layer);
@@ -291,7 +267,7 @@ class Physic {
 	MassTotal(R = Infinity) {
 		var out = 0;
 
-		this.matter.each_layer((layer, radius) => {
+		this.matter.each((layer, radius) => {
 			if (radius >= R) {
 				var approx = (R - layer.radius) / layer.height * layer.mass;
 				out += approx;
@@ -305,27 +281,26 @@ class Physic {
 		return out;
 	}
 
-	get maxspeed() {
-		return this.maxspeed_;  // in second
+	get matter() {
+		return this.matter_;
 	}
-	set maxspeed(val) {
-		if (typeof val === 'number') {
-			this.maxspeed_ = val;
+	set matter(val) {
+		if (!(val instanceof Matter)) {
+			throw new Error('Physic: matter: must be a Matter');
 		}
+
+		this.matter_ = val;
 	}
 
-	onupdate({
-		deltaTime
-	}) {
-		var velocity = this.velocity.multi(deltaTime);
-		this.body.position = Vec.sum(this.body.position, velocity);
+	get maxspeed() {
+		return this.maxspeed_;  // in second
 	}
 
 	Pressure(R) {
 		var out = 0;
 
 		var self = this;
-		this.matter.each_layer((layer, radius) => {
+		this.matter.each((layer, radius) => {
 			if (radius >= R) {
 				out = G * (self.MassTotal(R) * self.Density(R) / Math.pow(R, 2));
 				return false;
@@ -349,17 +324,6 @@ class Physic {
 		return out;
 	}
 
-	get velocity() {
-		return this.velocity_;
-	}
-	set velocity(val) {
-		if (!(val instanceof Vec3)) {
-			throw new Error('Physic: velocity: must be a Vec3');
-		}
-
-		this.velocity_ = val;
-	}
-
 	get volume() {
 		return this.pure_volume;
 	}
@@ -367,7 +331,7 @@ class Physic {
 	VolumeTotal(R = Infinity) {
 		var out = 0;
 
-		this.matter.each_layer((layer, radius) => {
+		this.matter.each((layer, radius) => {
 			out += layer.volume;
 			if (radius >= R) {
 				return false;
@@ -378,79 +342,175 @@ class Physic {
 	}
 }
 
+/**
+ * Matter creates layers by substances added or removed from it.
+ * @constructor
+ */
+
 class Matter {
-	constructor(matter) {
+	constructor(substances) {
+		if (typeof substances !== 'object') {
+			throw new Error('Matter: "substances" must be an object');
+		}
+
 		this.volume_ = 0;
 		this.layers_ = [];
-		this.substances_ = [];
-		this.matter = matter;
 
-		if (matter) {
-			for (var i in matter) {
-				if (matter.hasOwnProperty(i)) {
-					this.add_substance(i, matter[i]);
-				}
-			}
+		var subs = new Storage;
+		subs.filter = (data => typeof data === 'number');
+		this.substances = subs;
 
-			this.update_layers();
+		this.addSubstances(substances);
+	}
+
+	/**
+	 * Add a single substance to matter by name and volume. Usualy are called
+	 * by "addSubstances".
+	 * @param {String} name
+	 * @param {Number} volume
+	 */
+	addSubstance(name, volume) {
+		var periodic = PeriodicTable[name];
+		if (!periodic) {
+			return false;
 		}
-	}
 
-	add_substance(name, volume) {
-		if (PeriodicTable[name]) {
-			this.volume_ += volume;
-			
-			var item = {
-				name: name,
-				volume: volume
-			};
-			this.substances_.push(item);
+		this.volume_ += volume;
 
-			return item;
+		var o_volume = this.substances.get(name);
+		if (typeof o_volume === 'undefined') {
+			this.substances.set(name, volume);
 		}
+		else {
+			this.substances.set(name, o_volume + volume);
+		}
+
+		return true;
 	}
 
-	compare(matter) {
-		var result = true;
+	/**
+	 * Adds substances to matter and then calls "updateLayers".
+	 * @param {Object} substances
+	 */
+	addSubstances(substances) {
+		if (typeof substances !== 'object') {
+			throw new Error('Matter: "substances" must be an object');
+		}
 
-		var oldmatter = this.matter;
-		Object.keys(oldmatter).concat(Object.keys(matter)).forEach((a) => {
-			if (matter[a] !== oldmatter[a]) {
-				result = false;
+		for (var i in substances) {
+			if (substances.hasOwnProperty(i)) {
+				this.addSubstance(i, substances[i]);
 			}
-		});
+		}
 
-		return result;
+		this.updateLayers();
+		this.defineParameters();
 	}
 
-	each_layer(callback) {
-		var layers = this.layers_;
-		for (var layer of this.layers_) {
+	get color() {
+		return this.color_;
+	}
+
+	/**
+	 * Sets important parameters.
+	 */
+	defineParameters() {
+		var last = this.lastLayer;
+
+		if (!last) {
+			throw new Error('Matter: defineParameters: layers for matter are not defined');
+		}
+
+		var substance = last.substances[last.substances.length - 1];
+
+		this.color_ = PeriodicTable[substance].color;
+
+		this.radius_ = last.radius + last.height;
+		this.diameter_ = this.radius * 2;
+	}
+
+	get diameter() {
+		return this.diameter_;
+	}
+
+	/**
+	 * Goes through all layers and sends to callback a layer and layer's radius,
+	 * if callback returns false then stops cycling.
+	 * @param  {Function} callback
+	 */
+	each(callback) {
+		if (typeof callback !== 'function') {
+			console.warn('Matter: each: "callback" must be a function');
+			return;
+		}
+
+		var layers = this.layers;
+		for (var i = 0; i < layers.length; i++) {
+			var layer = layers[i];
+
 			var radius = layer.radius + layer.height;
-			var res = callback(layer, radius);
+			var result = callback(layer, radius);
 
-			if (res === false) {
+			if (result === false) {
 				break;
 			}
 		}
 	}
 
-	get last_layer() {
-		var out = this.layers_[this.layers_.length - 1];
+	/**
+	 * Returns sorted array of substances by density in decreasing order.
+	 * @return {Array}
+	 */
+	getSortedSubstances() {
+		var out = [];
+
+		var substances = this.substances;
+		substances.each((volume, name) => {
+			var item = {
+				name: name,
+				volume: volume
+			};
+
+			out.push(item);
+		});
+
+		out.sort(function(a, b) {
+			if (PeriodicTable[a.name].p < PeriodicTable[b.name].p) {
+				return 1;
+			}
+			else {
+				return -1;
+			}
+		});
 
 		return out;
+	}
+
+	get lastLayer() {
+		return this.layers[this.layers.length - 1];
 	}
 
 	get layers() {
 		return this.layers_;
 	}
 
-	get layer_height() {
-		var R = Phys.layer_height(this.volume_);
+	/**
+	 * How much height will be a one layer if layers count must be
+	 * "lAYERS_COUNT" for matter's volume.
+	 * @return {Number}
+	 */
+	layerHeight() {
+		var R = Phys.layerHeight(this.volume);
 		var out = R / LAYERS_COUNT;
+
 		return out;
 	}
 
+	/**
+	 * Returns next layer.
+	 * @param  {Object} layer
+	 * @return {Object}
+	 */
 	nextSibling(layer) {
 		var out;
 		var radius = layer.radius;
@@ -470,97 +530,119 @@ class Matter {
 		return out;
 	}
 
-	get sorted_substances() {
-		var out = [];
-
-		var substances = this.substances_;
-		for (var substance of substances) {
-			var name = substance.name;
-			var volume = substance.volume;
-
-			var item = {
-				name: name,
-				volume: volume
-			};
-
-			out.push(item);
-		}
-
-		out.sort(function(a, b) {
-			if (PeriodicTable[a.name].p > PeriodicTable[b.name].p) {
-				return -1;
-			}
-			else {
-				return 1;
-			}
-		});
-
-		return out;
+	get radius() {
+		return this.radius_;
 	}
 
-	update_layers() {
+	/**
+	 * Sets layers by substances added or removed from matter.
+	 * @method
+	 */
+	updateLayers() {
 		var layers = [];
-		var height = this.layer_height;
-		var arr = this.sorted_substances;
+		var height = this.layerHeight;
+		var substances = this.getSortedSubstances();
+
+		// Sum all masses and define to matter
+		var all_mass = 0;
 
 		var self = this;
 		;(function core(R = 0, index = 0) {
-			var substance = arr[index];
-			if (substance) {
-				var Vs = substance.volume;
-				var density = PeriodicTable[substance.name].p;
+			var substance = substances[index];
+			if (!substance) {
+				return;
+			}
 
-				var residue;
-				var last = layers[layers.length - 1];
-				if (last && last.max_V > last.volume) {
-					var V = last.max_V - last.volume;
-					residue = Vs - V;
-					var volume = residue >= 0 ? V : V + residue;
-					var p = (last.density + density) / 2;
+			// Current substance volume and density
+			var Vs = substance.volume;
+			var p = PeriodicTable[substance.name].p;
 
-					last.substances.push(substance.name);
-					last.volume += volume;
-					last.mass += Phys.mass(density, volume);
-					last.density = p;
+			// Last instantiated layer from all layers
+			var last = layers[layers.length - 1];
+			var residue;
+
+			/* If last layer haven't filled fully or layer doesn't exist
+			than fill it with new substance */
+			if (last && last.maxVolume > last.volume) {
+				// Unfilled volume of layer
+				var Vr = last.maxVolume - last.volume;
+
+				// How much substance will remain if fill layer
+				residue = Vs - Vr;
+
+				/* Layer volume after filling it with substance, if residue
+				bigger than 0 then layer's volume takes maximum value. */
+				var V = residue >= 0 ? Vr : Vr + residue;
+
+				// Add new substance to layer's matter
+				last.substances.push(substance.name);
+
+				// Average density of layer
+				var avgP = 0;
+				var substances = last.substances;
+				for (var i = 0; i < substances.length; i++) {
+					avgP += PeriodicTable(substances[i]).p;
 				}
-				else {
-					var V = Phys.layer_volume(self.layer_height, R);
-					residue = Vs - V;
-					var volume = residue >= 0 ? V : V + residue;
+				avgP /= substances.length;
+				last.density = avgP;
 
-					var layer = {
-						substances: [substance.name],
-						max_V: V,
-						volume: volume,
-						mass: Phys.mass(density, volume),
-						density: density,
-						radius: R,
-						height: height
-					};
+				// Add volume and mass to last layer
+				last.volume += V;
+				var mass = Phys.mass(p, Vs);
+				last.mass += mass;
+				all_mass += mass;
+			}
+			// If layers count is 0 or last layer is full
+			else {
+				// Maximum volume for layer with radius "R"
+				var maxV = Phys.layerVolume(self.layerHeight(), R);
 
-					layers.push(layer);
-				}
+				// How much substance will remain if fill layer
+				residue = Vs - maxV;
 
-				if (residue > 0) {
-					substance.volume = residue;
+				/* Layer volume after filling it with substance, if residue
+				bigger than 0 then layer's volume takes maximum value. */
+				var V = residue >= 0 ? maxV : maxV + residue;
+
+				// Define mass and substances matter for layer
+				var mass = Phys.mass(p, Vs);
+				all_mass += mass;
+				var substances = [substance.name];
+
+				// Make the layer and add to matter
+				var layer = {
+					substances: substances,
+					maxVolume: maxV,
+					volume: V,
+					mass: mass,
+					density: p,
+					radius: R,
+					height: height
+				};
+				layers.push(layer);
+			}
+
+			// If the substance remains then change volume value
+			if (residue > 0) {
+				substance.volume = residue;
+				R += height;
+			}
+			// If substance has filled all layer then change on next
+			else {
+				substance.volume = 0;
+				index++;
+
+				/* If substance has filles a layer and this layer is full
+				then go to next layer */
+				if (residue == 0) {
 					R += height;
 				}
-				else {
-					substance.volume = 0;
-					index++;
-					if (residue == 0) {
-						R += height;
-					}
-				}
-				core(R, index);
 			}
+
+			core(R, index);
 		})();
 
 		this.layers_ = layers;
-		
-		var layer = this.last_layer;
-		var substance = layer.substances[layer.substances.length - 1];
-		this.color_ = PeriodicTable[substance].color;
 	}
 
 	get volume() {

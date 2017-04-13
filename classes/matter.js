@@ -39,24 +39,28 @@ var PeriodicTable = {
 
 class Matter {
 	constructor(matter) {
-		var n_matter = {};
+		this.data = {};
 
-		if (typeof matter === 'object') {
-			for (var i in matter) {
-				if (!matter.hasOwnProperty(i)) {
-					continue;
-				}
-
-				if (this.addSubstance(i, matter[i])) {
-					n_matter[i] = matter[i];
-				}
-			}
-		}
-
-		this.data = n_matter;
+		this.initialize(matter);
 	}
 
-	addSubstance(name, volume) {
+	initialize(matter) {
+		if (typeof matter !== 'object') {
+			return;
+		}
+
+		for (var i in matter) {
+			if (!matter.hasOwnProperty(i)) {
+				continue;
+			}
+
+			if (this.isSubstance(i, matter[i])) {
+				this.data[i] = matter[i];
+			}
+		}
+	}
+
+	isSubstance(name, volume) {
 		if (PeriodicTable[name]) {
 			return true;
 		}

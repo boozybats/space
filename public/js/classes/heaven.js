@@ -20,7 +20,7 @@ class Heaven extends Sphere {
 			physic,
 			mesh,
 			collider,
-			precision: 1
+			precision: 3
 		});
 
 		this.me = me;
@@ -95,37 +95,6 @@ class Heaven extends Sphere {
 		var _private = this.private;
 		var _public  = this.public;
 
-		var oldD = _private.D || 0,
-			curD = this.physic.diameter;
-		if (oldD != curD) {
-			_private.D = curD;
-			_private.sizeint = (curD - oldD) / 20;
-		}
-
-		var sizeint = _private.sizeint;
-		if (sizeint) {
-			var body = this.body;
-			var scale = amc('+', this.body.scale, sizeint);
-			body.scale = scale;
-
-			if (sizeint > 0) {
-				if (body.scale.x >= curD || body.scale.y >= curD || body.scale.z >= curD) {
-					_private.sizeint = 0;
-				}
-			}
-			else {
-				if (body.scale.x <= curD || body.scale.y <= curD || body.scale.z <= curD) {
-					_private.sizeint = 0;
-				}
-			}
-		}
-
-		var oldcol = _private.color,
-			curcol = this.physic.color;
-		if (oldcol !== curcol) {
-			_private.color = curcol;
-		}
-
 		if (this.mouseControl) {
 			var mouse = this.mouseControl;
 
@@ -150,24 +119,6 @@ class Heaven extends Sphere {
 			var z = body.scale.z * -6;
 
 			cam.position = new Vec3(body.position.xy, z);
-		}
-
-		if (this.me) {
-			// does data has been changed since last update?
-			var isChanged = false;
-
-			var oldbody = _private.body;
-			if (!oldbody || !amc('=', oldbody.position, this.body.position)) {
-				isChanged = true;
-
-				_private.body = {
-					position: this.body.position
-				};
-			}
-
-			if (isChanged) {
-				this.updateOnServer();
-			}
 		}
 	}
 
@@ -267,19 +218,52 @@ class Heaven extends Sphere {
 		return out;
 	}
 
-	updateOnServer() {
-		if (!this.id) {
-			if (Server.id) {
-				this.id = Server.id;
+	uptodate(data) {
+		if (typeof data !== 'object') {
+			return;
+		}
+
+		if (typeof data.body === 'object') {
+			var pos = data.body.position,
+				rot = data.body.rotation,
+				sca = data.body.scale;
+
+			if (typeof pos !== 'object' ||
+				typeof rot !== 'object' ||
+				typeof sca !== 'object') {
+				console.warn('Heaven: uptodate: "body" bad request from server');
+				return;
+			}
+
+			if (this.body) {
+				this.body.position = new Vec3(pos[0], pos[1], pos[2]);
+				this.body.rotation = new Quaternion(rot[0], rot[1], rot[2], rot[3]);
+				this.body.scale = new Vec3(sca[0], sca[1], sca[2]);
 			}
 			else {
-				throw new Error('Forsaken ID');
+				this.body = new Body({
+					position: new Vec3(pos[0], pos[1], pos[2]),
+					rotation: new Quaternion(rot[0], rot[1], rot[2], rot[3])
+					//scale: new Vec3(sca[0], sca[1], sca[2])
+				});
 			}
 		}
 
-		Server.items.setData(this.toJSON());
-	}
+		if (typeof data.physic === 'object') {
+			var matter = data.physic.matter;
 
-	uptodate(data) {
+			if (typeof matter !== 'object') {
+				console.warn('Heaven: uptodate: "physic" bad request from server');
+				return;
+			}
+
+			if (this.physic) {
+			}
+			else {
+				this.physic = new Physic({
+					matter: data.physic.matter
+				});
+			}
+		}
 	}
 }

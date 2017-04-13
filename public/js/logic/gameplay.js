@@ -45,9 +45,7 @@ function gameplay(images) {
 		me: true,
 		mouseControl: cursor
 	});
-	me.instance(scene, true);
-
-	me.rotate(new Vec3(0, 0.5));
+	me.instance(scene);
 
 	// scaling after instantiation because need to determine diameter
 	me.body.scale = amc('+', new Vec3, me.physic.diameter);

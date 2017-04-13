@@ -14,10 +14,11 @@ class Heaven extends Item {
 	 * @param  {Number} lvl Item's level
 	 */
 	generateData(lvl) {
+		var volume = generator.playerVolume(lvl);
 		this.physic = new Physic({
-			matter: new Matter({
-				Fe: generator.playerSize(lvl)
-			})
+			matter: {
+				Fe: volume
+			}
 		});
 
 		var arr = generator.playerPosition(lvl);
@@ -39,6 +40,5 @@ module.exports = Heaven;
 const generator = require('../logic/generator');
 const Body      = require('./body');
 const Physic    = require('./physic');
-const Matter    = require('./matter');
 const Vector    = require('./vector');
 const Vec3      = Vector.Vec3;

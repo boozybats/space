@@ -11,7 +11,7 @@ var Generator = {
 
 		return position;
 	},
-	playerSize: function(lvl) {
+	playerVolume: function(lvl) {
 		var r = Math.random();
 
 		var size = player_sizes[lvl];

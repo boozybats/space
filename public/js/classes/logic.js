@@ -1,7 +1,19 @@
 class Logic {
 	constructor(scene) {
-		this.updateItems = this.updateItems.bind(this);
 		this.scene = scene;
+
+		this.updateItems = this.updateItems.bind(this);
+	}
+
+	get scene() {
+		return this.scene_;
+	}
+	set scene(val) {
+		if (!(val instanceof Scene)) {
+			throw new Error('Logic: scene: must be a Scene');
+		}
+
+		this.scene_ = val;
 	}
 
 	createitem(type, data) {
@@ -10,6 +22,7 @@ class Logic {
 		switch (type) {
 			case 'heaven':
 			item = new Heaven;
+			item.instance(this.scene);
 			item.uptodate(data);
 
 			break;
@@ -31,13 +44,13 @@ class Logic {
 			var id = wrap.id;
 
 			// try find existing item on scene
-			var item = scene.findItem(id);
+			var item = scene.findItem('id', id);
 
 			if (item) {
-				item.uptodate(wrap.data);
+				item.uptodate(wrap);
 			}
 			else {
-				this.createitem(wrap.type, wrap.data);
+				this.createitem(wrap.type, wrap);
 			}
 		}
 	}
