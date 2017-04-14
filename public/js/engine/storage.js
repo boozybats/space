@@ -16,7 +16,7 @@ class Storage {
 	 * Returns array with numberic-keys elements in data leading in order.
 	 * @return {Array}
 	 */
-	array() {
+	toArray() {
 		var out = [];
 		var length = this.numberkeyLength;
 
@@ -114,6 +114,16 @@ class Storage {
 	 */
 	get numberkeyLength() {
 		return this.numberkeyLength_;
+	}
+
+	toObject() {
+		var out = {};
+
+		this.each((data, index) => {
+			out[index] = data;
+		});
+
+		return out;
 	}
 
 	get onremove() {

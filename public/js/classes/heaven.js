@@ -3,35 +3,36 @@ class Heaven extends Sphere {
 		id,
 		name = 'asteroid',
 		body = new Body,
-		physic = new Physic({
-			matter: {
-				Fe: 50 * Math.pow(10, 5)
-			}
-		}),
-		me = false,
+		physic,
+		player = false,
 		mesh,
 		collider,
 		mouseControl
 	} = {}) {
 		super({
-			name,
-			id,
-			body,
-			physic,
-			mesh,
-			collider,
+			name: name,
+			id: id,
+			body: body,
+			physic: physic,
+			mesh: mesh,
+			collider: collider,
 			precision: 3
 		});
 
-		this.me = me;
+		// Defines item as player's item
+		this.player = player;
+
+		// Binds object movements depends on mouse axis
 		this.mouseControl = mouseControl;
 
+		// Add maps to shader
 		var normalmap = new Image();
 		normalmap.src = 'images/n_heaven.jpg';
 
 		var diffusemap = new Image();
 		diffusemap.src = 'images/d_heaven.jpg';
 
+		// Set heaven's shader, not parent's
 		this.mesh.shader = Heaven.shader;
 		this.mesh.material = new Material({
 			normalmap,
@@ -44,51 +45,39 @@ class Heaven extends Sphere {
 	 * @param  {Camera} camera
 	 */
 	bindCamera(camera) {
+		if (!(camera instanceof Camera)) {
+			console.warn(`Heaven: bindCamera: must be a Camera, type: ${typeof camera}, value: ${camera}, item id: ${this.id}`);
+			return;
+		}
+
 		this.camera = camera;
-	}
-
-	get core() {
-		var aggregation = this.physic.Pressure(CORE_MIN_RADIUS);
-
-		var out = {
-			aggregation: 0
-		};
-
-		return out;
 	}
 
 	get mouseControl() {
 		return this.mouseControl_;
 	}
-	/**
-	 * Sets velocity to object by mouse position
-	 * @param  {Cursor} val
-	 */
 	set mouseControl(val) {
 		if (val && !(val instanceof Cursor)) {
-			throw new Error('Heaven: mouseControl: must be a Cursor');
+			console.warn(`Heaven: mouseControl: must be a Cursor, type: ${typeof val}, value: ${val}, item id: ${this.id}`);
+			return;
 		}
 
 		this.mouseControl_ = val;
 	}
 
-	get me() {
-		return this.me_;
+	get player() {
+		return this.player_;
 	}
-	set me(val) {
+	set player(val) {
 		if (typeof val !== 'boolean') {
-			throw new Error('Heaven: me: must be a bool');
+			console.warn(`Heaven: player: must be a boolean, type: ${typeof val}, value: ${val}, item id: ${this.id}`);
+			return;
 		}
 
-		this.me_ = true;
+		this.player_ = val;
 	}
 
 	oninstance() {
-		var _private = this.private;
-		var _public  = this.public;
-
-		_public.velocity = new Vec2;
-		_public.maxspeed = 0;
 	}
 
 	onupdate() {
@@ -108,7 +97,7 @@ class Heaven extends Sphere {
 				dir = amc('*', vec.normalize(), maxspeed);
 			}
 
-			_public.velocity = this.physic.velocity = dir;
+			_public.velocity = dir;
 			_public.maxspeed = maxspeed;
 		}
 
@@ -218,6 +207,16 @@ class Heaven extends Sphere {
 		return out;
 	}
 
+	toJSON() {
+		var out = {};
+
+		if (this.body) {
+			out.body = this.body.toJSON();
+		}
+
+		return out;
+	}
+
 	uptodate(data) {
 		if (typeof data !== 'object') {
 			return;
@@ -235,18 +234,13 @@ class Heaven extends Sphere {
 				return;
 			}
 
-			if (this.body) {
-				this.body.position = new Vec3(pos[0], pos[1], pos[2]);
-				this.body.rotation = new Quaternion(rot[0], rot[1], rot[2], rot[3]);
-				this.body.scale = new Vec3(sca[0], sca[1], sca[2]);
+			if (!this.body) {
+				this.body = new Body;
 			}
-			else {
-				this.body = new Body({
-					position: new Vec3(pos[0], pos[1], pos[2]),
-					rotation: new Quaternion(rot[0], rot[1], rot[2], rot[3])
-					//scale: new Vec3(sca[0], sca[1], sca[2])
-				});
-			}
+
+			this.body.position = new Vec3(pos[0], pos[1], pos[2]);
+			this.body.rotation = new Quaternion(rot[0], rot[1], rot[2], rot[3]);
+			this.body.scale = new Vec3(sca[0], sca[1], sca[2]);
 		}
 
 		if (typeof data.physic === 'object') {
@@ -257,11 +251,9 @@ class Heaven extends Sphere {
 				return;
 			}
 
-			if (this.physic) {
-			}
-			else {
+			if (!this.physic) {
 				this.physic = new Physic({
-					matter: data.physic.matter
+					matter: new Matter(matter)
 				});
 			}
 		}

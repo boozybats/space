@@ -1,4 +1,8 @@
-function gameplay(images) {
+function gameplay({
+	images,
+	canvas,
+	cursor
+}) {
 	canvas.appendTo(document.body);
 
 	// initialize project, set as default image "Transparent"
@@ -39,35 +43,19 @@ function gameplay(images) {
 	 * to the required diameter to skip perframe scaling
 	 * at the begin
 	 */
-	cursor = new Cursor;
-	var me = new Heaven({
-		name: 'me',
-		me: true,
-		mouseControl: cursor
+	player = new Player({
+		scene: scene,
+		cursor: cursor,
+		camera: camera
 	});
-	me.instance(scene);
-
-	// scaling after instantiation because need to determine diameter
-	me.body.scale = amc('+', new Vec3, me.physic.diameter);
-
-	// make light source follows camera
-	me.bindCamera(camera);
 
 	// direction pointer, lightning
 	var facebox = new FaceBox;
 	facebox.instance(scene, true);
 
 	// share variables enviroment
-	facebox.private.env_heaven = me.public;
+	facebox.private.env_heaven = player.heaven.public;
 
-	// get "id" from server and start project
-	Server.player.defineId(id => {
-		me.id = id;
-
-		Server.heavens.getData(data => {
-			me.uptodate(data);
-
-			project.requestAnimationFrame();
-		});
-	});
+	// get all data from server for playing and start project
+	logic.getData(project);
 }

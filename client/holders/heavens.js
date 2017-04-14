@@ -27,7 +27,9 @@ ws_.set('heavens', response => {
 			item = instance(id);
 		}
 
-		response.answer(item.toJSON());
+		var json = item.toJSON();
+
+		response.answer(json);
 
 		break;
 	}

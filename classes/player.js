@@ -60,6 +60,16 @@ class Player {
 
 		this.client.send(options);
 	}
+
+	// Updates players heaven in server, is called by distribution
+	uptodate(data, time) {
+		if (typeof data !== 'object') {
+			return;
+		}
+
+		var heaven = this.items.get('heaven');
+		heaven.uptodate(data, time);
+	}
 }
 
 module.exports = Player;

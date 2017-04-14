@@ -1,10 +1,10 @@
 /**
  * Vector contains 2-4 values by keys x, y, z and w.
  * @this {Vec}
- * @param {*} x
- * @param {*} y
- * @param {*} z
- * @param {*} w
+ * @param {Number} x
+ * @param {Number} y
+ * @param {Number} z
+ * @param {Number} w
  * @class
  * @property {Vec} x-wzyx Returns new vector with coordinates
  * in new order.
@@ -13,17 +13,28 @@
 class Vec {
 	constructor(...arr) {
 		if (this.constructor === Vec) {
-			var out;
+			var x = arr[0],
+				y = arr[1],
+				z = arr[2],
+				w = arr[3];
+
+			if (x && typeof x !== 'number' ||
+				y && typeof y !== 'number' ||
+				z && typeof z !== 'number' ||
+				w && typeof w !== 'number') {
+				x = y = z = w = 0;
+			}
+
 			switch (arr.length) {
 				case 4:
-				this.w_ = arr[3] || 0;
+				this.w_ = w || 0;
 
 				case 3:
-				this.z_ = arr[2] || 0;
+				this.z_ = z || 0;
 
 				case 2:
-				this.x_ = arr[0] || 0;
-				this.y_ = arr[1] || 0;
+				this.x_ = x || 0;
+				this.y_ = y || 0;
 			}
 			this.size_ = arr.length;
 		}
@@ -38,6 +49,10 @@ class Vec {
 	 * @static
 	 */
 	static angle(vec1, vec2) {
+		if (!(vec1 instanceof Vec) || !(vec2 instanceof Vec)) {
+			vec1 = vec2 = new Vec;
+		}
+
 		var out = Math.acos(Vec.cos(vec1, vec2));
 	
 		return out;
@@ -72,8 +87,15 @@ class Vec {
 	 * vec;  // Vec {x: 3, y: 3, z: 4}
 	 */
 	static avg(...vectors) {
-		var sum = Vec.sum(...vectors);
-		var out = sum.multi(1 / vectors.length);
+		if (vectors.length == 0) {
+			return new Vec2;
+		}
+
+		var out = amc('/', amc('+', ...vectors), vectors.length);
+
+		if (!(out instanceof Vec)) {
+			out = new Vec2;
+		}
 
 		return out;
 	}
@@ -92,7 +114,7 @@ class Vec {
 	static compare(vec1, vec2) {
 		var out = true;
 
-		if (typeof vec1 === 'undefined' || typeof vec2 === 'undefined') {
+		if (!(vec1 instanceof Vec) || !(vec2 instanceof Vec)) {
 			out = false;
 		}
 		else {
@@ -124,6 +146,10 @@ class Vec {
 	 * @static
 	 */
 	static cos(vec1, vec2) {
+		if (!(vec1 instanceof Vec) || !(vec2 instanceof Vec)) {
+			vec1 = vec2 = new Vec2;
+		}
+
 		var out = (vec1.x * vec2.x + vec1.y * vec2.y) / (vec1.length() * vec2.length());
 
 		return out;
@@ -139,8 +165,20 @@ class Vec {
 	 * @static
 	 */
 	static dif(...vectors) {
+		if (vectors.length == 0) {
+			return new Vec2;
+		}
+
 		var vec1 = vectors[0],
 			vec2 = vectors[1];
+
+		if (!(vec1 instanceof Vec)) {
+			vec1 = new Vec2;
+		}
+		if (!(vec2 instanceof Vec)) {
+			vec2 = new Vec2;
+		}
+
 		var Type = vec1.size >= vec2.size ? vec1.constructor : vec2.constructor;
 
 		var out = new Type(
@@ -165,8 +203,19 @@ class Vec {
 	 * @static
 	 */
 	static dot(...vectors) {
-		var vec1 = vectors[0];
-		var vec2 = vectors[1];
+		if (vectors.length == 0) {
+			return new Vec2;
+		}
+
+		var vec1 = vectors[0],
+			vec2 = vectors[1];
+
+		if (!(vec1 instanceof Vec)) {
+			vec1 = new Vec2;
+		}
+		if (!(vec2 instanceof Vec)) {
+			vec2 = new Vec2;
+		}
 
 		var out = vec1.x * vec2.x + vec1.y * vec2.y;
 		if (typeof vec1.w !== 'undefined' && typeof vec2.w !== 'undefined') {
@@ -193,7 +242,7 @@ class Vec {
 	euler() {
 		var x = this.x,
 			y = this.y,
-			z = this.z;
+			z = this.z || 0;
 	
 		x = x * 180;
 		y = y * 180;
@@ -259,7 +308,15 @@ class Vec {
 	tohomogeneouspos() {
 		var out;
 
-		out = new Vec4(this, 1);
+		switch (this.size) {
+			case 2:
+			out = new Vec3(this, 1);
+			break;
+
+			case 3:
+			out = new Vec4(this, 1);
+			break;
+		}
 
 		return out;
 	}
@@ -299,15 +356,6 @@ class Vec {
 	}
 
 	/**
-	 * Returns quantity of coordinates in vector.
-	 * @return {Number}
-	 * @method
-	 */
-	get size() {
-		return this.size_;
-	}
-
-	/**
 	 * Multiplies vector coordinates on number and returns
 	 * result vector. P.S. Better use {@link amc} function, it is
 	 * much optimizing.
@@ -317,7 +365,7 @@ class Vec {
 	 */
 	multi(num) {
 		if (typeof num !== 'number') {
-			throw new Error('Vector: multi: must be a number');
+			num = 1;
 		}
 
 		var Type = this.constructor;
@@ -342,8 +390,20 @@ class Vec {
 	 * @static
 	 */
 	static multi(...vectors) {
+		if (vectors.length == 0) {
+			return new Vec2;
+		}
+
 		var vec1 = vectors[0],
-			vec2 = vectors[1] || new Vec2;
+			vec2 = vectors[1];
+
+		if (!(vec1 instanceof Vec)) {
+			vec1 = new Vec2;
+		}
+		if (!(vec2 instanceof Vec)) {
+			vec2 = new Vec2;
+		}
+
 		var Type = vec1.size >= vec2.size ? vec1.constructor : vec2.constructor;
 
 		var out = new Type(
@@ -381,6 +441,15 @@ class Vec {
 	}
 
 	/**
+	 * Returns quantity of coordinates in vector.
+	 * @return {Number}
+	 * @method
+	 */
+	get size() {
+		return this.size_;
+	}
+
+	/**
 	 * Sum vector's coordinates on number and returns
 	 * result vector.
 	 * @param {Number} num
@@ -389,7 +458,7 @@ class Vec {
 	 */
 	sum(num) {
 		if (typeof num !== 'number') {
-			throw new Error('Vector: sum: must be a number');
+			num = 0;
 		}
 
 		var Type = this.constructor;
@@ -414,8 +483,20 @@ class Vec {
 	 * @static
 	 */
 	static sum(...vectors) {
+		if (vectors.length == 0) {
+			return new Vec2;
+		}
+
 		var vec1 = vectors[0],
-			vec2 = vectors[1] || new Vec2;
+			vec2 = vectors[1];
+
+		if (!(vec1 instanceof Vec)) {
+			vec1 = new Vec2;
+		}
+		if (!(vec2 instanceof Vec)) {
+			vec2 = new Vec2;
+		}
+
 		var Type = vec1.size >= vec2.size ? vec1.constructor : vec2.constructor;
 
 		var out = new Type(
@@ -855,8 +936,8 @@ class Vec {
 /**
  * Vector with 2 coordinates x and y.
  * @this {Vec2}
- * @param {*} x
- * @param {*} y
+ * @param {Number} x
+ * @param {Number} y
  * @class
  * @extends Vec
  */
@@ -869,6 +950,10 @@ class Vec2 extends Vec {
 			y = x.y,
 			x = x.x;
 		}
+		else if (typeof x !== 'number' ||
+			typeof y !== 'number') {
+			x = y = 0;
+		}
 
 		this.x_ = x || 0;
 		this.y_ = y || 0;
@@ -880,9 +965,9 @@ class Vec2 extends Vec {
 /**
  * Vector with 3 coordinates x, y and z.
  * @this {Vec3}
- * @param {*} x
- * @param {*} y
- * @param {*} z
+ * @param {Number} x
+ * @param {Number} y
+ * @param {Number} z
  * @class
  * @extends Vec
  */
@@ -892,12 +977,19 @@ class Vec3 extends Vec {
 		super();
 
 		if (!z && x instanceof Vec && x.size == 2) {
+			if (typeof y !== 'number') {
+				y = 0;
+			}
+
 			z = y,
 			y = x.y,
 			x = x.x;
 		}
 		else if (!z && y instanceof Vec && y.size == 2) {
-			x = x;
+			if (typeof x !== 'number') {
+				x = 0;
+			}
+
 			z = y.y,
 			y = y.x;
 		}
@@ -905,6 +997,11 @@ class Vec3 extends Vec {
 			z = x.z,
 			y = x.y,
 			x = x.x;
+		}
+		else if (typeof x !== 'number' ||
+			typeof y !== 'number' ||
+			typeof z !== 'number') {
+			x = y = z = 0;
 		}
 
 		this.x_ = x;
@@ -922,6 +1019,10 @@ class Vec3 extends Vec {
 	 * @method
 	 */
 	static cross(vec1, vec2) {
+		if (!(vec1 instanceof Vec3) || !(vec2 instanceof Vec3)) {
+			vec1 = vec2 = new Vec3;
+		}
+
 		var x = vec1.y * vec2.z - vec1.z * vec2.y,
 			y = vec1.z * vec2.x - vec1.x * vec2.z,
 			z = vec1.x * vec2.y - vec1.y * vec2.x;
@@ -935,10 +1036,10 @@ class Vec3 extends Vec {
 /**
  * Vector with 4 coordinates x, y, z and w.
  * @this {Vec4}
- * @param {*} x
- * @param {*} y
- * @param {*} z
- * @param {*} w
+ * @param {Number} x
+ * @param {Number} y
+ * @param {Number} z
+ * @param {Number} w
  * @class
  * @extends Vec
  */
@@ -954,34 +1055,59 @@ class Vec4 extends Vec {
 			x = x.x;
 		}
 		else if (!w && x instanceof Vec && x.size == 2) {
+			if (typeof z !== 'number' ||
+				typeof y !== 'number') {
+				z = y = 0;
+			}
+
 			w = z,
 			z = y,
 			y = x.y,
 			x = x.x;
 		}
 		else if (!w && y instanceof Vec && y.size == 2) {
+			if (typeof z !== 'number' ||
+				typeof x !== 'number') {
+				z = x = 0;
+			}
+
 			w = z,
-			x = x,
 			z = y.y,
 			y = y.x;
 		}
 		else if (!w && z instanceof Vec && z.size == 2) {
-			x = x,
-			y = y,
+			if (typeof x !== 'number' ||
+				typeof y !== 'number') {
+				x = y = 0;
+			}
+
 			w = z.y,
 			z = z.x;
 		}
 		else if (!z && x instanceof Vec && x.size == 3) {
+			if (typeof y !== 'number') {
+				y = 0;
+			}
+
 			w = y,
 			z = x.z,
 			y = x.y,
 			x = x.x;
 		}
 		else if (!z && y instanceof Vec && y.size == 3) {
-			x = x,
+			if (typeof x !== 'number') {
+				x = 0;
+			}
+
 			w = y.z,
 			z = y.y,
 			y = y.x;
+		}
+		else if (typeof x !== 'number' ||
+			typeof y !== 'number' ||
+			typeof z !== 'number' ||
+			typeof w !== 'number') {
+			x = y = z = w = 0;
 		}
 
 		this.x_ = x;

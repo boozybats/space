@@ -1,10 +1,10 @@
 /**
  * Vector contains 2-4 values by keys x, y, z and w.
  * @this {Vec}
- * @param {*} x
- * @param {*} y
- * @param {*} z
- * @param {*} w
+ * @param {Number} x
+ * @param {Number} y
+ * @param {Number} z
+ * @param {Number} w
  * @class
  * @property {Vec} x-wzyx Returns new vector with coordinates
  * in new order.
@@ -936,8 +936,8 @@ class Vec {
 /**
  * Vector with 2 coordinates x and y.
  * @this {Vec2}
- * @param {*} x
- * @param {*} y
+ * @param {Number} x
+ * @param {Number} y
  * @class
  * @extends Vec
  */
@@ -965,9 +965,9 @@ class Vec2 extends Vec {
 /**
  * Vector with 3 coordinates x, y and z.
  * @this {Vec3}
- * @param {*} x
- * @param {*} y
- * @param {*} z
+ * @param {Number} x
+ * @param {Number} y
+ * @param {Number} z
  * @class
  * @extends Vec
  */
@@ -1036,10 +1036,10 @@ class Vec3 extends Vec {
 /**
  * Vector with 4 coordinates x, y, z and w.
  * @this {Vec4}
- * @param {*} x
- * @param {*} y
- * @param {*} z
- * @param {*} w
+ * @param {Number} x
+ * @param {Number} y
+ * @param {Number} z
+ * @param {Number} w
  * @class
  * @extends Vec
  */

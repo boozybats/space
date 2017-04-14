@@ -76,8 +76,7 @@ var PeriodicTable = {
 
 class Phys {
 	/**
-	 * Returns gravity power between 2 bodies
-	 *
+	 * Returns gravity power between 2 bodies.
 	 * @param {number} m0 Mass of first object
 	 * @param {number} m1 Mass of second object
 	 * @param {number} l Length (radius) between objects
@@ -91,8 +90,7 @@ class Phys {
 	/**
 	 * Returns layer height which volume starts on "V1"
 	 * and ends on "V0". "V1" isn't end volume because it
-	 * can be not selected
-	 *
+	 * can be not selected.
 	 * @param {number} V0 End volume
 	 * @param {number} V1 Start volume
 	 * @return {number} R
@@ -107,8 +105,7 @@ class Phys {
 
 	/**
 	 * Returns volume of layer which starts on "h" radius
-	 * and ends on "R" radius
-	 *
+	 * and ends on "R" radius.
 	 * @param {number} h End radius
 	 * @param {number} R Start radius
 	 * @return {number} V
@@ -122,14 +119,13 @@ class Phys {
 	}
 
 	/**
-	 * Defines: decreasing or increasing function sended
-	 *
+	 * Defines: decreasing or increasing function sended.
 	 * @param {Function} func Check function
 	 * @param {number} to End value to send as parameter
 	 * @param {number} precision How much times check the function
 	 * @return {string|number} 0 | +inf | -inf
 	 */
-	static inf_lim(func, to = 9999999, precision = 100) {
+	static infLim(func, to = 9999999, precision = 100) {
 		var x0 = 0;
 		var x1 = to;
 		var interval = (x1 - x0) / precision;
@@ -145,10 +141,10 @@ class Phys {
 		}
 
 		if (position > 1) {
-			return '+inf';
+			return 1;
 		}
 		else if (position < -1) {
-			return '-inf';
+			return -1;
 		}
 		else {
 			return 0;
@@ -193,11 +189,6 @@ class Physic {
 		matter = new Matter
 	} = {}) {
 		this.matter = matter;
-
-		/** @private */
-		this.pureVolume = this.matter.volume;
-		this.diameter = this.matter.diameter;
-		this.mass = this.MassTotal();
 	}
 
 	get color() {
@@ -205,15 +196,7 @@ class Physic {
 	}
 
 	get diameter() {
-		return this.diameter_;
-	}
-	set diameter(val) {
-		if (val && typeof val !== 'number') {
-			throw new Error('Physic: diameter: must be a number');
-		}
-
-		this.diameter_ = val;
-		this.maxspeed_ = val * 0.4;
+		return this.matter.diameter;
 	}
 
 	Density(R) {
@@ -229,22 +212,8 @@ class Physic {
 		return out;
 	}
 
-	get lastLayer() {
-		return this.matter.last_layer;
-	}
-
-	get layers() {
-		var out = this.matter.layers;
-		return out;
-	}
-
 	get mass() {
-		return this.mass_;
-	}
-	set mass(val) {
-		if (typeof val === 'number') {
-			this.mass_ = val;
-		}
+		return this.matter.mass;
 	}
 
 	Mass(R) {
@@ -293,7 +262,7 @@ class Physic {
 	}
 
 	get maxspeed() {
-		return this.maxspeed_;  // in second
+		return this.diameter * 0.4;  // in second
 	}
 
 	Pressure(R) {
@@ -319,13 +288,13 @@ class Physic {
 	toJSON() {
 		var out = {};
 
-		out.matter = this.matter.matter;
+		out.matter = this.matter.toJSON();
 
 		return out;
 	}
 
 	get volume() {
-		return this.pure_volume;
+		return this.matter.volume;
 	}
 
 	VolumeTotal(R = Infinity) {
@@ -349,10 +318,6 @@ class Physic {
 
 class Matter {
 	constructor(substances) {
-		if (typeof substances !== 'object') {
-			throw new Error('Matter: "substances" must be an object');
-		}
-
 		this.volume_ = 0;
 		this.layers_ = [];
 
@@ -360,7 +325,9 @@ class Matter {
 		subs.filter = (data => typeof data === 'number');
 		this.substances = subs;
 
-		this.addSubstances(substances);
+		if (typeof substances === 'object') {
+			this.addSubstances(substances);
+		}
 	}
 
 	/**
@@ -506,6 +473,10 @@ class Matter {
 		return out;
 	}
 
+	get mass() {
+		return this.mass_;
+	}
+
 	/**
 	 * Returns next layer.
 	 * @param  {Object} layer
@@ -534,13 +505,17 @@ class Matter {
 		return this.radius_;
 	}
 
+	toJSON() {
+		return this.substances.toObject();
+	}
+
 	/**
 	 * Sets layers by substances added or removed from matter.
 	 * @method
 	 */
 	updateLayers() {
 		var layers = [];
-		var height = this.layerHeight;
+		var height = this.layerHeight();
 		var substances = this.getSortedSubstances();
 
 		// Sum all masses and define to matter
@@ -579,11 +554,11 @@ class Matter {
 
 				// Average density of layer
 				var avgP = 0;
-				var substances = last.substances;
-				for (var i = 0; i < substances.length; i++) {
-					avgP += PeriodicTable(substances[i]).p;
+				var subs = last.substances;
+				for (var i = 0; i < subs.length; i++) {
+					avgP += PeriodicTable(subs[i]).p;
 				}
-				avgP /= substances.length;
+				avgP /= subs.length;
 				last.density = avgP;
 
 				// Add volume and mass to last layer
@@ -607,11 +582,11 @@ class Matter {
 				// Define mass and substances matter for layer
 				var mass = Phys.mass(p, Vs);
 				all_mass += mass;
-				var substances = [substance.name];
+				var subs = [substance.name];
 
 				// Make the layer and add to matter
 				var layer = {
-					substances: substances,
+					substances: subs,
 					maxVolume: maxV,
 					volume: V,
 					mass: mass,
@@ -642,6 +617,7 @@ class Matter {
 			core(R, index);
 		})();
 
+		this.mass_ = all_mass;
 		this.layers_ = layers;
 	}
 

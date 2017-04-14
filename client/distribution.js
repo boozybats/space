@@ -5,6 +5,7 @@ const _players = global.storages.players;
 
 // Make distribution one time per frame
 update.push(function({
+	time,
 	player
 }) {
 	// Storage of all items
@@ -19,10 +20,8 @@ update.push(function({
 				data: itemsData
 			}
 		},
-		callback: setData
+		callback: function(response) {
+			player.uptodate(response.data, time);
+		}
 	});
 }, 'players');
-
-function setData(response) {
-
-}

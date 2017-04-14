@@ -17,6 +17,16 @@ Math.RTD = (rad) => rad * 180 / Math.PI;
 Math.DTR = (deg) => deg * Math.PI / 180;
 
 /**
+ * Returns num if value bigger than minimal and lower than maximal
+ * else returns one of two: minimal or maximal.
+ * @param  {Number} num
+ * @param  {Number} min Minimal
+ * @param  {Number} max Maximal
+ * @return {Number}
+ */
+Math.clamp = (num, min, max) => Math.min(Math.max(num, min), max);
+
+/**
  * If number is degree of two then returns true
  * else returns false.
  * @param  {Number}  num

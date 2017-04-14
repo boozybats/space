@@ -79,49 +79,6 @@ class Item {
 
 		return out;
 	}
-
-	/**
-	 * Updates item data by sended data.
-	 * @param  {Object} data
-	 */
-	uptodate(data) {
-		if (typeof data !== 'object') {
-			return;
-		}
-
-		if (typeof data.body === 'object') {
-			if (!this.body) {
-				this.body = new Body;
-			}
-
-			var body = data.body;
-
-			if (body.position instanceof Array) {
-				var pos = body.position;
-				this.body.position = new Vec3(pos[0], pos[1], pos[2]);
-			}
-			if (body.rotation instanceof Array) {
-				var rot = body.rotation;
-				this.body.rotation = new Quaternion(rot[0], rot[1], rot[2], rot[3]);
-			}
-			if (body.scale instanceof Array) {
-				var sca = body.scale;
-				this.body.position = new Vec3(sca[0], sca[1], sca[2]);
-			}
-		}
-
-		if (typeof data.physic === 'object') {
-			if (!this.physic) {
-				this.physic = new Physic;
-			}
-
-			var physic = data.physic;
-
-			if (typeof physic.matter === 'object') {
-				this.physic.initMatter(physic.matter);
-			}
-		}
-	}
 }
 
 module.exports = Item;

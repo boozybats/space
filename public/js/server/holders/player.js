@@ -16,7 +16,11 @@ ws.set('player', response => {
 				Server.player.ondistribution(items);
 			}
 
-			response.answer('ok');
+			if (player instanceof Player) {
+				var json = player.toJSON();
+
+				response.answer(json);
+			}
 		}
 
 		break;

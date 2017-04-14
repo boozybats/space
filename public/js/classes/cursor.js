@@ -18,7 +18,8 @@ class Cursor {
 	 */
 	set axis(val) {
 		if (!(val instanceof Vec2)) {
-			throw new Error('Cursor: axis: must be a Vec2');
+			console.log(`Cursor: axis: must be a Vec2, type: ${typeof val}, value: ${val}`);
+			return;
 		}
 
 		this.axis_ = val;
@@ -35,7 +36,8 @@ class Cursor {
 	 */
 	set position(val) {
 		if (!(val instanceof Vec2)) {
-			throw new Error('Cursor: position: must be a Vec2');
+			console.log(`Cursor: position: must be a Vec2, type: ${typeof val}, value: ${val}`);
+			return;
 		}
 
 		var length = val.length();

@@ -30,7 +30,19 @@ class Client {
 		return (this.handlers[key] instanceof Handler);
 	}
 
+	/**
+	 * Removes excpired handlers.
+	 * @param  {Number} date Current time (in miliseconds)
+	 */
 	removeExpiredHandlers(date) {
+		if (typeof date !== 'number') {
+			console.one('removeExpiredHandlers', () => {
+				console.log(`Client: removeExpiredHandlers: uncorrect "date" sended, type: ${typeof date}, value: ${date}`);
+			});
+
+			return;
+		}
+
 		for (var i = 0; i < this.handlers.length; i++) {
 			if (!this.isHandler(i)) {
 				continue;
@@ -61,13 +73,13 @@ class Client {
 	// Sets answer-callback
 	setHandler(callback, {
 		lifetime = 15000
-	}) {
+	} = {}) {
 		if (typeof callback !== 'function') {
-			console.warn('Client: setHandler: "callback" must be a function');
+			console.warn(`Client: setHandler: "callback" must be a function, type: ${typeof callback}, value: ${callback}, lifetime: ${lifetime}`);
 			return false;
 		}
 		else if (typeof lifetime !== 'number') {
-			console.warn('Client: setHandler: "lifetime" must be a number');
+			console.warn(`Client: setHandler: "lifetime" must be a number, type: ${typeof lifetime}, value: ${lifetime}, callback: ${callback.toString()}`);
 			lifetime = 15000;
 		}
 
@@ -106,6 +118,7 @@ class Handler {
 	}
 	set callback(val) {
 		if (typeof val !== 'function') {
+			console.log(`Handler: callback: must be a function, type: ${typeof val}, value: ${val}`);
 			val = function() {};
 		}
 
@@ -117,6 +130,7 @@ class Handler {
 	}
 	set lifetime(val) {
 		if (typeof val !== 'number') {
+			console.log(`Handler: lifetime: must be a number, type: ${typeof val}, value: ${val}`);
 			val = 0;
 		}
 
@@ -128,6 +142,7 @@ class Handler {
 	}
 	set startLifetime(val) {
 		if (typeof val !== 'number') {
+			console.log(`Handler: startLifetime: must be a number, type: ${typeof val}, value: ${val}`);
 			val = 0;
 		}
 

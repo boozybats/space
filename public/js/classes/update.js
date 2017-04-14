@@ -1,3 +1,9 @@
+/**
+ * After instantiation "Update" starts iterations with specified
+ * frequency. Executes all added callbacks by each iteration.
+ * It helps to optimize process and not create many of timers.
+ */
+
 class Update {
 	constructor({
 		frequency = 1000 / 60
@@ -18,22 +24,25 @@ class Update {
 	}
 	set frequency(val) {
 		if (typeof val !== 'number') {
-			throw new Error('Update: must be a number');
+			console.warn(`Update: frequency: must be a number, type: ${typeof val}, value: ${val}`);
+			val = 1000 / 60;
 		}
 
 		this.frequency_ = val;
 	}
 
+	/* Setup update function by frequency, all added callbacks will be called once
+	per frame. Can be selected area of update:
+	main - call once per update */
 	initialize() {
 		var callbacks = this.callbacks,
 			frequency = this.frequency;
 
-		/* Setup update function by frequency, all added callbacks will be called once
-		per frame. Can be selected area of update:
-		main - call once per update */
 		var o_time = Date.now();
 		;(function update() {
+			// current time
 			var n_time = Date.now();
+			// difference between old and new times
 			var delta = n_time - o_time;
 
 			callbacks.main.each(callback => {
@@ -49,6 +58,9 @@ class Update {
 		})();
 	}
 
+	/**
+	 * Sets new callback in choosen area.
+	 */
 	push(callback, area = 'main') {
 		var arr = this.callbacks[area];
 		if (!arr) {

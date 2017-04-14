@@ -2,12 +2,11 @@ const FPS = 1000 / 60;
 const RESOLUTION_MAX = Math.max(RESOLUTION_WIDTH, RESOLUTION_HEIGHT);
 const RESOLUTION_MIN = Math.min(RESOLUTION_WIDTH, RESOLUTION_HEIGHT);
 
-var canvas;
-var cursor;
-
 loader({
 	transparent: 'images/default/transparent.png'
 }, images => {
+	var cursor = new Cursor;
+
 	// REQUEST ANIMATION FRAME
 	window.requestAnimationFrame = window.requestAnimationFrame ||
 		window.mozRequestAnimationFrame ||
@@ -16,7 +15,7 @@ loader({
 	// \REQUEST ANIMATION FRAME
 
 	// CANVAS APPEND
-	canvas = new Canvas(RESOLUTION_WIDTH, RESOLUTION_HEIGHT);
+	var canvas = new Canvas(RESOLUTION_WIDTH, RESOLUTION_HEIGHT);
 	var canvasdom = canvas.canvas;
 
 	// POINTER LOCK IDENTIFICATION
@@ -84,7 +83,11 @@ loader({
 	window.onresize = onresize;
 	// \AUTORESIZE
 
-	gameplay(images);
+	gameplay({
+		images: images,
+		canvas: canvas,
+		cursor: cursor
+	});
 });
 
 // SHOW ONCE AT SESSION

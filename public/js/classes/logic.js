@@ -10,13 +10,23 @@ class Logic {
 	}
 	set scene(val) {
 		if (!(val instanceof Scene)) {
-			throw new Error('Logic: scene: must be a Scene');
+			throw new Error(`Logic: scene: must be a Scene, type: ${typeof val}, value: ${val}`);
 		}
 
 		this.scene_ = val;
 	}
 
+	/**
+	 * Creates item by sended type and data from server.
+	 * @param  {String} type
+	 * @param  {Object} data
+	 * @return {Item}
+	 */
 	createitem(type, data) {
+		if (typeof type !== 'string' || typeof data !== 'object') {
+			return;
+		}
+
 		var item;
 
 		switch (type) {
@@ -31,6 +41,36 @@ class Logic {
 		return item;
 	}
 
+	/**
+	 * Receives id and item's data from server then starts project.
+	 * @param  {Project} project
+	 * @param  {Heaven} heaven  Player's heaven
+	 */
+	getData(project) {
+		if (!(project instanceof Project)) {
+			throw new Error(`Logic: getData: "project" must be a Project, type: ${typeof project}, value: ${project}, heaven: ${heaven}`);
+		}
+
+		// get player's item from global object
+		var heaven = player.heaven;
+
+		Server.player.defineId(id => {
+			heaven.id = id;
+
+			Server.heavens.getData(data => {
+				heaven.uptodate(data);
+
+				project.requestAnimationFrame();
+			});
+		});
+	}
+
+	/**
+	 * Callback function, is called from server request and creates new item
+	 * or updates already existing (checking id).
+	 * @param  {[type]} data [description]
+	 * @return {[type]}      [description]
+	 */
 	updateItems(data) {
 		if (typeof data !== 'object') {
 			return;
@@ -38,7 +78,7 @@ class Logic {
 
 		var scene = this.scene;
 		
-		// data with all existing items
+		// for every item
 		for (var i = 0; i < data.length; i++) {
 			var wrap = data[i];
 			var id = wrap.id;
