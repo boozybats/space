@@ -17,9 +17,8 @@ ws.set('player', response => {
 			}
 
 			if (player instanceof Player) {
-				var json = player.toJSON();
-
-				response.answer(json);
+				var actions = player.getActions();
+				response.answer(actions);
 			}
 		}
 

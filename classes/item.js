@@ -55,6 +55,18 @@ class Item {
 		this.onremove_ = val;
 	}
 
+	applyActions(time, data) {
+		if (typeof data !== 'object') {
+			return;
+		}
+
+		for (var i = 0; i < data.length; i++) {
+			var action = data[i];
+
+			var result = this.verifyAction(time, action);
+		}
+	}
+
 	// Just initializes "onremove"-function.
 	remove() {
 		this.onremove();
@@ -64,24 +76,67 @@ class Item {
 	 * Converts available item's data to object and stringify it.
 	 * @return {String} JSON
 	 */
-	toJSON() {
+	toJSON(options = []) {
+		if (typeof options !== 'object') {
+			return {};
+		}
+
 		var out = {};
 
 		out.id = this.id;
 
-		if (this.body) {
+		if (~options.indexOf('body') && this.body) {
 			out.body = this.body.toJSON();
 		}
 
-		if (this.physic) {
+		if (~options.indexOf('physic') && this.physic) {
 			out.physic = this.physic.toJSON();
 		}
 
 		return out;
 	}
+
+	/**
+	 * Checks user's changes, if it possible then apply them
+	 * @param  {Number} time How much time goes before last update
+	 * @param  {Object} changes
+	 */
+	verifyAction(time, action) {
+		if (typeof action !== 'object') {
+			return false;
+		}
+		else if (!this.physic) {
+			return false;
+		}
+
+		var type = action.type;
+
+		switch (type) {
+			case 'velocity':
+			var vec = action.data;
+			if (typeof vec !== 'object') {
+				return false;
+			}
+
+			var maxspeed = this.physic.maxspeed * time / 1000;
+			var shift = new Vec3(vec[0], vec[1], vec[2]);
+
+			return verifyVelocity(shift, maxspeed);
+		}
+	}
+}
+
+function verifyVelocity(vec, maxspeed) {
+	var distance = vec.length();
+	return distance <= maxspeed;
 }
 
 module.exports = Item;
 
 const Body   = require('./body');
 const Physic = require('./physic');
+const Vector     = require('./vector');
+const Vec        = Vector.Vec;
+const Vec2       = Vector.Vec2;
+const Vec3       = Vector.Vec3;
+const Vec4       = Vector.Vec4;

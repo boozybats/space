@@ -12,19 +12,13 @@ class Storage {
 		this.numberkeyLength_ = 0;
 	}
 
-	/**
-	 * Returns array with numberic-keys elements in data leading in order.
-	 * @return {Array}
-	 */
-	array() {
-		var out = [];
-		var length = this.numberkeyLength;
+	clear() {
+		var self = this;
+		this.each((data, index) => {
+			self.remove(index);
+		});
 
-		for (var i = 0; i < length; i++) {
-			out.push(this.data[i]);
-		}
-
-		return out;
+		this.numberkeyLength_ = 0;
 	}
 
 	/**
@@ -180,6 +174,31 @@ class Storage {
 		}
 
 		return result;
+	}
+
+	/**
+	 * Returns array with numberic-keys elements in data leading in order.
+	 * @return {Array}
+	 */
+	toArray() {
+		var out = [];
+		var length = this.numberkeyLength;
+
+		for (var i = 0; i < length; i++) {
+			out.push(this.data[i]);
+		}
+
+		return out;
+	}
+
+	toObject() {
+		var out = {};
+
+		this.each((data, index) => {
+			out[index] = data;
+		});
+
+		return out;
 	}
 }
 

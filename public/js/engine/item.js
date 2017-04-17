@@ -33,11 +33,12 @@ class Item {
 	constructor({
 		enabled = true,
 		id,
-		name = 'empty',
-		body = new Body,
+		name,
+		body,
 		mesh,
+		collider,
 		physic,
-		collider
+		rigidbody
 	} = {}) {
 		this.enabled = enabled;
 		this.id = id;
@@ -46,6 +47,7 @@ class Item {
 		this.mesh = mesh;
 		this.collider = collider;
 		this.physic = physic;
+		this.rigidbody = rigidbody;
 
 		/**
 		 * Has been item instantiated.
@@ -66,9 +68,12 @@ class Item {
 		 */
 		this.private_ = {};
 
-		if (typeof this.oninstance === 'function') {
-			this.oninstance();
-		}
+		// If item corrupted it will not be instantiated
+		this.corrupted = false;
+
+		this.oninstance = function() {};
+		this.onupdate   = function() {};
+		this.onremove   = function() {};
 	}
 
 	get enabled() {
@@ -87,7 +92,7 @@ class Item {
 	}
 	set id(val) {
 		if (val && typeof val !== 'number') {
-			throw new Error('Item: id: must be a number');
+			val = -2;
 		}
 
 		this.id_ = val;
@@ -98,7 +103,7 @@ class Item {
 	}
 	set name(val) {
 		if (typeof val !== 'string') {
-			throw new Error('Item: name: must be a string');
+			val = 'anonymous';
 		}
 
 		this.name_ = val;
@@ -109,7 +114,7 @@ class Item {
 	}
 	set body(val) {
 		if (val && !(val instanceof Body)) {
-			throw new Error('Item: body: must be a Body');
+			val = undefined;
 		}
 
 		this.body_ = val;
@@ -120,7 +125,7 @@ class Item {
 	}
 	set mesh(val) {
 		if (val && !(val instanceof Mesh)) {
-			throw new Error('Item: mesh: must be a Mesh');
+			val = undefined;
 		}
 
 		this.mesh_ = val;
@@ -131,7 +136,7 @@ class Item {
 	}
 	set collider(val) {
 		if (val && !(val instanceof Collider)) {
-			throw new Error('Item: collider: must be a Collider');
+			val = undefined;
 		}
 
 		this.collider_ = val;
@@ -142,7 +147,7 @@ class Item {
 	}
 	set physic(val) {
 		if (val && !(val instanceof Physic)) {
-			throw new Error('Item: physic: must be a Physic');
+			val = undefined;
 		}
 
 		this.physic_ = val;
@@ -499,6 +504,10 @@ class Item {
 	 * item.instance(scene, true);
 	 */
 	instance(scene, isSystem = false) {
+		if (this.corrupted) {
+			console.one(this.id, () => console.log(`Item: instance: item corrupted and wont be instantiated, id: ${this.id}, name: ${this.name}`));
+		}
+
 		if (!(scene instanceof Scene)) {
 			throw new Error('Item: instance: must be a Scene');
 		}
@@ -521,6 +530,8 @@ class Item {
 			this.changeAttributes(this.mesh.attributes);
 			this.changeUniforms(this.mesh.uniforms);
 		}
+
+		this.oninstance();
 	}
 
 	/**
@@ -611,7 +622,15 @@ class Item {
 	 * @method
 	 * @callback
 	 */
-	oninstance() {
+	get oninstance() {
+		return this.oninstance_;
+	}
+	set oninstance(val) {
+		if (typeof val !== 'function') {
+			val = function() {};
+		}
+
+		this.oninstance_ = val;
 	}
 
 	/**
@@ -619,7 +638,15 @@ class Item {
 	 * @method
 	 * @callback
 	 */
-	onupdate() {
+	get onupdate() {
+		return this.onupdate_;
+	}
+	set onupdate(val) {
+		if (typeof val !== 'function') {
+			val = function() {};
+		}
+
+		this.onupdate_ = val;
 	}
 
 	/**
@@ -627,7 +654,15 @@ class Item {
 	 * @method
 	 * @callback
 	 */
-	onremove() {
+	get onremove() {
+		return this.onremove_;
+	}
+	set onremove(val) {
+		if (typeof val !== 'function') {
+			val = function() {};
+		}
+
+		this.onremove_ = val;
 	}
 
 	get private() {
@@ -654,6 +689,17 @@ class Item {
 		}
 
 		this.scene.removeItem(this);
+	}
+
+	get rigidbody() {
+		return this.rigidbody_;
+	}
+	set rigidbody(val) {
+		if (val && !(val instanceof Rigidbody)) {
+			val = undefined;
+		}
+
+		this.rigidbody_ = val;
 	}
 
 	/**
@@ -767,7 +813,14 @@ class Item {
 	 * Image | Number | Array | Object} options.value
 	 * @method
 	 */
-	updateUniform({isActive, type, method, location, counter, value}) {
+	updateUniform({
+		isActive,
+		type,
+		method,
+		location,
+		counter,
+		value
+	}) {
 		if (isActive) {
 			return;
 		}
@@ -817,9 +870,9 @@ const DEFAULT_VALUES = {
 	vec4: new Vec4,
 	vec3: new Vec3,
 	vec2: new Vec2,
-	col: new Color(0, 0, 0, 0),
-	qua: new Quaternion(0, 0, 0, 0),
-	eul: new Euler(0, 0, 0),
-	tex: 0,
-	num: 0
+	col:  new Color(0, 0, 0, 0),
+	qua:  new Quaternion(0, 0, 0, 0),
+	eul:  new Euler(0, 0, 0),
+	tex:  0,
+	num:  0
 };

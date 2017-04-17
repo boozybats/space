@@ -183,7 +183,7 @@ class Project {
 	 */
 	initialize() {
 		var self = this;
-		this.addLayer(function(options = {}) {
+		this.addLayer(function(options) {
 			var renderer = self.webGLRenderer,
 				scene = self.currentScene,
 				cameras = scene.cameras,
@@ -238,8 +238,10 @@ class Project {
 				gl.drawElements(gl[mesh.drawStyle], VIOBuffer.length, gl.UNSIGNED_SHORT, 0);
 			}
 
-			if (typeof item.onupdate === 'function') {
-				item.onupdate(options);
+			// update by custrom scripts
+			item.onupdate(options);
+			if (item.rigidbody) {
+				item.rigidbody.onupdate(options);
 			}
 		}
 	}
@@ -305,12 +307,17 @@ class Project {
 
 		var olddate = this.olddate || Date.now(),
 			newdate = Date.now(),
-			deltaTime = newdate - olddate;
+			delta = newdate - olddate;
 		this.olddate = newdate;
 
-		for (var i = layers.length - 1; i >= 0; i--) {
+		var options = {
+			time: newdate,
+			deltaTime: delta
+		};
+
+		for (var i = layers.length; i--;) {
 			var layer = layers[i];
-			layer({deltaTime});
+			layer(options);
 		}
 	}
 

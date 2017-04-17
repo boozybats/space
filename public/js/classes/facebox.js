@@ -5,7 +5,8 @@
 
 class FaceBox extends UI {
 	constructor({
-		name = 'facebox'
+		name = 'facebox',
+		cursor
 	} = {}) {
 		super({
 			name,
@@ -14,13 +15,27 @@ class FaceBox extends UI {
 		});
 
 		this.mesh.shader = FaceBox.shader;
+
+		this.cursor = cursor;
 		this.changeUniforms({
 			u_Mouse: new Vec2,
-			u_Resolution: new Vec2(RESOLUTION_MIN, RESOLUTION_MIN),
-			u_Maxspeed: 0.0
+			u_Resolution: new Vec2(RESOLUTION_MIN, RESOLUTION_MIN)
 		});
 
 		this.body.position = new Vec3;
+
+		this.initialize();
+	}
+
+	get cursor() {
+		return this.cursor_;
+	}
+	set cursor(val) {
+		if (!(val instanceof Cursor)) {
+			throw new Error('Facebox: cursor: must be a cursor');
+		}
+
+		this.cursor_ = val;
 	}
 
 	/**
@@ -28,14 +43,12 @@ class FaceBox extends UI {
 	 * to draw arrow. Velocity is normal vector that draws
 	 * on circle radius.
 	 */
-	onupdate() {
-		var vec = this.private.env_heaven.velocity.xy;
-		var max = this.private.env_heaven.maxspeed;
-
-		this.changeUniforms({
-			u_Mouse: vec,
-			u_Maxspeed: max
-		});
+	initialize() {
+		this.onupdate = function() {
+			this.changeUniforms({
+				u_Mouse: this.cursor.position
+			});
+		}
 	}
 
 	static get shader() {
@@ -60,7 +73,6 @@ class FaceBox extends UI {
 
 			uniform vec2 u_Mouse;
 			uniform vec2 u_Resolution;
-			uniform float u_Maxspeed;
 
 			varying vec3 v_Position;
 
@@ -108,7 +120,7 @@ class FaceBox extends UI {
 					}
 				}
 
-				float bright = min(sqrt(pow(u_Mouse.x, 2.0) + pow(u_Mouse.y, 2.0)) / u_Maxspeed, 1.0);
+				float bright = min(sqrt(pow(u_Mouse.x, 2.0) + pow(u_Mouse.y, 2.0)), 1.0);
 
 				return bright * frag;
 			}

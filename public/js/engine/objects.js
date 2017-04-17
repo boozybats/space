@@ -9,24 +9,28 @@
  * @param {Body} options.body
  * @param {Collider} options.collider
  * @param {Physic} options.physic
+ * @param {Rigidbody} options.rigidbody
  * @class
  * @extends Item
  */
 
 class Icosahedron extends Item {
+	// doesn't get a mesh, because generates itself
 	constructor({
 		id,
 		name = 'icosahedron',
-		body = new Body,
+		body,
 		collider,
-		physic
+		physic,
+		rigidbody
 	} = {}) {
 		super({
-			name,
-			id,
-			body,
-			collider,
-			physic,
+			id: id,
+			name: name,
+			body: body,
+			collider: collider,
+			physic: physic,
+			rigidbody: rigidbody
 		});
 
 		var mesh = icosahedronMesh;
@@ -236,20 +240,23 @@ class Icosahedron extends Item {
  */
 
 class Sphere extends Item {
+	// doesn't get a mesh, because generates itself
 	constructor({
 		id,
 		name = 'sphere',
-		body = new Body,
+		body,
 		collider,
 		physic,
+		rigidbody,
 		precision = 3
 	} = {}) {
 		super({
-			id,
-			name,
-			body,
-			collider,
-			physic
+			id: id,
+			name: name,
+			body: body,
+			collider: collider,
+			physic: physic,
+			rigidbody: rigidbody
 		});
 
 		var mesh = sphereMesh[precision];
@@ -284,7 +291,7 @@ class Sphere extends Item {
 		uvs,
 		indices
 	} = {}) {
-		// transforms old the less detailed sphere
+		// transforms older sphere to more detailed sphere
 		var [nvertices, nnormals, nuvs, nindices] = [vertices.slice(),
 			normals.slice(), uvs.slice(), indices.slice()];
 		nvertices.size = 3;
@@ -439,16 +446,18 @@ class Cube extends Item {
 	constructor({
 		id,
 		name = 'cube',
-		body = new Body,
+		body,
 		collider,
-		physic
+		physic,
+		rigidbody
 	} = {}) {
 		super({
-			id,
-			name,
-			body,
-			collider,
-			physic,
+			id: id,
+			name: name,
+			body: body,
+			collider: collider,
+			physic: physic,
+			rigidbody: rigidbody
 		});
 
 		var indices = [
@@ -562,15 +571,17 @@ class UI extends Item {
 		body = new Body,
 		collider,
 		physic,
+		rigidbody,
 		width = RESOLUTION_WIDTH,
 		height = RESOLUTION_HEIGHT
 	} = {}) {
 		super({
-			id,
-			name,
-			body,
-			collider,
-			physic
+			id: id,
+			name: name,
+			body: body,
+			collider: collider,
+			physic: physic,
+			rigidbody: rigidbody
 		});
 
 		this.width = width;
@@ -720,13 +731,17 @@ class Empty extends Item {
 	constructor({
 		id,
 		name = 'empty',
-		body = new Body
+		body,
+		physic,
+		rigidbody
 	} = {}) {
-		super(
-			id,
-			name,
-			body
-		);
+		super({
+			id: id,
+			name: name,
+			body: body,
+			physic: physic,
+			rigidbody: rigidbody
+		});
 	}
 }
 

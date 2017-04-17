@@ -27,7 +27,7 @@ ws_.set('heavens', response => {
 			item = instance(id);
 		}
 
-		var json = item.toJSON();
+		var json = item.toJSON(['body', 'physic']);
 
 		response.answer(json);
 
@@ -43,7 +43,7 @@ ws_.set('heavens', response => {
 		var heaven = new Heaven({
 			id
 		});
-		player.items.set('heaven', heaven);
+		player.heaven = heaven;
 
 		heaven.generateData(0);
 		heaven.onremove = function() {

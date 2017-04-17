@@ -1,21 +1,25 @@
+/**
+ * Main gameobject known as asteroid.
+ * Doesn't pass a mesh because "Sphere" will generate itself.
+ */
 class Heaven extends Sphere {
 	constructor({
 		id,
 		name = 'asteroid',
 		body = new Body,
-		physic,
+		collider = new Collider,
+		physic = new Physic,
+		rigidbody = new Rigidbody,
 		player = false,
-		mesh,
-		collider,
 		mouseControl
 	} = {}) {
 		super({
-			name: name,
 			id: id,
+			name: name,
 			body: body,
-			physic: physic,
-			mesh: mesh,
 			collider: collider,
+			physic: physic,
+			rigidbody: rigidbody,
 			precision: 3
 		});
 
@@ -25,32 +29,65 @@ class Heaven extends Sphere {
 		// Binds object movements depends on mouse axis
 		this.mouseControl = mouseControl;
 
-		// Add maps to shader
-		var normalmap = new Image();
-		normalmap.src = 'images/n_heaven.jpg';
-
-		var diffusemap = new Image();
-		diffusemap.src = 'images/d_heaven.jpg';
-
-		// Set heaven's shader, not parent's
-		this.mesh.shader = Heaven.shader;
-		this.mesh.material = new Material({
-			normalmap,
-			diffusemap
-		});
+		this.initializeMesh();
+		this.initializeRigidbody();
+		this.initialize();
 	}
 
-	/**
-	 * Binds camera to object, so it's follows object
-	 * @param  {Camera} camera
-	 */
-	bindCamera(camera) {
-		if (!(camera instanceof Camera)) {
-			console.warn(`Heaven: bindCamera: must be a Camera, type: ${typeof camera}, value: ${camera}, item id: ${this.id}`);
-			return;
+	get body() {
+		return this.body_;
+	}
+	set body(val) {
+		if (!(val instanceof Body)) {
+			val = new Body;
 		}
 
-		this.camera = camera;
+		this.body_ = val;
+	}
+
+	get mesh() {
+		return this.mesh_;
+	}
+	set mesh(val) {
+		if (!(val instanceof Mesh)) {
+			this.corrupted = true;
+			val = undefined;
+		}
+
+		this.mesh_ = val;
+	}
+
+	get collider() {
+		return this.collider_;
+	}
+	set collider(val) {
+		if (!(val instanceof Collider)) {
+			val = new Collider;
+		}
+
+		this.collider_ = val;
+	}
+
+	get physic() {
+		return this.physic_;
+	}
+	set physic(val) {
+		if (!(val instanceof Physic)) {
+			val = new Physic;
+		}
+
+		this.physic_ = val;
+	}
+
+	get rigidbody() {
+		return this.rigidbody_;
+	}
+	set rigidbody(val) {
+		if (!(val instanceof Rigidbody)) {
+			val = new Rigidbody;
+		}
+
+		this.rigidbody_ = val;
 	}
 
 	get mouseControl() {
@@ -69,7 +106,7 @@ class Heaven extends Sphere {
 		return this.player_;
 	}
 	set player(val) {
-		if (typeof val !== 'boolean') {
+		if (val && !(val instanceof Player)) {
 			console.warn(`Heaven: player: must be a boolean, type: ${typeof val}, value: ${val}, item id: ${this.id}`);
 			return;
 		}
@@ -77,38 +114,85 @@ class Heaven extends Sphere {
 		this.player_ = val;
 	}
 
-	oninstance() {
+	/**
+	 * Binds camera to object, so it's follows object
+	 * @param  {Camera} camera
+	 */
+	bindCamera(camera) {
+		if (!(camera instanceof Camera)) {
+			console.warn(`Heaven: bindCamera: must be a Camera, type: ${typeof camera}, value: ${camera}, item id: ${this.id}`);
+			return;
+		}
+
+		this.camera = camera;
 	}
 
-	onupdate() {
-		var _private = this.private;
-		var _public  = this.public;
+	initialize() {
+		var self = this;
+		this.onupdate = function() {
+			if (self.mouseControl) {
+				var mouse = self.mouseControl;
 
-		if (this.mouseControl) {
-			var mouse = this.mouseControl;
+				var vec = mouse.position.xyz;
+				var maxspeed = self.physic.maxspeed;
 
-			var vec = mouse.position.xyz;
-			var maxspeed = this.physic.maxspeed;
+				var dir = amc('*', vec, maxspeed);
 
-			var dir = amc('*', vec, maxspeed);
+				var length = dir.length();
+				if (length > maxspeed) {
+					dir = amc('*', vec.normalize(), maxspeed);
+				}
 
-			var length = dir.length();
-			if (length > maxspeed) {
-				dir = amc('*', vec.normalize(), maxspeed);
+				self.rigidbody.velocity = dir;
 			}
 
-			_public.velocity = dir;
-			_public.maxspeed = maxspeed;
+			if (self.camera) {
+				var cam = self.camera.body;
+				var body = self.body;
+
+				var z = body.scale.z * -6;
+
+				cam.position = new Vec3(body.position.xy, z);
+			}
 		}
+	}
 
-		if (this.camera) {
-			var cam = this.camera.body;
-			var body = this.body;
+	initializeMesh() {
+		// Add maps to shader
+		var normalmap = new Image();
+		normalmap.src = 'images/n_heaven.jpg';
 
-			var z = body.scale.z * -6;
+		var diffusemap = new Image();
+		diffusemap.src = 'images/d_heaven.jpg';
 
-			cam.position = new Vec3(body.position.xy, z);
+		// Set heaven's shader, not parent's
+		this.mesh.shader = Heaven.shader;
+		this.mesh.material = new Material({
+			normalmap:  normalmap,
+			diffusemap: diffusemap
+		});
+	}
+
+	initializeRigidbody() {
+		var self = this;
+		this.rigidbody.onupdate = function({
+			deltaTime
+		} = {}) {
+			var body = self.body;
+
+			var velocity = this.velocity;
+			if (velocity.length() !== 0) {
+				var shift = amc('*', velocity, deltaTime / 1000);
+				body.position = amc('+', body.position, shift);
+
+				if (self.player) {
+					self.player.addAction('velocity', shift.array());
+				}
+			}
 		}
+	}
+
+	oninstance() {
 	}
 
 	static get shader() {
@@ -251,7 +335,10 @@ class Heaven extends Sphere {
 				return;
 			}
 
-			if (!this.physic) {
+			if (this.physic) {
+				this.physic.matter = new Matter(matter);
+			}
+			else {
 				this.physic = new Physic({
 					matter: new Matter(matter)
 				});

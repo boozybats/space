@@ -6,6 +6,7 @@ const _players = global.storages.players;
 // Make distribution one time per frame
 update.push(function({
 	time,
+	deltaTime,
 	player
 }) {
 	// Storage of all items
@@ -21,7 +22,21 @@ update.push(function({
 			}
 		},
 		callback: function(response) {
-			player.uptodate(response.data, time);
+			if (!player.heaven) {
+				return;
+			}
+
+			// How much time passed before answer
+			var delta;
+			if (player.lastActionsUpdate) {
+				delta = time - player.lastActionsUpdate;
+			}
+			else {
+				delta = 0;
+			}
+			player.lastActionsUpdate = time;
+
+			player.heaven.applyActions(delta, response.data);
 		}
 	});
 }, 'players');

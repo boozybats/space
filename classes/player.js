@@ -28,8 +28,30 @@ class Player {
 		}
 	}
 
+	get heaven() {
+		return this.items.get('heaven');
+	}
+	set heaven(val) {
+		if (!(val instanceof Heaven)) {
+			val = new Heaven;
+		}
+
+		this.items.set('heaven', val);
+	}
+
 	get items() {
 		return this.items_;
+	}
+
+	get lastActionsUpdate() {
+		return this.lastActionsUpdate_;
+	}
+	set lastActionsUpdate(val) {
+		if (typeof val !== 'number') {
+			val = Date.now();
+		}
+
+		this.lastActionsUpdate_ = val;
 	}
 
 	get onremove() {
@@ -47,7 +69,7 @@ class Player {
 		this.onremove();
 
 		var heaven = this.items.get('heaven');
-		if (heaven instanceof Heaven) {
+		if (heaven) {
 			heaven.remove();
 		}
 	}
@@ -60,20 +82,10 @@ class Player {
 
 		this.client.send(options);
 	}
-
-	// Updates players heaven in server, is called by distribution
-	uptodate(data, time) {
-		if (typeof data !== 'object') {
-			return;
-		}
-
-		var heaven = this.items.get('heaven');
-		heaven.uptodate(data, time);
-	}
 }
 
 module.exports = Player;
 
 const Storage  = require('./storage');
-const Heaven   = require('./heaven');
 const Client   = require('./client');
+const Heaven   = require('./heaven');

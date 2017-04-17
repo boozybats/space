@@ -21,7 +21,7 @@ class Player {
 
 		var heaven = new Heaven({
 			name: 'player',
-			me: true,
+			player: this,
 			mouseControl: cursor
 		});
 		heaven.instance(scene);
@@ -29,9 +29,34 @@ class Player {
 		// make light source follows camera
 		heaven.bindCamera(camera);
 
+		this.actions_ = new Storage;
+
 		// player contains items binded to him
 		this.items = new Storage;
 		this.items.set('heaven', heaven);
+	}
+
+	addAction(type, data) {
+		var action = {
+			type: type,
+			data: data
+		}
+		this.actions.push(action);
+	}
+
+	get actions() {
+		return this.actions_;
+	}
+
+	getActions() {
+		var actions = this.actions.toArray();
+		this.actions.clear();
+
+		return actions;
+	}
+
+	getLastAction() {
+		return this.actions[this.actions.length - 1];
 	}
 
 	get heaven() {

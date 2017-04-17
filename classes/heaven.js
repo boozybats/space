@@ -5,7 +5,7 @@ class Heaven extends Item {
 		id
 	}) {
 		super({
-			id
+			id: id
 		});
 
 		this.updateOldtime = Date.now();
@@ -18,9 +18,9 @@ class Heaven extends Item {
 	generateData(lvl) {
 		var volume = generator.playerVolume(lvl);
 		this.physic = new Physic({
-			matter: {
+			matter: new Matter({
 				Fe: volume
-			}
+			})
 		});
 
 		var arr = generator.playerPosition(lvl);
@@ -29,8 +29,8 @@ class Heaven extends Item {
 		});
 	}
 
-	toJSON() {
-		var json = super.toJSON();
+	toJSON(options) {
+		var json = super.toJSON(options);
 		json.type = 'heaven';
 
 		return json;
@@ -70,24 +70,14 @@ class Heaven extends Item {
 
 		this.verifyChanges(delta, changes);
 	}
-
-	/**
-	 * Checks user's changes, if it possible then apply them
-	 * @param  {Number} time How much time goes before last update
-	 * @param  {Object} changes
-	 */
-	verifyChanges(time, {
-		position,
-		rotation
-	}) {
-		// check movement
-	}
 }
 
 module.exports = Heaven;
 
-const generator = require('../logic/generator');
-const Body      = require('./body');
-const Physic    = require('./physic');
-const Vector    = require('./vector');
-const Vec3      = Vector.Vec3;
+const generator  = require('../logic/generator');
+const Body       = require('./body');
+const Physic     = require('./physic');
+const Matter     = require('./matter');
+const Vector     = require('./vector');
+const Vec3       = Vector.Vec3;
+const Quaternion = require('./quaternion');

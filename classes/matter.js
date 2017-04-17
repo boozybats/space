@@ -1,3 +1,5 @@
+var Storage = require('./storage');
+
 var PeriodicTable = {
 	Fe: {
 		M: 55.845,
@@ -38,34 +40,85 @@ var PeriodicTable = {
 };
 
 class Matter {
-	constructor(matter) {
-		this.data = {};
+	constructor(substances) {
+		this.volume_ = 0;
 
-		this.initialize(matter);
+		var subs = new Storage;
+		subs.filter = (data => typeof data === 'number');
+		this.substances = subs;
+
+		if (typeof substances === 'object') {
+			this.addSubstances(substances);
+		}
 	}
 
-	initialize(matter) {
-		if (typeof matter !== 'object') {
+	/**
+	 * Add a single substance to matter by name and volume. Usualy are called
+	 * by "addSubstances".
+	 * @param {String} name
+	 * @param {Number} volume
+	 */
+	addSubstance(name, volume) {
+		var periodic = PeriodicTable[name];
+		if (!periodic) {
+			return false;
+		}
+
+		this.volume_ += volume;
+
+		var o_volume = this.substances.get(name);
+		if (typeof o_volume === 'undefined') {
+			this.substances.set(name, volume);
+		}
+		else {
+			this.substances.set(name, o_volume + volume);
+		}
+
+		return true;
+	}
+
+	/**
+	 * Adds substances to matter and then calls "updateLayers".
+	 * @param {Object} substances
+	 */
+	addSubstances(substances) {
+		if (typeof substances !== 'object') {
 			return;
 		}
 
-		for (var i in matter) {
-			if (!matter.hasOwnProperty(i)) {
-				continue;
-			}
-
-			if (this.isSubstance(i, matter[i])) {
-				this.data[i] = matter[i];
+		for (var i in substances) {
+			if (substances.hasOwnProperty(i)) {
+				this.addSubstance(i, substances[i]);
 			}
 		}
+
+		this.defineParameters();
 	}
 
-	isSubstance(name, volume) {
-		if (PeriodicTable[name]) {
-			return true;
-		}
+	get diameter() {
+		return this.diameter_;
+	}
 
-		return false;
+	defineParameters() {
+		this.radius_ = Math.pow(3 * this.volume / (4 * Math.PI), 1 / 3);
+		this.diameter_ = this.radius * 2;
+		this.maxspeed_ = this.diameter * 0.4;
+	}
+
+	get maxspeed() {
+		return this.maxspeed_;
+	}
+
+	get radius() {
+		return this.radius_;
+	}
+
+	toJSON() {
+		return this.substances.toObject();
+	}
+
+	get volume() {
+		return this.volume_;
 	}
 }
 

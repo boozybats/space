@@ -49,12 +49,11 @@ function gameplay({
 		camera: camera
 	});
 
-	// direction pointer, lightning
-	var facebox = new FaceBox;
+	// direction pointer
+	var facebox = new FaceBox({
+		cursor: cursor
+	});
 	facebox.instance(scene, true);
-
-	// share variables enviroment
-	facebox.private.env_heaven = player.heaven.public;
 
 	// get all data from server for playing and start project
 	logic.getData(project);

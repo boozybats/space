@@ -1,19 +1,30 @@
 class Physic {
 	constructor({
-		matter
+		matter = new Matter
 	}) {
-		this.initMatter(matter);
+		this.matter = matter;
 	}
 
-	initMatter(matter) {
-		this.matter = new Matter(matter);
+	get matter() {
+		return this.matter_;
+	}
+	set matter(val) {
+		if (!(val instanceof Matter)) {
+			val = new Matter;
+		}
+
+		this.matter_ = val;
+	}
+
+	get maxspeed() {
+		return this.matter.maxspeed;
 	}
 
 	toJSON() {
 		var out = {};
 
 		if (this.matter) {
-			out.matter = this.matter.data;
+			out.matter = this.matter.toJSON();
 		}
 
 		return out;

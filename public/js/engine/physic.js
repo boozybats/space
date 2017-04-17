@@ -262,7 +262,7 @@ class Physic {
 	}
 
 	get maxspeed() {
-		return this.diameter * 0.4;  // in second
+		return this.matter.maxspeed;  // in second
 	}
 
 	Pressure(R) {
@@ -325,9 +325,7 @@ class Matter {
 		subs.filter = (data => typeof data === 'number');
 		this.substances = subs;
 
-		if (typeof substances === 'object') {
-			this.addSubstances(substances);
-		}
+		this.addSubstances(substances);
 	}
 
 	/**
@@ -361,7 +359,7 @@ class Matter {
 	 */
 	addSubstances(substances) {
 		if (typeof substances !== 'object') {
-			throw new Error('Matter: "substances" must be an object');
+			substances = {};
 		}
 
 		for (var i in substances) {
@@ -384,16 +382,18 @@ class Matter {
 	defineParameters() {
 		var last = this.lastLayer;
 
-		if (!last) {
-			throw new Error('Matter: defineParameters: layers for matter are not defined');
+		if (last) {
+			var substance = last.substances[last.substances.length - 1];
+			this.color_ = PeriodicTable[substance].color;
+		}
+		else {
+			this.color_ = undefined;
 		}
 
-		var substance = last.substances[last.substances.length - 1];
 
-		this.color_ = PeriodicTable[substance].color;
-
-		this.radius_ = last.radius + last.height;
+		this.radius_ = Math.pow(3 * this.volume / (4 * Math.PI), 1 / 3);
 		this.diameter_ = this.radius * 2;
+		this.maxspeed_ = this.diameter * 0.4;
 	}
 
 	get diameter() {
@@ -475,6 +475,10 @@ class Matter {
 
 	get mass() {
 		return this.mass_;
+	}
+
+	get maxspeed() {
+		return this.maxspeed_;
 	}
 
 	/**
