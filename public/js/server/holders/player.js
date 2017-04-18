@@ -18,6 +18,7 @@ ws.set('player', response => {
 
 			if (player instanceof Player) {
 				var actions = player.getActions();
+				player.clearActions();
 				response.answer(actions);
 			}
 		}

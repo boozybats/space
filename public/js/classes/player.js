@@ -39,9 +39,14 @@ class Player {
 	addAction(type, data) {
 		var action = {
 			type: type,
+			date: Date.now(),
 			data: data
-		}
+		};
 		this.actions.push(action);
+	}
+
+	clearActions() {
+		this.actions.clear();
 	}
 
 	get actions() {
@@ -49,10 +54,7 @@ class Player {
 	}
 
 	getActions() {
-		var actions = this.actions.toArray();
-		this.actions.clear();
-
-		return actions;
+		return this.actions.toArray();
 	}
 
 	getLastAction() {
