@@ -82,5 +82,10 @@ function remove(index, area = 'main') {
 	return arr.remove(index);
 }
 
+function getFrequency() {
+	return frequency;
+}
+
 exports.push = push;
 exports.remove = remove;
+exports.getFrequency = getFrequency;

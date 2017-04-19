@@ -32,7 +32,7 @@ server.on('connection', ws => {
 	});
 });
 
-// Generates unique string, ex: '1234-5678-9101-1121'
+// Generates unique string, ex: '192.168.0.1'
 var GUIDs = [];
 function GUID() {
 	var key = `${path()}.${path()}.${path()}.${path()}`;
@@ -123,11 +123,12 @@ function message(ip, response) {
 	// Sends back a request to front end
 	var answer = json.answer;
 	if (typeof answer !== 'undefined') {
-		json.answer = function(data, callback) {
+		json.answer = function(data, callback, lifetime) {
 			client.send({
 				handler: answer,
 				data: data,
-				callback: callback
+				callback: callback,
+				callbackLifetime: lifetime
 			});
 		}
 	}

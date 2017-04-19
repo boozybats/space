@@ -55,7 +55,7 @@ class Item {
 		this.onremove_ = val;
 	}
 
-	applyActions(time, data) {
+	applyActions(latency, data) {
 		if (typeof data !== 'object') {
 			return;
 		}
@@ -63,7 +63,7 @@ class Item {
 		for (var i = 0; i < data.length; i++) {
 			var action = data[i];
 
-			var result = this.verifyAction(time, action);
+			var result = this.verifyAction(action);
 		}
 	}
 
@@ -101,7 +101,7 @@ class Item {
 	 * @param  {Number} time How much time goes before last update
 	 * @param  {Object} changes
 	 */
-	verifyAction(time, action) {
+	verifyAction(action) {
 		if (typeof action !== 'object') {
 			return false;
 		}
@@ -118,7 +118,7 @@ class Item {
 				return false;
 			}
 
-			var maxspeed = this.physic.maxspeed * time / 1000;
+			var maxspeed = this.physic.maxspeed;
 			var shift = new Vec3(vec[0], vec[1], vec[2]);
 
 			return verifyVelocity(shift, maxspeed);

@@ -43,15 +43,26 @@ class Player {
 		return this.items_;
 	}
 
-	get lastActionsUpdate() {
-		return this.lastActionsUpdate_;
+	get lastActionsUpdateReceivetime() {
+		return this.lastActionsUpdateReceivetime_;
 	}
-	set lastActionsUpdate(val) {
+	set lastActionsUpdateReceivetime(val) {
 		if (typeof val !== 'number') {
 			val = Date.now();
 		}
 
-		this.lastActionsUpdate_ = val;
+		this.lastActionsUpdateReceivetime_ = val;
+	}
+
+	get lastActionsUpdateStarttime() {
+		return this.lastActionsUpdateStarttime_;
+	}
+	set lastActionsUpdateStarttime(val) {
+		if (typeof val !== 'number') {
+			val = Date.now();
+		}
+
+		this.lastActionsUpdateStarttime_ = val;
 	}
 
 	get onremove() {

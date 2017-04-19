@@ -26,17 +26,24 @@ update.push(function({
 				return;
 			}
 
+			if (time < player.lastActionsUpdateStarttime) {
+				return;
+			}
+			player.lastActionsUpdateStarttime = time;
+
 			// How much time passed before answer
-			var delta;
-			if (player.lastActionsUpdate) {
-				delta = time - player.lastActionsUpdate;
+			var currentTime = Date.now();
+			// Not really latency, this is how much time passed before last callback
+			var latency;
+			if (player.lastActionsUpdateReceivetime) {
+				latency = currentTime - player.lastActionsUpdateReceivetime;
 			}
 			else {
-				delta = 0;
+				latency = update.getFrequency();
 			}
-			player.lastActionsUpdate = time;
+			player.lastActionsUpdateReceivetime = currentTime;
 
-			player.heaven.applyActions(delta, response.data);
+			player.heaven.applyActions(latency, response.data);
 		}
 	});
 }, 'players');

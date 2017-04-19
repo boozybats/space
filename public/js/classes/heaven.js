@@ -182,11 +182,8 @@ class Heaven extends Sphere {
 
 			var velocity = this.velocity;
 			if (velocity.length() !== 0) {
-				var shift = amc('*', velocity, deltaTime / 1000);
-				body.position = amc('+', body.position, shift);
-
 				if (self.player) {
-					self.player.addAction('velocity', shift.array());
+					self.player.addAction('velocity', velocity.array());
 				}
 			}
 		}
