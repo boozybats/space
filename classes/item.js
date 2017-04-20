@@ -128,6 +128,7 @@ class Item {
 
 function verifyVelocity(vec, maxspeed) {
 	var distance = vec.length();
+	console.log(distance <= maxspeed, distance, maxspeed);
 	return distance <= maxspeed;
 }
 

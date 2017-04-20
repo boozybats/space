@@ -35,41 +35,6 @@ class Heaven extends Item {
 
 		return json;
 	}
-
-	// updates heaven on server, is called by player
-	uptodate(data, time) {
-		if (typeof data !== 'object') {
-			return;
-		}
-		else if (typeof time !== 'number') {
-			return;
-		}
-
-		var changes = {};
-
-		var o_time = this.updateOldtime,
-			n_time = time;
-		var delta = n_time - o_time;
-		this.updateOldtime = n_time;
-
-		if (typeof data.body === 'object') {
-			var pos = data.body.position,
-				rot = data.body.rotation,
-				sca = data.body.scale;
-
-			if (typeof pos !== 'object' ||
-				typeof rot !== 'object' ||
-				typeof sca !== 'object') {
-				return;
-			}
-
-			changes.position = new Vec3(pos[0], pos[1], pos[2]);
-			changes.rotation = new Quaternion(rot[0], rot[1], rot[2], rot[3]);
-			changes.scale = new Vec3(sca[0], sca[1], sca[2]);
-		}
-
-		this.verifyChanges(delta, changes);
-	}
 }
 
 module.exports = Heaven;
