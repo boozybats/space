@@ -62,8 +62,11 @@ class Item {
 
 		for (var i = 0; i < data.length; i++) {
 			var action = data[i];
-
-			var result = this.verifyAction(action);
+			Action.execute({
+				item: this,
+				latency: latency,
+				action: action
+			});
 		}
 	}
 
@@ -95,49 +98,10 @@ class Item {
 
 		return out;
 	}
-
-	/**
-	 * Checks user's changes, if it possible then apply them
-	 * @param  {Number} time How much time goes before last update
-	 * @param  {Object} changes
-	 */
-	verifyAction(action) {
-		if (typeof action !== 'object') {
-			return false;
-		}
-		else if (!this.physic) {
-			return false;
-		}
-
-		var type = action.type;
-
-		switch (type) {
-			case 'velocity':
-			var vec = action.data;
-			if (typeof vec !== 'object') {
-				return false;
-			}
-
-			var maxspeed = this.physic.maxspeed;
-			var shift = new Vec3(vec[0], vec[1], vec[2]);
-
-			return verifyVelocity(shift, maxspeed);
-		}
-	}
-}
-
-function verifyVelocity(vec, maxspeed) {
-	var distance = vec.length();
-	console.log(distance <= maxspeed, distance, maxspeed);
-	return distance <= maxspeed;
 }
 
 module.exports = Item;
 
-const Body   = require('./body');
-const Physic = require('./physic');
-const Vector     = require('./vector');
-const Vec        = Vector.Vec;
-const Vec2       = Vector.Vec2;
-const Vec3       = Vector.Vec3;
-const Vec4       = Vector.Vec4;
+const Body       = require('./body');
+const Physic     = require('./physic');
+const Action     = require('./action');

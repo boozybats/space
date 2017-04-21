@@ -55,9 +55,9 @@ class WebGLRenderer {
 		}
 
 		if (!gl) {
-			throw new Error('WebGLRenderer: can\'t create webglrenderer context');
+			throw new Error('WebGLRenderer: can not create WebGLContext');
 		}
-		
+
 		this.project = project;
 		this.canvas_ = canvas;
 		this.webGL_ = gl;

@@ -390,7 +390,6 @@ class Matter {
 			this.color_ = undefined;
 		}
 
-
 		this.radius_ = Math.pow(3 * this.volume / (4 * Math.PI), 1 / 3);
 		this.diameter_ = this.radius * 2;
 		this.maxspeed_ = this.diameter * 0.4;
