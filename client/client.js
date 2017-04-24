@@ -13,12 +13,16 @@ players.filter = (data => data instanceof Player);
 // All items, include npc
 var items = new Storage;
 items.filter = (data => data instanceof Item);
+// Only NPC
+var npcs = new Storage;
+npcs.filter = (data => data instanceof Item);
 
 // Gives access to storages in global variable
 global.storages = {
 	clients: clients,
 	players: players,
-	items: items
+	items: items,
+	npcs: npcs
 };
 
 /**
@@ -42,13 +46,15 @@ global.verification = function(id, ip) {
 
 // Distribution sends data to client on update
 require('./distribution');
+// Creates asteroids
+require('./crop');
 
 // Holders works on client's messages
 require('./holders/player');
 require('./holders/items');
 require('./holders/heavens');
 
-const update  = require('../logic/update');
+const update = require('../logic/update');
 
 // Eraser of expired handlers
 update.push(function({

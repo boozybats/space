@@ -92,7 +92,7 @@ loader({
 
 // SHOW ONCE AT SESSION
 var consoleoneusednames = [];
-console.one = function(name, callback) {
+console.once = function(name, callback) {
 	if (consoleoneusednames.indexOf(name) == -1) {
 		consoleoneusednames.push(name);
 		callback();

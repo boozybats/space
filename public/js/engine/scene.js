@@ -27,11 +27,11 @@ class Scene {
 		this.skyBoxColor = skyBoxColor;
 		this.skyBoxType = skyBoxType;
 
-		this.cameras_ = [];
-		this.directionalLights_ = [];
-		this.pointLights_ = [];
-		this.items_ = [];
-		this.systemitems_ = [];
+		this.cameras_ = new Storage;
+		this.directionalLights_ = new Storage;
+		this.pointLights_ = new Storage;
+		this.items_ = new Storage;
+		this.systemitems_ = new Storage;
 	}
 
 	get name() {
@@ -104,7 +104,7 @@ class Scene {
 		if (!(item instanceof Item)) {
 			throw new Error('Scene: appendItem: must be an Item');
 		}
-		
+
 		this.items.push(item);
 		item.scene_ = this;
 	}
@@ -170,17 +170,19 @@ class Scene {
 	 * scene.findItem('id', 2031);  // Item {id: 2031, ...}
 	 */
 	findItem(type, val) {
+		var out;
 		var items = this.items;
 
 		switch (type) {
 			case 'id':
-			for (var item of items) {
-				if (item.id === val) {
-					return item;
-				}
-			}
+			out = items.find(item => {
+				return item.id === val;
+			});
+			out = out[0];
 			break;
 		}
+
+		return out;
 	}
 
 	/**
@@ -196,14 +198,14 @@ class Scene {
 		var out = [];
 
 		var directionalLights = this.directionalLights;
-		for (var i = directionalLights.length; i--;) {
-			out.push(directionalLights[i].data());
-		}
+		directionalLights.each(light => {
+			out.push(light.data());
+		});
 
 		var pointLights = this.pointLights;
-		for (var i = pointLights.length; i--;) {
-			out.push(pointLights[i].data());
-		}
+		pointLights.each(light => {
+			out.push(light.data());
+		});
 
 		return out;
 	}

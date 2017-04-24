@@ -15,7 +15,25 @@ class Heaven extends Item {
 	 * Sets new body, physic
 	 * @param  {Number} lvl Item's level
 	 */
-	generateData(lvl) {
+	generateNPCData(lvl) {
+		var volume = generator.npcVolume(lvl);
+		this.physic = new Physic({
+			matter: new Matter({
+				Fe: volume
+			})
+		});
+
+		var arr = generator.position(lvl);
+		this.body = new Body({
+			position: new Vec3(...arr)
+		});
+	}
+
+	/**
+	 * Sets new body, physic
+	 * @param  {Number} lvl Item's level
+	 */
+	generatePlayerData(lvl) {
 		var volume = generator.playerVolume(lvl);
 		this.physic = new Physic({
 			matter: new Matter({
@@ -23,7 +41,7 @@ class Heaven extends Item {
 			})
 		});
 
-		var arr = generator.playerPosition(lvl);
+		var arr = generator.position(lvl);
 		this.body = new Body({
 			position: new Vec3(...arr)
 		});

@@ -1,7 +1,7 @@
-var GUIDs = [];
+const GUIDs = [];
 function GUID() {
 	function path() {
-		return ((Math.random() * 99999999999).toFixed(0) - 0);
+		return ((Math.random() * 10e+12).toFixed(0) - 0);
 	}
 	var key = path();
 	if (~GUIDs.indexOf(key)) {

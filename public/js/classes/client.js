@@ -36,7 +36,7 @@ class Client {
 	 */
 	removeExpiredHandlers(date) {
 		if (typeof date !== 'number') {
-			console.one('removeExpiredHandlers', () => {
+			console.once('removeExpiredHandlers', () => {
 				console.log(`Client: removeExpiredHandlers: uncorrect "date" sended, type: ${typeof date}, value: ${date}`);
 			});
 

@@ -5,12 +5,73 @@
  * @param {String} vertexShader
  * @param {String} fragmentShader
  * @class
+ * @property {Object} attributes
+ * @property {Object} uniforms
+ * @property {Object} textures
+ * @property {Number} texturesCount
+ * @property {Number} id
+ * P.S. Better create all shaders at start of the project, so it will be
+ * loaded once and wont slow a process.
  */
 
-class ShaderTemplate {
-	constructor(vertexShader, fragmentShader) {
+class Shader {
+	constructor(webGL, vertexShader, fragmentShader, options = {}) {
+		this.webGL = webGL;
 		this.vertexShader = vertexShader;
 		this.fragmentShader = fragmentShader;
+		this.options = options;
+
+		this.attributes = {};
+		this.uniforms = {};
+		this.textures = {};
+		this.texturesCount = 0;
+		this.id = GUID();
+
+		this.initalize(webGL);
+	}
+
+	get webGL() {
+		return this.webGL_;
+	}
+	set webGL(val) {
+		if (!(val instanceof WebGLContext)) {
+			throw new Error(`Shader: webGL: must be a WebGLContext, value: ${webGL}`);
+		}
+
+		this.webGL_ = val;
+	}
+
+	get fragmentShader() {
+		return this.fragmentShader_;
+	}
+	set fragmentShader(val) {
+		if (typeof val !== 'string') {
+			throw new Error(`Shader: fragmentShader: must be a string, value: ${val}`);
+		}
+
+		this.fragmentShader_ = val;
+	}
+
+	get vertexShader() {
+		return this.vertexShader_;
+	}
+	set vertexShader(val) {
+		if (typeof val !== 'string') {
+			throw new Error(`Shader: vertexShader: must be a string, value: ${val}`);
+		}
+
+		this.vertexShader_ = val;
+	}
+
+	get options() {
+		return this.options_;
+	}
+	set options(val) {
+		if (typeof val !== 'object') {
+			val = {};
+		}
+
+		this.options = val;
 	}
 
 	/**
@@ -18,14 +79,16 @@ class ShaderTemplate {
 	 * founded, return new constructor Shader with program. Must
 	 * be initialized for item, each item must have own shader.
 	 * Usualy function are called by {@link Item#instance}.
-	 * @param {WebGLContext} gl.
-	 * @param {Object} functions Shader enabled functions (DEPTH_TEST, CULL_FACE).
+	 * @param {WebGLContext} gl
+	 * @param {Object} options Shader native options.
 	 * @return {Shader}
 	 * @method
 	 */
-	initialize(gl, functions = {}) {
+	initialize() {
+		var gl = this.webGL;
 		var vertexShader = this.vertexShader,
 			fragmentShader = this.fragmentShader;
+		var options = this.options;
 		var vs = gl.createShader(gl.VERTEX_SHADER),
 			fs = gl.createShader(gl.FRAGMENT_SHADER);
 
@@ -55,68 +118,35 @@ class ShaderTemplate {
 		gl.detachShader(program, fs);
 
 		gl.enable(gl.CULL_FACE);
-		if (typeof functions.cullface !== 'undefined') {
-			gl.cullFace(functions.cullface);
+		if (typeof options.CULL_FACE !== 'undefined') {
+			gl.cullFace(options.CULL_FACE);
 		}
 		else {
 			gl.cullFace(gl.FRONT);
 		}
 
-		if (functions.depthtest !== false) {
+		if (options.DEPTH_TEST !== false) {
 			gl.enable(gl.DEPTH_TEST);
 		}
 
-		if (functions.blend !== false) {
+		if (options.BLEND !== false) {
 			gl.enable(gl.BLEND);
 		}
 
-		if (typeof functions.blendfunc === 'object') {
-			var bf = functions.blendfunc;
+		if (typeof options.blendFunc === 'object') {
+			var bf = options.blendFunc;
 			gl.blendFunc(bf.srcalpha, bf.oneminussrcalpha);
 		}
 		else {
 			gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
 		}
 
-		if (typeof functions.polygonoffset === 'object') {
-			var po = functions.polygonoffset;
+		if (typeof options.polygonOffset === 'object') {
+			var po = options.polygonOffset;
 			gl.polygonOffset(po.factor, po.units);
 			gl.enable(gl.POLYGON_OFFSET_FILL);
 		}
 
-		var out = new Shader(program);
-		out.template = this;
-		
-		return out;
-	}
-}
-
-/**
- * Initialized shader with WebGLShader, contains data about
- * uniforms, attributes, textures of item. Generates unique id for
- * shader to determine which shader has been used the last one.
- * @this {Shader}
- * @param {WebGLProgram} program
- * @class
- * @property {Object} attributes
- * @property {Object} uniforms
- * @property {Object} textures
- * @property {Number} texturesCount
- * @property {Number} id
- */
-
-class Shader {
-	constructor(program, error) {
-		// if mixed up Shader and ShaderTemplate
-		if (typeof program === 'string' && typeof error === 'string') {
-			throw new Error('Shader: you must use ShaderTemplate instead of Shader');
-		}
-
 		this.program = program;
-		this.attributes = {};
-		this.uniforms = {};
-		this.textures = {};
-		this.texturesCount = 0;
-		this.id = GUID();
 	}
 }

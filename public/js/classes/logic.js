@@ -26,12 +26,15 @@ class Logic {
 		if (typeof type !== 'string' || typeof data !== 'object') {
 			return;
 		}
+		return;
 
 		var item;
 
 		switch (type) {
 			case 'heaven':
-			item = new Heaven;
+			item = new Heaven({
+				id: data.id
+			});
 			item.instance(this.scene);
 			item.uptodate(data);
 

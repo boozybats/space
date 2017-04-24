@@ -28,7 +28,6 @@ class Project {
 		 */
 		this.lastShaderId = undefined;
 
-		this.oldtime = 0;
 		this.requestAnimationFrame = this.requestAnimationFrame.bind(this);
 	}
 
@@ -183,7 +182,7 @@ class Project {
 	 */
 	initialize() {
 		var self = this;
-		this.addLayer(function(options) {
+		this.addLayer(options => {
 			var renderer = self.webGLRenderer,
 				scene = self.currentScene,
 				cameras = scene.cameras,
@@ -193,14 +192,16 @@ class Project {
 			renderer.renderer.start();
 
 			self.clearScene();
-			for (var camera of cameras) {
+			cameras.each(camera => {
 				var mvpmatrix = camera.mvpmatrix();
 
-				var allitems = items.concat(sysitems);
-				for (var item of allitems) {
+				items.each(item => {
 					draw(item, mvpmatrix, options);
-				}
-			}
+				});
+				sysitems.each(item => {
+					draw(item, mvpmatrix, options);
+				});
+			});
 
 			renderer.renderer.end();
 		});

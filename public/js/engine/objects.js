@@ -24,27 +24,26 @@ class Icosahedron extends Item {
 		physic,
 		rigidbody
 	} = {}) {
+		var icos = icosahedronMesh;
+		var mesh = new Mesh({
+			attributes: {
+				a_Position: icos.vertices,
+				a_Normal: icos.normals,
+				a_UV: icos.uvs,
+				a_Tangent: icos.tangents,
+				a_Bitangent: icos.bitangents
+			},
+			vertexIndices: icos.indices
+		});
+
 		super({
 			id: id,
 			name: name,
 			body: body,
+			mesh: mesh,
 			collider: collider,
 			physic: physic,
 			rigidbody: rigidbody
-		});
-
-		var mesh = icosahedronMesh;
-
-		this.mesh = new Mesh({
-			attributes: {
-				a_Position: mesh.vertices,
-				a_Normal: mesh.normals,
-				a_UV: mesh.uvs,
-				a_Tangent: mesh.tangents,
-				a_Bitangent: mesh.bitangents
-			},
-			vertexIndices: mesh.indices,
-			shader: Icosahedron.shader
 		});
 	}
 
@@ -190,37 +189,6 @@ class Icosahedron extends Item {
 			uvs.push(...uv);
 		}
 	}
-
-	/**
-	 * Usual shader with vertex shadow.
-	 * @return {ShaderTemplate}
-	 * @method
-	 * @static
-	 */
-	static get shader() {
-		var out = new ShaderTemplate(
-			`attribute vec3 a_Position;
-
-			uniform mat4 u_MVMatrix;
-			uniform mat4 u_MVPMatrix;
-
-			varying float v_Light;
-
-			void main(void) {
-				vec4 position4 = u_MVMatrix * vec4(a_Position, 1.0);
-
-				gl_Position = u_MVPMatrix * position4;
-			}`,
-
-			`precision mediump float;
-
-			void main(void) {
-				gl_FragColor = vec4(1.0);
-			}`
-		);
-
-		return out;
-	}
 }
 
 /**
@@ -248,29 +216,28 @@ class Sphere extends Item {
 		collider,
 		physic,
 		rigidbody,
-		precision = 3
+		precision = 1
 	} = {}) {
+		var sphere = sphereMesh[precision];
+		var mesh = new Mesh({
+			attributes: {
+				a_Position: sphere.vertices,
+				a_Normal: sphere.normals,
+				a_UV: sphere.uvs,
+				a_Tangent: sphere.tangents,
+				a_Bitangent: sphere.bitangents
+			},
+			vertexIndices: sphere.indices
+		});
+
 		super({
 			id: id,
 			name: name,
 			body: body,
+			mesh: mesh,
 			collider: collider,
 			physic: physic,
 			rigidbody: rigidbody
-		});
-
-		var mesh = sphereMesh[precision];
-
-		this.mesh = new Mesh({
-			attributes: {
-				a_Position: mesh.vertices,
-				a_Normal: mesh.normals,
-				a_UV: mesh.uvs,
-				a_Tangent: mesh.tangents,
-				a_Bitangent: mesh.bitangents
-			},
-			vertexIndices: mesh.indices,
-			shader: Icosahedron.shader
 		});
 	}
 
@@ -427,8 +394,22 @@ class Sphere extends Item {
 	}
 }
 
+/***
+ * Initializes icosahedron ans sphere meshes (with precision
+ * from 1 to 4), it optimizes process because don't need to
+ * initialize new mesh then creating new item.
+ */
 var icosahedronMesh,
 	sphereMesh;
+;(function() {
+	icosahedronMesh = Icosahedron.mesh();
+
+	sphereMesh = [];
+	sphereMesh[0] = icosahedronMesh;
+	for (var i = 1; i < 5; i++) {
+		sphereMesh[i] = Sphere.mesh(sphereMesh[i - 1]);
+	}
+})();
 
 /**
  * Creates item with cube's mesh.
@@ -451,15 +432,6 @@ class Cube extends Item {
 		physic,
 		rigidbody
 	} = {}) {
-		super({
-			id: id,
-			name: name,
-			body: body,
-			collider: collider,
-			physic: physic,
-			rigidbody: rigidbody
-		});
-
 		var indices = [
 			0, 1, 3, 3, 1, 2,
 			7, 6, 4, 4, 6, 5,
@@ -490,9 +462,9 @@ class Cube extends Item {
 		uvs.size = 2;
 
 		var tbn = TBN({
-			indices,
-			vertices,
-			uvs
+			indices: indices,
+			vertices: vertices,
+			uvs: uvs
 		});
 
 		var normals = tbn.normals;
@@ -504,7 +476,7 @@ class Cube extends Item {
 		var bitangents = tbn.bitangents;
 		bitangents.size = 3;
 
-		this.mesh = new Mesh({
+		var mesh = new Mesh({
 			attributes: {
 				a_Position: vertices,
 				a_UV: uvs,
@@ -512,38 +484,18 @@ class Cube extends Item {
 				a_Tangent: tangents,
 				a_Bitangent: bitangents
 			},
-			vertexIndices: indices,
-			shader: Cube.shader
+			vertexIndices: indices
 		});
-	}
 
-	/**
-	 * Creates cube shader.
-	 * @return {ShaderTemplate}
-	 * @method
-	 * @static
-	 */
-	static get shader() {
-		var out = new ShaderTemplate(
-			`attribute vec3 a_Position;
-
-			uniform mat4 u_MVMatrix;
-			uniform mat4 u_MVPMatrix;
-
-			void main(void) {
-				vec4 position4 = u_MVMatrix * vec4(a_Position, 1.0);
-
-				gl_Position = u_MVPMatrix * position4;
-			}`,
-
-			`precision mediump float;
-
-			void main(void) {
-				gl_FragColor = vec4(1.0);
-			}`
-		);
-
-		return out;
+		super({
+			id: id,
+			name: name,
+			body: body,
+			mesh: mesh,
+			collider: collider,
+			physic: physic,
+			rigidbody: rigidbody
+		});
 	}
 }
 
@@ -655,8 +607,7 @@ class UI extends Item {
 				a_Position: vertices,
 				a_UV: uv
 			},
-			vertexIndices: VI,
-			shader: UI.shader
+			vertexIndices: VI
 		});
 	}
 
@@ -684,41 +635,6 @@ class UI extends Item {
 			1 * (this.height / RESOLUTION_HEIGHT),
 			1
 		);
-	}
-
-	/**
-	 * Create UI's shader.
-	 * @return {ShaderTemplate}
-	 */
-	static get Shader() {
-		var out = new Shader(
-			`attribute vec3 a_Position;
-			attribute vec2 a_UV;
-
-			uniform mat4 u_MVMatrix;
-
-			varying vec2 v_UV;
-
-			void main(void) {
-				v_UV = a_UV;
-
-				gl_Position = u_MVMatrix * vec4(a_Position, 1.0);
-			}`,
-
-			`precision highp float;
-
-			uniform sampler2D u_Texture;
-
-			varying vec2 v_UI;
-
-			void main(void) {
-				vec4 texel = texture2D(u_Texture, v_UV);
-
-				gl_FragColor = texel;
-			}`
-		);
-
-		return out;
 	}
 }
 
@@ -953,18 +869,3 @@ function TBN({indices, vertices, uvs, normals} = {}) {
 		return out;
 	}
 }
-
-/***
- * Initializes icosahedron ans sphere meshes (with precision
- * from 1 to 4), it optimizes process because don't need to
- * initialize new mesh then creating new item.
- */
-;(function() {
-	icosahedronMesh = Icosahedron.mesh();
-
-	sphereMesh = [];
-	sphereMesh[0] = icosahedronMesh;
-	for (var i = 1; i < 5; i++) {
-		sphereMesh[i] = Sphere.mesh(sphereMesh[i - 1]);
-	}
-})();

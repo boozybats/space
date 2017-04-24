@@ -128,8 +128,16 @@ class Heaven extends Sphere {
 	}
 
 	initialize() {
+		var _private = this.private;
 		var self = this;
 		this.onupdate = function() {
+			var oldDiameter = _private.diameter,
+				diameter = self.physic.diameter;
+			if (oldDiameter !== diameter) {
+				_private.diameter = diameter;
+				self.body.scale = new Vec3(diameter, diameter, diameter);
+			}
+
 			if (self.mouseControl) {
 				var mouse = self.mouseControl;
 
@@ -166,7 +174,7 @@ class Heaven extends Sphere {
 		diffusemap.src = 'images/d_heaven.jpg';
 
 		// Set heaven's shader, not parent's
-		this.mesh.shader = Heaven.shader;
+		this.mesh.shader = shaders.heaven;
 		this.mesh.material = new Material({
 			normalmap:  normalmap,
 			diffusemap: diffusemap
@@ -178,6 +186,10 @@ class Heaven extends Sphere {
 		this.rigidbody.onupdate = function({
 			deltaTime
 		} = {}) {
+			if (!this.player) {
+				return;
+			}
+
 			var body = self.body;
 
 			var velocity = this.velocity;
@@ -187,105 +199,6 @@ class Heaven extends Sphere {
 				}
 			}
 		}
-	}
-
-	oninstance() {
-	}
-
-	static get shader() {
-		var out = new ShaderTemplate(
-			`#define MAX_LIGHTS 8
-
-			struct Light {
-				vec4  ambient;
-				vec4  diffuse;
-				vec4  specular;
-				vec3  position;
-				float type;
-				float intensity;
-			};
-
-			attribute vec3 a_Position;
-			attribute vec3 a_Normal;
-			attribute vec2 a_UV;
-
-			uniform mat4 u_MVMatrix;
-			uniform mat4 u_MVPMatrix;
-			uniform mat3 u_MVNMatrix;
-			uniform Light u_Lights[MAX_LIGHTS];
-
-			varying vec4 v_LightAmbient[MAX_LIGHTS];
-			varying vec4 v_LightDiffuse[MAX_LIGHTS];
-			varying vec2 v_UV;
-
-			void main(void) {
-				vec4 position4 = u_MVMatrix * vec4(a_Position, 1.0);
-				gl_Position = u_MVPMatrix * position4;
-
-				v_UV = a_UV;
-
-				vec3 position3 = position4.xyz / position4.w;
-				vec3 normal = normalize(u_MVNMatrix * a_Normal);
-
-				for (int i = 0; i < MAX_LIGHTS; i++) {
-					Light light = u_Lights[i];
-					if (light.type != 2.0) {
-						continue;
-					}
-
-					vec3 dir = normalize(light.position - position3);
-					float cosTheta = clamp(dot(normal, dir), 0.0, 1.0);
-
-					float dist = distance(position3, light.position);
-
-					v_LightDiffuse[i] = light.diffuse * light.intensity * cosTheta / pow(dist, 2.0);
-					v_LightAmbient[i] = light.ambient;
-				}
-			}`,
-
-			`precision mediump float;
-
-			#define MAX_LIGHTS 8
-
-			struct Material {
-				vec4 ambient;
-				vec4 diffuse;
-				vec4 specular;
-				sampler2D ambientmap;
-				sampler2D diffusemap;
-				sampler2D specularmap;
-				sampler2D normalmap;
-			};
-
-			uniform Material u_Material;
-
-			varying vec4 v_LightAmbient[MAX_LIGHTS];
-			varying vec4 v_LightDiffuse[MAX_LIGHTS];
-			varying vec2 v_UV;
-
-			void main(void) {
-				vec4 diffuseTex = texture2D(u_Material.diffusemap, v_UV);
-
-				vec4 color = vec4(0.0);
-
-				for (int i = 0; i < MAX_LIGHTS; i++) {
-					vec4 ambient = u_Material.ambient * v_LightAmbient[i];
-					vec4 diffuse = diffuseTex * v_LightDiffuse[i];
-					color += ambient + diffuse;
-				}
-
-				color = vec4(
-					min(color.x, diffuseTex.x),
-					min(color.y, diffuseTex.y),
-					min(color.z, diffuseTex.z),
-					min(color.w, diffuseTex.w)
-				);
-
-				gl_FragColor = color;
-			}`
-		);
-
-		return out;
 	}
 
 	toJSON() {
@@ -321,7 +234,7 @@ class Heaven extends Sphere {
 
 			this.body.position = new Vec3(pos[0], pos[1], pos[2]);
 			this.body.rotation = new Quaternion(rot[0], rot[1], rot[2], rot[3]);
-			this.body.scale = new Vec3(sca[0], sca[1], sca[2]);
+			// this.body.scale = new Vec3(sca[0], sca[1], sca[2]);
 		}
 
 		if (typeof data.physic === 'object') {

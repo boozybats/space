@@ -134,6 +134,17 @@ class Mesh {
 	get VIOBuffer() {
 		return this.VIOBuffer_;
 	}
+
+	get webGL() {
+		return this.webGL_;
+	}
+	set webGL(val) {
+		if (val instanceof WebGLContext) {
+			throw new Error(`Mesh: webGL: must be a WebGLContext, value: ${val}`);
+		}
+
+		this.webGL_ = val;
+	}
 }
 
 /**

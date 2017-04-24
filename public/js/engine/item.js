@@ -49,27 +49,14 @@ class Item {
 		this.physic = physic;
 		this.rigidbody = rigidbody;
 
-		/**
-		 * Has been item instantiated.
-		 * @type {Boolean}
-		 * @private
-		 */
+		// Has been item instantiated
 		this.isInstanced = false;
-		/**
-		 * A variable environment that can be obtained by external methods.
-		 * @type {Object}
-		 * @private
-		 */
-		this.public_ = {};
-		/**
-		 * A variable environment that can be obtained only in this object.
-		 * @type {Object}
-		 * @private
-		 */
-		this.private_ = {};
-
 		// If item corrupted it will not be instantiated
-		this.corrupted = false;
+		this.isCorrupted = false;
+		// A variable environment that can be obtained by external methods
+		this.public_ = {};
+		// A variable environment that can be obtained only in this object
+		this.private_ = {};
 
 		this.oninstance = function() {};
 		this.onupdate   = function() {};
@@ -91,7 +78,7 @@ class Item {
 		return this.id_;
 	}
 	set id(val) {
-		if (val && typeof val !== 'number') {
+		if (typeof val !== 'number') {
 			val = -2;
 		}
 
@@ -331,7 +318,7 @@ class Item {
 
 		var size = val.size;
 		if (typeof size === 'undefined') {
-			console.warn(`Not selected size for attribute '${key}'`);
+			console.warn(`Item: initializeAttribute: Not selected size for attribute '${key}'`);
 		}
 
 		var location = gl.getAttribLocation(program, key);
@@ -504,8 +491,8 @@ class Item {
 	 * item.instance(scene, true);
 	 */
 	instance(scene, isSystem = false) {
-		if (this.corrupted) {
-			console.one(this.id, () => console.log(`Item: instance: item corrupted and wont be instantiated, id: ${this.id}, name: ${this.name}`));
+		if (this.isCorrupted) {
+			console.once(this.id, () => console.log(`Item: instance: item corrupted and wont be instantiated, id: ${this.id}, name: ${this.name}`));
 		}
 
 		if (!(scene instanceof Scene)) {
@@ -525,10 +512,10 @@ class Item {
 		this.webGL_ = this.project.webGLRenderer.webGL;
 
 		if (this.mesh) {
-			this.mesh.shader = this.mesh.shader.initialize(this.webGL);
+			this.mesh.webGL = this.webGL;
 			this.mesh.setVIOBuffer(this.webGL, this.mesh.vertexIndices);
-			this.changeAttributes(this.mesh.attributes);
-			this.changeUniforms(this.mesh.uniforms);
+			this.mesh.changeAttributes(this.mesh.attributes);
+			this.mesh.changeUniforms(this.mesh.uniforms);
 		}
 
 		this.oninstance();

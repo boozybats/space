@@ -18,6 +18,9 @@ function gameplay({
 		}
 	});
 
+	// Initialize all shaders in project
+	initializeShaders(project.webGLRenderer.webGL);
+
 	// set first layer for webGL drawning in project
 	project.initialize();
 
