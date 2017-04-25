@@ -286,9 +286,12 @@ class Mesh {
 		}
 
 		var gl = this.webGL;
-		var program = this.program;
+		var shader = this.shader,
+			program = this.program;
 
-		gl.useProgram(program);
+		if (!checkIsLastShader(shader)) {
+			shader.useProgram();
+		}
 
 		var size = val.size;
 		if (typeof size === 'undefined') {
@@ -336,9 +339,12 @@ class Mesh {
 		}
 
 		var gl = this.webGL;
-		var program = this.program;
+		var shader = this.shader,
+			program = this.program;
 
-		gl.useProgram(program);
+		if (!checkIsLastShader(shader)) {
+			shader.useProgram();
+		}
 
 		var location,
 			method,
@@ -551,15 +557,12 @@ class Mesh {
 	 * every attribute, uniform and texture in shader.
 	 * @method
 	 */
-	update() {
+	update(lastUsedShader) {
 		var gl = this.webGL;
-		var program = this.program;
 		var data = this.shaderdata,
 			attributes = data.attributes,
 			uniforms = data.uniforms,
 			textures = data.textures;
-
-		gl.useProgram(program);
 
 		for (var i in attributes) {
 			if (attributes.hasOwnProperty(i)) {
@@ -595,6 +598,11 @@ class Mesh {
 		size
 	} = {}) {
 		var gl = this.webGL;
+		var shader = this.shader;
+
+		if (!checkIsLastShader(shader)) {
+			shader.useProgram();
+		}
 
 		if (location >= 0) {
 			gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
@@ -622,10 +630,15 @@ class Mesh {
 		counter,
 		value
 	} = {}) {
-		var gl = this.webGL;
-
 		if (!location) {
 			return;
+		}
+
+		var gl = this.webGL;
+		var shader = this.shader;
+
+		if (!checkIsLastShader(shader)) {
+			shader.useProgram();
 		}
 
 		switch (type) {
@@ -684,6 +697,12 @@ const DEFAULT_VALUES = {
 	tex:  0,
 	num:  0
 };
+
+var lastUsedShader;
+function checkIsLastShader(shader) {
+	lastUsedShader = shader;
+	return (shader === lastUsedShader);
+}
 
 /**
  * Sends data about mesh's material in shader.

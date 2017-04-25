@@ -159,13 +159,13 @@ class Project {
 	initialize() {
 		var self = this;
 		this.addLayer(options => {
-			var renderer = self.webGLRenderer,
+			var webGLRenderer = self.webGLRenderer,
 				scene = self.currentScene,
 				cameras = scene.cameras,
 				sysitems = scene.systemitems,
 				items = scene.items;
 
-			renderer.renderer.start();
+			webGLRenderer.renderer.start();
 
 			self.clearScene();
 			cameras.each(camera => {
@@ -179,7 +179,7 @@ class Project {
 				});
 			});
 
-			renderer.renderer.end();
+			webGLRenderer.renderer.end();
 		});
 
 		function draw(item, mvpmatrix, options) {
@@ -204,6 +204,12 @@ class Project {
 
 				var lights = scene.getLights();
 				uniforms.u_Lights = lights;
+
+				var shader = item.mesh.shader;
+				if (self.lastUsedShader !== shader) {
+					self.lastUsedShader = shader;
+					shader.useProgram();
+				}
 
 				mesh.changeUniforms(uniforms);
 

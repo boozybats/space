@@ -153,6 +153,14 @@ class Shader {
 			gl.enable(gl.POLYGON_OFFSET_FILL);
 		}
 
-		this.program = program;
+		this.program_ = program;
+	}
+
+	get program() {
+		return this.program_;
+	}
+
+	useProgram() {
+		this.webGL.useProgram(this.program);
 	}
 }
