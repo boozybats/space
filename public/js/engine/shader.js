@@ -1,7 +1,7 @@
 /**
  * Containts vertex shader and fragment shader,
  * must be initialized to get WebGLShader.
- * @this {ShaderTemplate}
+ * @this {Shader}
  * @param {String} vertexShader
  * @param {String} fragmentShader
  * @class
@@ -21,21 +21,27 @@ class Shader {
 		this.fragmentShader = fragmentShader;
 		this.options = options;
 
-		this.attributes = {};
-		this.uniforms = {};
-		this.textures = {};
-		this.texturesCount = 0;
 		this.id = GUID();
 
-		this.initalize(webGL);
+		var collection = new Storage;
+		collection.filter = (data => typeof data === 'object');
+		collection.onadd = function(data) {
+			data.attributes    = {};
+			data.uniforms      = {};
+			data.textures      = {};
+			data.texturesCount = 0;
+		}
+		this.collection = collection;
+
+		this.initialize();
 	}
 
 	get webGL() {
 		return this.webGL_;
 	}
 	set webGL(val) {
-		if (!(val instanceof WebGLContext)) {
-			throw new Error(`Shader: webGL: must be a WebGLContext, value: ${webGL}`);
+		if (!(val instanceof WebGLRenderingContext)) {
+			throw new Error(`Shader: webGL: must be a WebGLRenderingContext, value: ${val}`);
 		}
 
 		this.webGL_ = val;
@@ -71,7 +77,7 @@ class Shader {
 			val = {};
 		}
 
-		this.options = val;
+		this.options_ = val;
 	}
 
 	/**
@@ -79,7 +85,7 @@ class Shader {
 	 * founded, return new constructor Shader with program. Must
 	 * be initialized for item, each item must have own shader.
 	 * Usualy function are called by {@link Item#instance}.
-	 * @param {WebGLContext} gl
+	 * @param {WebGLRenderingContext} gl
 	 * @param {Object} options Shader native options.
 	 * @return {Shader}
 	 * @method

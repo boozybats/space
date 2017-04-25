@@ -4,12 +4,12 @@
  * @this {WebGLRenderer}
  * @param {Object} options
  * @param {Project} options.project
- * @param {Object} options.attributes WebGLContext attributes:
+ * @param {Object} options.attributes WebGLRenderingContext attributes:
  * Boolean antialias, Boolean alpha, Boolean willReadFrequently,
  * String storage, Number depth, Number stencil, Boolean premultipliedAlpha,
  * Boolean preserveDrawingBuffer, Boolean failIfMajorPerformanceCaveat.
  * @class
- * @property {WebGLContext} webGL
+ * @property {WebGLRenderingContext} webGL
  * @property {Canvas} canvas
  */
 
@@ -55,7 +55,7 @@ class WebGLRenderer {
 		}
 
 		if (!gl) {
-			throw new Error('WebGLRenderer: can not create WebGLContext');
+			throw new Error('WebGLRenderer: can not create WebGLRenderingContext');
 		}
 
 		this.project = project;
@@ -173,7 +173,9 @@ class WebGLRenderer {
 		});
 
 		function NOAA() {
-			shader = (new ShaderTemplate(
+			shader = new Shader(
+				gl,
+				
 				`attribute vec3 a_Position;
 				attribute vec2 a_UV;
 
@@ -196,7 +198,7 @@ class WebGLRenderer {
 
 					gl_FragColor = texel;
 				}`
-			)).initialize(gl);
+			);
 
 			var frame = self.createframe(1);
 			buffer = frame.buffer;
@@ -204,7 +206,9 @@ class WebGLRenderer {
 		}
 
 		function FXAAx2() {
-			shader = (new ShaderTemplate(
+			shader = new Shader(
+				gl,
+
 				`attribute vec3 a_Position;
 				attribute vec2 a_UV;
 
@@ -227,7 +231,7 @@ class WebGLRenderer {
 
 					gl_FragColor = texel;
 				}`
-			)).initialize(gl);
+			);
 
 			var frame = self.createframe(2);
 			buffer = frame.buffer;
@@ -235,7 +239,9 @@ class WebGLRenderer {
 		}
 
 		function FXAAx4() {
-			shader = (new ShaderTemplate(
+			shader = new Shader(
+				gl,
+
 				`attribute vec3 a_Position;
 				attribute vec2 a_UV;
 
@@ -258,7 +264,7 @@ class WebGLRenderer {
 
 					gl_FragColor = texel;
 				}`
-			)).initialize(gl);
+			);
 
 			var frame = self.createframe(4);
 			buffer = frame.buffer;

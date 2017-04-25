@@ -26,7 +26,6 @@ class Logic {
 		if (typeof type !== 'string' || typeof data !== 'object') {
 			return;
 		}
-		return;
 
 		var item;
 

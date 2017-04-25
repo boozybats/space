@@ -1,46 +1,22 @@
 /**
  * Collects scenes and project properties. Must be created to start
- * WebGLContext drawning. Should be initialized for main layer.
+ * WebGLRenderingContext drawning. Should be initialized for main layer.
  * @this {Project}
  * @param {Object} options
- * @param {Image} options.transparentImage Default image that shows if
- * sampler didn't load.
  * @class
  * @property {Array} scenes
  * @property {Array} layers Layers are called each frame in order.
- * @property {Image} transparentImage Default image that shows if
- * sampler didn't load.
  * @property {Canvas} canvas
  * @property {WebGLRenderer} webGLRenderer
  * @property {Scene} currentScene
  */
 
 class Project {
-	constructor({
-		transparentImage
-	}) {
+	constructor() {
 		this.scenes_ = [];
 		this.layers_ = [];
-		this.transparentImage = transparentImage;
-
-		/**
-		 * @private
-		 */
-		this.lastShaderId = undefined;
 
 		this.requestAnimationFrame = this.requestAnimationFrame.bind(this);
-	}
-
-	get transparentImage() {
-		return this.transparentImage_;
-	}
-
-	set transparentImage(val) {
-		if (!(val instanceof Image)) {
-			throw new Error('Project: transparentImage: must be an image');
-		}
-
-		this.transparentImage_ = val;
 	}
 
 	/**
@@ -229,14 +205,14 @@ class Project {
 				var lights = scene.getLights();
 				uniforms.u_Lights = lights;
 
-				item.changeUniforms(uniforms);
+				mesh.changeUniforms(uniforms);
 
-				item.update();
+				mesh.update();
 
 				var VIOBuffer = mesh.VIOBuffer;
 				gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, VIOBuffer);
 
-				gl.drawElements(gl[mesh.drawStyle], VIOBuffer.length, gl.UNSIGNED_SHORT, 0);
+				gl.drawElements(gl[mesh.drawStyle], VIOBuffer.size, gl.UNSIGNED_SHORT, 0);
 			}
 
 			// update by custrom scripts

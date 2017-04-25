@@ -6,9 +6,7 @@ function gameplay({
 	canvas.appendTo(document.body);
 
 	// initialize project, set as default image "Transparent"
-	var project = new Project({
-		transparentImage: images.transparent
-	});
+	var project = new Project;
 	project.attachCanvas(canvas);
 
 	// initialize webGLRenderer and set attributes
@@ -19,7 +17,9 @@ function gameplay({
 	});
 
 	// Initialize all shaders in project
-	initializeShaders(project.webGLRenderer.webGL);
+	initializeShaders(project.webGLRenderer.webGL, {
+		transparentImage: images.transparent
+	});
 
 	// set first layer for webGL drawning in project
 	project.initialize();

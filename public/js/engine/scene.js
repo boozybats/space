@@ -80,7 +80,7 @@ class Scene {
 
 	/**
 	 * Appends camera to scene. All binded enabled cameras
-	 * draw new WebGLContext view. To see all redrawed items
+	 * draw new WebGLRenderingContext view. To see all redrawed items
 	 * set skyBoxType as transparent.
 	 * @param  {Camera} camera
 	 * @method

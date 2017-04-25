@@ -1,3 +1,6 @@
+// To set in empty functions
+var anonymousfunction = function() {};
+
 /**
  * Stores elements in object, filter can be setted by {@Storage#filter},
  * remove event by {@Storage#onremove}.
@@ -7,6 +10,7 @@ class Storage {
 	constructor() {
 		this.data     = {};
 		this.filter   = null;
+		this.onadd    = null;
 		this.onremove = null;
 
 		this.numberkeyLength_ = 0;
@@ -110,12 +114,23 @@ class Storage {
 		return this.numberkeyLength_;
 	}
 
+	get onadd() {
+		return this.onadd_;
+	}
+	set onadd(val) {
+		if (typeof val !== 'function') {
+			val = anonymousfunction;
+		}
+
+		this.onadd_ = val;
+	}
+
 	get onremove() {
 		return this.onremove_;
 	}
 	set onremove(val) {
 		if (typeof val !== 'function') {
-			val = function() {};
+			val = anonymousfunction;
 		}
 
 		this.onremove_ = val;
@@ -140,7 +155,10 @@ class Storage {
 
 			if (result) {
 				this.numberkeyLength_++;
-				this.data[index++] = value;
+				this.data[index] = value;
+				this.onadd(value, index, this);
+
+				index++;
 			}
 		}
 
@@ -163,14 +181,15 @@ class Storage {
 		return true;
 	}
 
-	set(key, data) {
+	set(key, value) {
 		var result = true;
 		if (this.filter) {
-			result = this.filter(data);
+			result = this.filter(value);
 		}
 
 		if (result) {
-			this.data[key] = data;
+			this.data[key] = value;
+			this.onadd(value, key, this);
 		}
 
 		return result;
