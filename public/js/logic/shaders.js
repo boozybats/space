@@ -99,7 +99,7 @@ function initializeShaders(webGL, options) {
 		webGL,
 		
 		`attribute vec3 a_Position;
-		attribute vec2 a_UI;
+		attribute vec2 a_UV;
 
 		uniform mat4 u_MVMatrix;
 

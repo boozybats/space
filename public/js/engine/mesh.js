@@ -52,14 +52,17 @@ class Mesh {
 
 		if (shader) {
 			this.webGL = shader.webGL;
+			this.shaderdata = {
+				attributes: {},
+				uniforms: {},
+				textures: {},
+				texturesCount: 0
+			};
 
-			this.shaderdata = {};
-			shader.collection.push(this.shaderdata);
+			this.setVIOBuffer();
 
 			this.changeAttributes(this.attributes);
 			this.changeUniforms(this.uniforms);
-
-			this.setVIOBuffer();
 		}
 		else {
 			this.webGL = undefined;
@@ -222,6 +225,7 @@ class Mesh {
 			return;
 		}
 
+		var shader = this.shader;
 		var data = this.shaderdata;
 
 		for (var i in options) {
@@ -247,7 +251,7 @@ class Mesh {
 	 */
 	changeUniforms(options) {
 		if (!this.shader) {
-			console.warn('Mesh: changeAttributes: attributes can not be applied without binded shader');
+			console.warn('Mesh: changeUniforms: uniforms can not be applied without binded shader');
 			return;
 		}
 
@@ -285,20 +289,28 @@ class Mesh {
 			return;
 		}
 
+		if (!this.shader) {
+			console.warn('Mesh: initializeAttribute: attributes can not be applied without binded shader');
+			return;
+		}
+
 		var gl = this.webGL;
 		var shader = this.shader,
 			program = this.program;
 
-		if (!checkIsLastShader(shader)) {
-			shader.useProgram();
-		}
+		shader.useProgram();
 
 		var size = val.size;
 		if (typeof size === 'undefined') {
 			console.warn(`Item: initializeAttribute: Not selected size for attribute '${key}'`);
 		}
 
-		var location = gl.getAttribLocation(program, key);
+		var location = shader.attributes[key];
+		if (typeof location !== 'number') {
+			location = gl.getAttribLocation(program, key);
+			shader.attributes[key] = location;
+		}
+
 		if (location < 0) {
 			// console.warn(`Shader doesnt contain '${key}' attribute or this is unusable`);
 		}
@@ -338,13 +350,16 @@ class Mesh {
 			return;
 		}
 
+		if (!this.shader) {
+			console.warn('Mesh: initializeUniform: uniforms can not be applied without binded shader');
+			return;
+		}
+
 		var gl = this.webGL;
 		var shader = this.shader,
 			program = this.program;
 
-		if (!checkIsLastShader(shader)) {
-			shader.useProgram();
-		}
+		shader.useProgram();
 
 		var location,
 			method,
@@ -443,11 +458,16 @@ class Mesh {
 		};
 
 		function getlocation() {
-			var loc = gl.getUniformLocation(program, key);
-			if (!loc) {
+			var location = shader.uniforms[key] ;
+			if (!location) {
+				location = gl.getUniformLocation(program, key);
+				shader.uniforms[key] = location;
+			}
+
+			if (!location) {
 				// console.warn(`Shader doesnt contain '${key}' uniform or this is unusable`);
 			}
-			return loc;
+			return location;
 		}
 	}
 
@@ -600,9 +620,7 @@ class Mesh {
 		var gl = this.webGL;
 		var shader = this.shader;
 
-		if (!checkIsLastShader(shader)) {
-			shader.useProgram();
-		}
+		shader.useProgram();
 
 		if (location >= 0) {
 			gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
@@ -637,13 +655,11 @@ class Mesh {
 		var gl = this.webGL;
 		var shader = this.shader;
 
-		if (!checkIsLastShader(shader)) {
-			shader.useProgram();
-		}
+		shader.useProgram();
 
 		switch (type) {
 			case 'mat':
-			gl[method](location, null, new Float32Array(value.columnmajor()));
+			gl[method](location, null, value.columnmajor());
 			break;
 
 			case 'col':
@@ -651,7 +667,7 @@ class Mesh {
 			case 'vec':
 			case 'eul':
 			case 'qua':
-			gl[method](location, new Float32Array(value.array()));
+			gl[method](location, value.array());
 			break;
 
 			case 'tex':
@@ -697,12 +713,6 @@ const DEFAULT_VALUES = {
 	tex:  0,
 	num:  0
 };
-
-var lastUsedShader;
-function checkIsLastShader(shader) {
-	lastUsedShader = shader;
-	return (shader === lastUsedShader);
-}
 
 /**
  * Sends data about mesh's material in shader.

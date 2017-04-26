@@ -169,20 +169,38 @@ class Project {
 
 			self.clearScene();
 			cameras.each(camera => {
-				var mvpmatrix = camera.mvpmatrix();
-
+				// Execute onupdate functions at first
 				items.each(item => {
-					draw(item, mvpmatrix, options);
+					update(item, options);
 				});
 				sysitems.each(item => {
-					draw(item, mvpmatrix, options);
+					update(item, options);
+				});
+
+				// Initialze perspective matrix by camera body
+				var mvpmatrix = camera.mvpmatrix();
+
+				// Then draw items
+				items.each(item => {
+					draw(item, mvpmatrix);
+				});
+				sysitems.each(item => {
+					draw(item, mvpmatrix);
 				});
 			});
 
 			webGLRenderer.renderer.end();
 		});
 
-		function draw(item, mvpmatrix, options) {
+		function update(item, options) {
+			// update by custrom scripts
+			item.onupdate(options);
+			if (item.rigidbody) {
+				item.rigidbody.onupdate(options);
+			}
+		}
+
+		function draw(item, mvpmatrix) {
 			var gl = self.webGLRenderer.webGL;
 			var scene = self.currentScene;
 
@@ -219,12 +237,6 @@ class Project {
 				gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, VIOBuffer);
 
 				gl.drawElements(gl[mesh.drawStyle], VIOBuffer.size, gl.UNSIGNED_SHORT, 0);
-			}
-
-			// update by custrom scripts
-			item.onupdate(options);
-			if (item.rigidbody) {
-				item.rigidbody.onupdate(options);
 			}
 		}
 	}

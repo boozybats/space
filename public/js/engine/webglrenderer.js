@@ -287,8 +287,9 @@ class Renderer {
 		viewportHeight
 	}) {
 		var program = shader.program;
+		this.webGL = gl;
+		this.shader = shader;
 		this.program = program;
-		this.gl = gl;
 		this.texture = texture;
 		this.buffer = buffer;
 		this.viewportWidth = viewportWidth;
@@ -314,7 +315,7 @@ class Renderer {
 		var indices = [0, 1, 2, 2, 3, 0];
 
 		// create buffers
-		gl.useProgram(program);
+		shader.useProgram();
 
 		var v_buffer = gl.createBuffer();
 		gl.bindBuffer(gl.ARRAY_BUFFER, v_buffer);
@@ -346,11 +347,77 @@ class Renderer {
 
 		// set uniforms
 		gl.uniform1i(gl.getUniformLocation(program, 'u_Texture'), 0);
-		gl.uniform2fv(gl.getUniformLocation(program, 'u_Pixel'), new Float32Array([1 / viewportWidth, 1 / viewportHeight]));
+		gl.uniform2fv(gl.getUniformLocation(program, 'u_Pixel'), [1 / viewportWidth, 1 / viewportHeight]);
+	}
+
+	get webGL() {
+		return this.webGL_;
+	}
+	set webGL(val) {
+		if (!(val instanceof WebGLRenderingContext)) {
+			throw new Error(`Renderer: webGL: must be a WebGLRenderingContext, value: ${val}`);
+		}
+
+		this.webGL_ = val;
+	}
+
+	get shader() {
+		return this.shader_;
+	}
+	set shader(val) {
+		if (!(val instanceof Shader)) {
+			throw new Error(`Renderer: shader: must be a Shader, value: ${val}`);
+		}
+
+		this.shader_ = val;
+	}
+
+	get texture() {
+		return this.texture_;
+	}
+	set texture(val) {
+		if (!(val instanceof WebGLTexture)) {
+			throw new Error(`Renderer: texture: must be a WebGLTexture, value: ${val}`);
+		}
+
+		this.texture_ = val;
+	}
+
+	get buffer() {
+		return this.buffer_;
+	}
+	set buffer(val) {
+		if (!(val instanceof WebGLFramebuffer)) {
+			throw new Error(`Renderer: buffer: must be a WebGLFramebuffer, value: ${val}`);
+		}
+
+		this.buffer_ = val;
+	}
+
+	get viewportWidth() {
+		return this.viewportWidth_;
+	}
+	set viewportWidth(val) {
+		if (typeof val !== 'number') {
+			val = 0;
+		}
+
+		this.viewportWidth_ = val;
+	}
+
+	get viewportHeight() {
+		return this.viewportHeight_;
+	}
+	set viewportHeight(val) {
+		if (typeof val !== 'number') {
+			val = 0;
+		}
+
+		this.viewportHeight_ = val;
 	}
 
 	end() {
-		var gl = this.gl;
+		var gl = this.webGL;
 
     	gl.bindFramebuffer(gl.FRAMEBUFFER, null);
 
@@ -367,7 +434,7 @@ class Renderer {
 	}
 
 	start() {
-		var gl = this.gl;
+		var gl = this.webGL;
 		var buffer = this.buffer;
 
     	gl.bindFramebuffer(gl.FRAMEBUFFER, buffer);
@@ -375,10 +442,10 @@ class Renderer {
 	}
 
 	update() {
-		var gl = this.gl,
-			program = this.program;
+		var gl = this.webGL,
+			shader = this.shader;
 
-		gl.useProgram(program);
+		shader.useProgram();
 
 		gl.bindBuffer(gl.ARRAY_BUFFER, this.buffers.vertex);
 		gl.vertexAttribPointer(this.locations.vertex, 3, gl.FLOAT, false, 0, 0);

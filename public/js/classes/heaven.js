@@ -186,13 +186,13 @@ class Heaven extends Sphere {
 		this.rigidbody.onupdate = function({
 			deltaTime
 		} = {}) {
-			if (!this.player) {
+			if (!self.player) {
 				return;
 			}
 
 			var body = self.body;
 
-			var velocity = this.velocity;
+			var velocity = self.rigidbody.velocity;
 			if (velocity.length() !== 0) {
 				if (self.player) {
 					self.player.addAction('velocity', velocity.array());

@@ -21,17 +21,8 @@ class Shader {
 		this.fragmentShader = fragmentShader;
 		this.options = options;
 
-		this.id = GUID();
-
-		var collection = new Storage;
-		collection.filter = (data => typeof data === 'object');
-		collection.onadd = function(data) {
-			data.attributes    = {};
-			data.uniforms      = {};
-			data.textures      = {};
-			data.texturesCount = 0;
-		}
-		this.collection = collection;
+		this.attributes = {};
+		this.uniforms = {};
 
 		this.initialize();
 	}
@@ -161,6 +152,15 @@ class Shader {
 	}
 
 	useProgram() {
-		this.webGL.useProgram(this.program);
+		if (!checkIsLastShader(this)) {
+			this.webGL.useProgram(this.program);
+		}
 	}
+}
+
+var lastUsedShader;
+function checkIsLastShader(shader) {
+	var result = (shader === lastUsedShader);
+	lastUsedShader = shader;
+	return result;
 }

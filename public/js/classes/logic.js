@@ -70,8 +70,6 @@ class Logic {
 	/**
 	 * Callback function, is called from server request and creates new item
 	 * or updates already existing (checking id).
-	 * @param  {[type]} data [description]
-	 * @return {[type]}      [description]
 	 */
 	updateItems(data) {
 		if (typeof data !== 'object') {
