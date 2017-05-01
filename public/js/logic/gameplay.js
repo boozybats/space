@@ -39,7 +39,7 @@ function gameplay({
 	// game logic item, needs to complete functions on each frame
 	var logic = new Logic(scene);
 	// each data distribution from server are using in logic
-	Server.player.ondistribution = logic.updateItems;
+	Server.player.ondistribution = logic.distribution;
 
 	/**
 	 * Determine player's object, bind cursor, scale
@@ -58,6 +58,7 @@ function gameplay({
 	});
 	facebox.instance(scene, true);
 
+	project.requestAnimationFrame();
 	// get all data from server for playing and start project
 	logic.getData(project);
 }

@@ -1,7 +1,8 @@
-const update = require('../logic/update');
-const guid   = require('../logic/guid');
-const info   = require('../logic/info');
-const Heaven = require('../classes/heaven');
+const update       = require('../logic/update');
+const guid         = require('../logic/guid');
+const info         = require('../logic/info');
+const Heaven       = require('../classes/heaven');
+const distribution = require('./distribution');
 
 const _items = global.storages.items;
 const _npcs   = global.storages.npcs;
@@ -17,11 +18,16 @@ update.push(function({
 	time,
 	deltaTime
 }) {
+	// Remove items by life time and add event to distribution
+	var removed = [];
 	_npcs.each(item => {
 		if (item.instanceTime + lifetime < time) {
+			removed.push(item.id);
 			item.remove();
 		}
 	});
+
+	distribution.add('remove', removed);
 
 	if (lastupdate + interval > time) {
 		return;

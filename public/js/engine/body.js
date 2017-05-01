@@ -18,9 +18,9 @@
 
 class Body {
 	constructor({
-		position = new Vec3,
-		rotation = new Quaternion,
-		scale = new Vec3(1, 1, 1),
+		position,
+		rotation,
+		scale,
 		parent
 	} = {}) {
 		this.position = position;
@@ -51,7 +51,7 @@ class Body {
 	}
 	set position(val) {
 		if (!(val instanceof Vec3)) {
-			throw new Error('Body: position: must be a Vec3');
+			val = new Vec3;
 		}
 
 		this.position_ = val;
@@ -62,7 +62,7 @@ class Body {
 	}
 	set rotation(val) {
 		if (!(val instanceof Quaternion)) {
-			throw new Error('Body: rotation: must be a Quaternion');
+			val = new Quaternion;
 		}
 
 		this.rotation_ = val;
@@ -73,7 +73,7 @@ class Body {
 	}
 	set scale(val) {
 		if (!(val instanceof Vec3)) {
-			throw new Error('Body: scale: must be a Vec3');
+			val = new Vec3(1, 1, 1);
 		}
 
 		this.scale_ = val;

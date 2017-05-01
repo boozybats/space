@@ -44,6 +44,8 @@ global.verification = function(id, ip) {
 
 // Scripts initialization
 
+// Updates items data
+require('./items');
 // Distribution sends data to client on update
 require('./distribution');
 // Creates asteroids

@@ -631,8 +631,8 @@ class UI extends Item {
 	 */
 	scale() {
 		this.body.scale = new Vec3(
-			1 * (this.width / RESOLUTION_WIDTH),
-			1 * (this.height / RESOLUTION_HEIGHT),
+			1 * ((this.width || 0) / RESOLUTION_WIDTH),
+			1 * ((this.height || 0) / RESOLUTION_HEIGHT),
 			1
 		);
 	}

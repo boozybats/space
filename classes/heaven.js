@@ -5,10 +5,11 @@ class Heaven extends Item {
 		id
 	}) {
 		super({
-			id: id
+			id: id,
+			rigidbody: new Rigidbody
 		});
 
-		this.updateOldtime = Date.now();
+		this.initializeRigidbody();
 	}
 
 	/**
@@ -47,6 +48,22 @@ class Heaven extends Item {
 		});
 	}
 
+	initializeRigidbody() {
+		var self = this,
+			rigidbody = this.rigidbody;
+
+		rigidbody.onupdate = function({
+			deltaTime
+		}) {
+			// Calculate shift on delta time by velocity
+			var velocity = rigidbody.velocity;
+			var shift = amc('*', velocity, deltaTime);
+
+			// Change body position on shift
+			self.body.position = amc('+', self.body.position, shift);
+		}
+	}
+
 	toJSON(options) {
 		var json = super.toJSON(options);
 		json.type = 'heaven';
@@ -60,7 +77,10 @@ module.exports = Heaven;
 const generator  = require('../logic/generator');
 const Body       = require('./body');
 const Physic     = require('./physic');
+const Rigidbody  = require('./rigidbody');
 const Matter     = require('./matter');
 const Vector     = require('./vector');
 const Vec3       = Vector.Vec3;
 const Quaternion = require('./quaternion');
+const math       = require('./math');
+const amc        = math.amc;

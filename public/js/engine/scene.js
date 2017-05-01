@@ -155,6 +155,23 @@ class Scene {
 	}
 
 	/**
+	 * Checks items by ids, if id doesn't selected then disables
+	 * item.
+	 * @param  {Array} items
+	 */
+	disableUnusableItems(items) {
+		this.items.each(item => {
+			if (!item.enabled) {
+				return;
+			}
+			
+			if (!~items.indexOf(item.id)) {
+				item.enabled = false;
+			}
+		});
+	}
+
+	/**
 	 * Returns finded item of scene by id, name (depending on
 	 * "type") else returns undefined.
 	 * @param {String} type id, name.
@@ -225,20 +242,28 @@ class Scene {
 	 */
 	removeItem(item) {
 		if (!(item instanceof Item)) {
-			throw new Error('Scene: removeItem: must be an Item');
+			console.warn(`Scene: removeItem: must be an Item, value: ${item}`);
+			return;
 		}
 
-		var index = this.items.indexOf(item);
-		if (~index) {
-			this.items.splice(index, 1);
-		}
-		else {
-			var index = this.systemitems.indexOf(item);
+		var result = false;
 
-			if (~index) {
-				this.systemitems.splice(index, 1);
+		this.items.each((nitem, key) => {
+			if (nitem === item) {
+				this.items.remove(key);
+				result = true;
+				return false;
 			}
-		}
+		});
+		this.systemitems.each((nitem, key) => {
+			if (nitem === item) {
+				this.systemitems.remove(key);
+				result = true;
+				return false;
+			}
+		});
+
+		return result;
 	}
 
 	/**

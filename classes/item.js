@@ -2,13 +2,16 @@ class Item {
 	constructor({
 		id,
 		body,
-		physic
+		physic,
+		rigidbody
 	} = {}) {
 		this.id = id;
 		this.body = body;
 		this.physic = physic;
+		this.rigidbody = rigidbody;
 
 		this.onremove = function() {};
+		this.onupdate = function() {};
 	}
 
 	get id() {
@@ -44,6 +47,17 @@ class Item {
 		this.physic_ = val;
 	}
 
+	get rigidbody() {
+		return this.rigidbody_;
+	}
+	set rigidbody(val) {
+		if (val && !(val instanceof Rigidbody)) {
+			val = new Rigidbody;
+		}
+
+		this.rigidbody_ = val;
+	}
+
 	get onremove() {
 		return this.onremove_;
 	}
@@ -55,6 +69,18 @@ class Item {
 		this.onremove_ = val;
 	}
 
+	get onupdate() {
+		return this.onupdate_;
+	}
+	set onupdate(val) {
+		if (typeof val !== 'function') {
+			val = function() {};
+		}
+
+		this.onupdate_ = val;
+	}
+
+	// Send actions list to Action and applies for item
 	applyActions(latency, data) {
 		if (typeof data !== 'object') {
 			return;
@@ -67,6 +93,17 @@ class Item {
 				latency: latency,
 				action: action
 			});
+		}
+	}
+
+	// Executes all "onupdate"-functions for item (physic, rigidbody, etc)
+	frameupdate(options) {
+		this.onupdate(options);
+		if (this.physic) {
+			this.physic.onupdate(options);
+		}
+		if (this.rigidbody) {
+			this.rigidbody.onupdate(options);
 		}
 	}
 
@@ -104,4 +141,5 @@ module.exports = Item;
 
 const Body       = require('./body');
 const Physic     = require('./physic');
+const Rigidbody  = require('./rigidbody');
 const Action     = require('./action');

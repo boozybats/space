@@ -1,7 +1,7 @@
 const Action = {
 	/**
 	 * Verificate user action and sets it if it is a valid.
-	 * @param {Opbject} options
+	 * @param {Object} options
 	 * @param  {Item} options.item
 	 * @param  {Number} options.latency Latency between callbacks of distribution.
 	 * @param  {Object} options.action
@@ -29,7 +29,7 @@ const Action = {
 		}
 	},
 	/**
-	 * Sets action to item, are used bu execute after verification.
+	 * Sets action to item, are used by execute after verification.
 	 */
 	set: function({
 		item,
@@ -41,9 +41,9 @@ const Action = {
 			var vec = action.data;
 
 			var velocity = new Vec3(vec[0], vec[1], vec[2]);
-			var shift = amc('*', velocity, latency / 1000);
-
-			item.body.position = amc('+', item.body.position, shift);
+			if (item.rigidbody) {
+				item.rigidbody.velocity = velocity;
+			}
 		}
 	},
 	/**
@@ -78,8 +78,8 @@ const Action = {
 };
 
 function verifyVelocity(vec, maxspeed) {
-	var distance = vec.length();
-	return distance <= maxspeed;
+	// If velocity vector smaller or equal to maximal speed then OK
+	return (vec.length() <= maxspeed);
 }
 
 module.exports = Action;

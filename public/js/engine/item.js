@@ -59,8 +59,8 @@ class Item {
 		this.private_ = {};
 
 		this.oninstance = function() {};
-		this.onupdate   = function() {};
 		this.onremove   = function() {};
+		this.onupdate   = function() {};
 	}
 
 	get enabled() {
@@ -140,6 +140,16 @@ class Item {
 		this.physic_ = val;
 	}
 
+	frameupdate(options) {
+		this.onupdate(options);
+		if (this.physic) {
+			this.physic.onupdate(options);
+		}
+		if (this.rigidbody) {
+			this.rigidbody.onupdate(options);
+		}
+	}
+
 	/**
 	 * Instances item to scene. Intializes shader, attributes, uniforms
 	 * and write it to the shader, defines vertexIndices. Adds to
@@ -195,22 +205,6 @@ class Item {
 	}
 
 	/**
-	 * Called after {@link Project} initialization on each frame
-	 * @method
-	 * @callback
-	 */
-	get onupdate() {
-		return this.onupdate_;
-	}
-	set onupdate(val) {
-		if (typeof val !== 'function') {
-			val = function() {};
-		}
-
-		this.onupdate_ = val;
-	}
-
-	/**
 	 * Called after item remove
 	 * @method
 	 * @callback
@@ -224,6 +218,22 @@ class Item {
 		}
 
 		this.onremove_ = val;
+	}
+
+	/**
+	 * Called after {@link Project} initialization on each frame
+	 * @method
+	 * @callback
+	 */
+	get onupdate() {
+		return this.onupdate_;
+	}
+	set onupdate(val) {
+		if (typeof val !== 'function') {
+			val = function() {};
+		}
+
+		this.onupdate_ = val;
 	}
 
 	get private() {

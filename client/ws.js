@@ -2,9 +2,14 @@ const ws_     = require('ws');
 const ip_     = require('ip');
 const Storage = require('../classes/storage');
 const Client  = require('../classes/client');
+const servers = require('../logic/servers');
 
 const _listener = 5611;
 const _clients = global.storages.clients;
+// after client connection choose server for him
+_clients.onadd(client => {
+	servers.appendClient(client);
+});
 
 // Handlers is callback function, requests from front end redirects into handler
 const _handlers = new Storage;

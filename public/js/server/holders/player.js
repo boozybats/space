@@ -8,19 +8,15 @@ ws.set('player', response => {
 	var method = data.method;
 
 	switch (method) {
-		case 'update':
-		if (typeof data.items === 'object') {
-			var items = data.items.data;
+		case 'distribution':
+		if (typeof Server.player.ondistribution === 'function') {
+			Server.player.ondistribution(data);
+		}
 
-			if (Server.player.ondistribution) {
-				Server.player.ondistribution(items);
-			}
-
-			if (player instanceof Player) {
-				var actions = player.getActions();
-				player.clearActions();
-				response.answer(actions);
-			}
+		if (player instanceof Player) {
+			var actions = player.getActions();
+			player.clearActions();
+			response.answer(actions);
 		}
 
 		break;

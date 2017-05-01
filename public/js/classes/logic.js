@@ -2,7 +2,7 @@ class Logic {
 	constructor(scene) {
 		this.scene = scene;
 
-		this.updateItems = this.updateItems.bind(this);
+		this.distribution = this.distribution.bind(this);
 	}
 
 	get scene() {
@@ -43,6 +43,22 @@ class Logic {
 		return item;
 	}
 
+	distribution(data) {
+		if (typeof data !== 'object') {
+			return;
+		}
+
+		if (typeof data.items === 'object') {
+			var items = data.items.data;
+			this.updateItems(items);
+		}
+
+		if (typeof data.remove === 'object') {
+			var array = data.remove;
+			this.removeItems(array);
+		}
+	}
+
 	/**
 	 * Receives id and item's data from server then starts project.
 	 * @param  {Project} project
@@ -67,6 +83,21 @@ class Logic {
 		});
 	}
 
+	removeItems(array) {
+		if (!(array instanceof Array)) {
+			return;
+		}
+
+		for (var i = 0; i < array.length; i++) {
+			var id = array[i];
+			var item = this.scene.findItem('id', id);
+
+			if (item) {
+				item.remove();
+			}
+		}
+	}
+
 	/**
 	 * Callback function, is called from server request and creates new item
 	 * or updates already existing (checking id).
@@ -77,21 +108,27 @@ class Logic {
 		}
 
 		var scene = this.scene;
+		var usedId = [];
 		
 		// for every item
 		for (var i = 0; i < data.length; i++) {
 			var wrap = data[i];
 			var id = wrap.id;
 
+			usedId.push(id);
+
 			// try find existing item on scene
 			var item = scene.findItem('id', id);
 
 			if (item) {
 				item.uptodate(wrap);
+				item.enabled = true;
 			}
 			else {
 				this.createitem(wrap.type, wrap);
 			}
+
+			scene.disableUnusableItems(usedId);
 		}
 	}
 }

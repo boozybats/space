@@ -47,6 +47,9 @@ class Matter {
 		subs.filter = (data => typeof data === 'number');
 		this.substances = subs;
 
+		// Velocity versus diameter
+		this.speedMultiplier = 0.4;
+
 		if (typeof substances === 'object') {
 			this.addSubstances(substances);
 		}
@@ -104,7 +107,7 @@ class Matter {
 		this.diameter_ = this.radius * 2;
 		/* Except calculation errors, when client multiplies number on vector
 		it's can be an error */
-		this.maxspeed_ = this.diameter * (0.4 + Number.EPSILON);
+		this.maxspeed_ = this.diameter * (this.speedMultiplier + Number.EPSILON);
 	}
 
 	get maxspeed() {

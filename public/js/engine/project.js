@@ -171,9 +171,15 @@ class Project {
 			cameras.each(camera => {
 				// Execute onupdate functions at first
 				items.each(item => {
+					if (!item.enabled) {
+						return;
+					}
 					update(item, options);
 				});
 				sysitems.each(item => {
+					if (!item.enabled) {
+						return;
+					}
 					update(item, options);
 				});
 
@@ -182,9 +188,15 @@ class Project {
 
 				// Then draw items
 				items.each(item => {
+					if (!item.enabled) {
+						return;
+					}
 					draw(item, mvpmatrix);
 				});
 				sysitems.each(item => {
+					if (!item.enabled) {
+						return;
+					}
 					draw(item, mvpmatrix);
 				});
 			});
@@ -194,10 +206,7 @@ class Project {
 
 		function update(item, options) {
 			// update by custrom scripts
-			item.onupdate(options);
-			if (item.rigidbody) {
-				item.rigidbody.onupdate(options);
-			}
+			item.frameupdate(options);
 		}
 
 		function draw(item, mvpmatrix) {

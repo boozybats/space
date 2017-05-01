@@ -3,6 +3,8 @@ class Physic {
 		matter = new Matter
 	}) {
 		this.matter = matter;
+
+		this.onupdate = function() {};
 	}
 
 	get matter() {
@@ -14,6 +16,17 @@ class Physic {
 		}
 
 		this.matter_ = val;
+	}
+
+	get onupdate() {
+		return this.onupdate_;
+	}
+	set onupdate(val) {
+		if (typeof val !== 'function') {
+			val = function() {};
+		}
+
+		this.onupdate_ = val;
 	}
 
 	get maxspeed() {
