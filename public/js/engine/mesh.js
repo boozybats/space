@@ -299,7 +299,11 @@ class Mesh {
 			console.warn(`Item: initializeAttribute: Not selected size for attribute '${key}'`);
 		}
 
-		var location = gl.getAttribLocation(program, key);
+		var location = shader.attributes[key];
+		if (typeof location !== 'number') {
+			location = gl.getAttribLocation(program, key);
+			shader.attributes[key] = location;
+		}
 		if (location < 0) {
 			// console.warn(`Shader doesnt contain '${key}' attribute or this is unusable`);
 		}
@@ -336,6 +340,11 @@ class Mesh {
 	initializeUniform(key, val, out) {
 		// if uniform already exists and equal to new then skip
 		if (out[key] && amc('=', out[key].value, val)) {
+			return;
+		}
+
+		if (!this.shader) {
+			console.warn('Mesh: initializeUniform: uniforms can not be applied without binded shader');
 			return;
 		}
 
@@ -442,11 +451,17 @@ class Mesh {
 		};
 
 		function getlocation() {
-			var loc = gl.getUniformLocation(program, key);
-			if (!loc) {
+			var location = shader.uniforms[key];
+			if (!location) {
+				location = gl.getUniformLocation(program, key);
+				shader.uniforms[key] = location;
+			}
+
+			if (!location) {
 				// console.warn(`Shader doesnt contain '${key}' uniform or this is unusable`);
 			}
-			return loc;
+
+			return location;
 		}
 	}
 
