@@ -8,7 +8,7 @@ const _items = global.storages.items;
 		deltaTime,
 		item
 	}) {
-		item.frameupdate({
+		item.frameUpdate({
 			time: time,
 			deltaTime: deltaTime
 		});

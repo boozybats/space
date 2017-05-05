@@ -43,28 +43,6 @@ class Player {
 		return this.items_;
 	}
 
-	get lastActionsUpdateReceivetime() {
-		return this.lastActionsUpdateReceivetime_;
-	}
-	set lastActionsUpdateReceivetime(val) {
-		if (typeof val !== 'number') {
-			val = Date.now();
-		}
-
-		this.lastActionsUpdateReceivetime_ = val;
-	}
-
-	get lastActionsUpdateStarttime() {
-		return this.lastActionsUpdateStarttime_;
-	}
-	set lastActionsUpdateStarttime(val) {
-		if (typeof val !== 'number') {
-			val = Date.now();
-		}
-
-		this.lastActionsUpdateStarttime_ = val;
-	}
-
 	get onremove() {
 		return this.onremove_;
 	}

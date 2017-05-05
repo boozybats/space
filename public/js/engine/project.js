@@ -206,7 +206,7 @@ class Project {
 
 		function update(item, options) {
 			// update by custrom scripts
-			item.frameupdate(options);
+			item.frameUpdate(options);
 		}
 
 		function draw(item, mvpmatrix) {

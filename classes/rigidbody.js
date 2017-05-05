@@ -31,4 +31,4 @@ class Rigidbody {
 module.exports = Rigidbody;
 
 const Vector = require('./vector');
-const Vec3   = vector.Vec3;
+const Vec3   = Vector.Vec3;

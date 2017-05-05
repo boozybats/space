@@ -97,7 +97,7 @@ class Item {
 	}
 
 	// Executes all "onupdate"-functions for item (physic, rigidbody, etc)
-	frameupdate(options) {
+	frameUpdate(options) {
 		this.onupdate(options);
 		if (this.physic) {
 			this.physic.onupdate(options);

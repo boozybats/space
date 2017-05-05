@@ -39,7 +39,7 @@ function gameplay({
 	// game logic item, needs to complete functions on each frame
 	var logic = new Logic(scene);
 	// each data distribution from server are using in logic
-	Server.player.ondistribution = logic.distribution;
+	Server.client.ondistribution = logic.distribution;
 
 	/**
 	 * Determine player's object, bind cursor, scale

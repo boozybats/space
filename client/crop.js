@@ -27,7 +27,11 @@ update.push(function({
 		}
 	});
 
-	distribution.add('remove', removed);
+	var arr = distribution.get('remove');
+	if (arr instanceof Array) {
+		removed = arr.concat(removed);
+	}
+	distribution.set('remove', removed);
 
 	if (lastupdate + interval > time) {
 		return;
@@ -42,7 +46,7 @@ update.push(function({
 	}
 
 	lastupdate = time;
-}, 'main');
+});
 
 function instance(level, time) {
 	var id = guid.gen();

@@ -6,26 +6,32 @@ const _items = global.storages.items;
 const _npcs = global.storages.npcs;
 
 // Frequency of update
-var frequency = 1000 / 30;
+var frequency = 1000 / 60;
 
 // Callbacks will be executed by each frame
 const callbacks = {
-	main: new Storage,
+	start: new Storage,
 	clients: new Storage,
 	players: new Storage,
 	items: new Storage,
-	npcs: new Storage
+	npcs: new Storage,
+	end: new Storage
 };
-callbacks.main.filter    = (data => typeof data === 'function');
+callbacks.start.filter   = (data => typeof data === 'function');
 callbacks.clients.filter = (data => typeof data === 'function');
 callbacks.players.filter = (data => typeof data === 'function');
 callbacks.items.filter   = (data => typeof data === 'function');
 callbacks.npcs.filter    = (data => typeof data === 'function');
+callbacks.end.filter     = (data => typeof data === 'function');
 
 /* Setup update function by frequency, all added callbacks will be called once
 per frame. Can be selected area of update:
-main - call once per update
+start - call on start of update
+clients - call for each client
 players - call for each player every update
+items - call for each item
+npcs - call for each npc
+end - call on end of update
 This method optimizes process of updating server's data. */
 ;(function() {
 	var o_time = Date.now();
@@ -33,55 +39,54 @@ This method optimizes process of updating server's data. */
 		var n_time = Date.now();
 		var delta = n_time - o_time;
 
-		if (callbacks.clients.numberkeyLength > 0) {
-			callbacks.clients.each(callback => {
-				_clients.each(client => {
-					callback({
-						time: n_time,
-						deltaTime: delta,
-						client: client
-					});
+		callbacks.start.each(callback => {
+			callback({
+				time: n_time,
+				deltaTime: delta
+			});
+		});
+
+		callbacks.clients.each(callback => {
+			_clients.each(client => {
+				callback({
+					time: n_time,
+					deltaTime: delta,
+					client: client
 				});
 			});
-		}
+		});
 
-		if (callbacks.players.numberkeyLength > 0) {
-			callbacks.players.each(callback => {
-				_players.each(player => {
-					callback({
-						time: n_time,
-						deltaTime: delta,
-						player: player
-					});
+		callbacks.players.each(callback => {
+			_players.each(player => {
+				callback({
+					time: n_time,
+					deltaTime: delta,
+					player: player
 				});
 			});
-		}
+		});
 
-		if (callbacks.items.numberkeyLength > 0) {
-			callbacks.items.each(callback => {
-				_items.each(item => {
-					callback({
-						time: n_time,
-						deltaTime: delta,
-						item: item
-					});
+		callbacks.items.each(callback => {
+			_items.each(item => {
+				callback({
+					time: n_time,
+					deltaTime: delta,
+					item: item
 				});
 			});
-		}
+		});
 
-		if (callbacks.npcs.numberkeyLength > 0) {
-			callbacks.npcs.each(callback => {
-				_npcs.each(npc => {
-					callback({
-						time: n_time,
-						deltaTime: delta,
-						npc: npc
-					});
+		callbacks.npcs.each(callback => {
+			_npcs.each(npc => {
+				callback({
+					time: n_time,
+					deltaTime: delta,
+					npc: npc
 				});
 			});
-		}
+		});
 
-		callbacks.main.each(callback => {
+		callbacks.end.each(callback => {
 			callback({
 				time: n_time,
 				deltaTime: delta
@@ -92,7 +97,7 @@ This method optimizes process of updating server's data. */
 	}, frequency);
 })();
 
-function push(callback, area = 'main') {
+function push(callback, area = 'start') {
 	var arr = callbacks[area];
 	if (!arr) {
 		return false;
@@ -103,7 +108,7 @@ function push(callback, area = 'main') {
 	return index;
 }
 
-function remove(index, area = 'main') {
+function remove(index, area = 'start') {
 	var arr = callbacks[area];
 	if (!arr) {
 		return false;

@@ -138,4 +138,4 @@ update.push(function({
 	time
 }) {
 	ws.client.removeExpiredHandlers(time);
-}, 'main');
+});

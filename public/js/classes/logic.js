@@ -22,7 +22,7 @@ class Logic {
 	 * @param  {Object} data
 	 * @return {Item}
 	 */
-	createitem(type, data) {
+	createItem(type, data) {
 		if (typeof type !== 'string' || typeof data !== 'object') {
 			return;
 		}
@@ -43,13 +43,19 @@ class Logic {
 		return item;
 	}
 
-	distribution(data) {
+	/**
+	 * Used by server distribution. Sends back to server data
+	 * by callback-function.
+	 * @param  {Object}   data     Data from server
+	 * @param  {Function} callback Answer-function to server
+	 */
+	distribution(data, callback) {
 		if (typeof data !== 'object') {
 			return;
 		}
 
 		if (typeof data.items === 'object') {
-			var items = data.items.data;
+			var items = data.items;
 			this.updateItems(items);
 		}
 
@@ -57,6 +63,11 @@ class Logic {
 			var array = data.remove;
 			this.removeItems(array);
 		}
+
+		var wrap = {
+			actions: player.getActions()
+		}
+		callback(wrap);
 	}
 
 	/**
@@ -125,7 +136,7 @@ class Logic {
 				item.enabled = true;
 			}
 			else {
-				this.createitem(wrap.type, wrap);
+				this.createItem(wrap.type, wrap);
 			}
 
 			scene.disableUnusableItems(usedId);

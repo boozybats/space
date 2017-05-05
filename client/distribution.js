@@ -2,22 +2,26 @@ const update = require('../logic/update');
 const items  = require('./items');
 
 const _players = global.storages.players;
+
+// How much longer than maxrate can be request
+const limitIndex = 4;
+// How often times in second server can send data to clients
+const maxrate = 20;
+// Maximal latency value to keep server rate update for client
+const expectedLatency = 100;
+// Important data wich must be sended to client everytime
 const permanentData = {
 	method: 'distribution'
 };
 var wrap = {};
 
-// Make distribution one time per frame
-update.push(function({
-	time,
-	deltaTime,
-	player
-}) {
-	// Storage of all items
-	var itemsData = items.getEachData();
-	wrap.items = {
-		data: itemsData
-	};
+// Storage of all items
+var itemsData;
+
+// Update all items on update iteration start and define options to send to client
+update.push(function() {
+	itemsData = items.getEachData();
+	wrap.items = itemsData;
 
 	/* Set permanent data to wrap because wrap must be updated by creating
 	new object. So wrap can be filled anything but by iteration it will
@@ -29,49 +33,79 @@ update.push(function({
 
 		wrap[i] = permanentData[i];
 	}
+}, 'start');
 
-	// Send for each player data. Not for clients, because they may not play.
-	player.send({
-		handler: 'player',
+// Erase wrap custom data on update iteration end
+update.push(function() {
+	wrap = {};
+}, 'end');
+
+// Make distribution by server rate
+update.push(function({
+	time,
+	deltaTime,
+	client
+}) {
+	client.distributionTime -= deltaTime;
+
+	var throughput = client.throughput;
+
+	// If client can't get data
+	if (throughput === 0) {
+		return;
+	}
+	// If this isn't distribution time for this client
+	else if (client.distributionTime > 0) {
+		return;
+	}
+
+	// Frequency of update
+	var frequency = 1000 / maxrate;
+
+	// Send for each client distribution
+	var size = client.send({
+		handler: 'client',
 		data: wrap,
 		callback: function(response) {
-			if (!player.heaven) {
+			if (time < client.lastActionsUpdateStarttime) {
+				return;
+			}
+			client.lastActionsUpdateStarttime = time;
+
+			/* Not really latency, this is how much time passed before
+			last callback and start distribution time */
+			var latency = Date.now() - time;
+
+			// If latency bigger than "limitIndex" x time then deny request
+			if (latency > frequency * limitIndex) {
 				return;
 			}
 
-			if (time < player.lastActionsUpdateStarttime) {
+			var data = response.data;
+			if (typeof data !== 'object') {
 				return;
 			}
-			player.lastActionsUpdateStarttime = time;
 
-			// Frequency of distribution update
-			var frequency = update.getFrequency();
-			// How much time passed before answer
-			var currentTime = Date.now();
-			// Not really latency, this is how much time passed before last callback
-			var latency;
-
-			// For first update set deltaTime as updateTime, no matter
-			if (player.lastActionsUpdateReceivetime) {
-				latency = currentTime - player.lastActionsUpdateReceivetime;
-				/* If latency bigger than double frequency time then change it to
-				frequency x2, so actions will not be twitching or abruptly stop */
-				latency = Math.min(latency, frequency * 2);
-			}
-			else {
-				latency = frequency;
-			}
-			player.lastActionsUpdateReceivetime = currentTime;
-
-			player.heaven.applyActions(latency, response.data);
+			client.distribution(latency, data);
 		}
 	});
 
-	wrap = {};
-}, 'players');
+	// Required time to send all data to client
+	var reqtime = size / throughput;
+	// Rate to make distribution for this client
+	var rate = maxrate * Math.min(expectedLatency / reqtime, 1);
 
-function add(name, data) {
+	// How much time left to next distribution
+	client.distributionTime = 1000 / rate;
+}, 'clients');
+
+function get(name) {
+	return wrap[name];
+}
+
+function set(name, data) {
 	wrap[name] = data;
 }
 
-exports.add = add;
+exports.get = get;
+exports.set = set;

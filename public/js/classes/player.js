@@ -57,10 +57,6 @@ class Player {
 		return this.actions.toArray();
 	}
 
-	getLastAction() {
-		return this.actions[this.actions.length - 1];
-	}
-
 	get heaven() {
 		return this.items.get('heaven');
 	}

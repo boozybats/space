@@ -57,7 +57,7 @@ class Heaven extends Item {
 		}) {
 			// Calculate shift on delta time by velocity
 			var velocity = rigidbody.velocity;
-			var shift = amc('*', velocity, deltaTime);
+			var shift = amc('*', velocity, deltaTime / 1000);
 
 			// Change body position on shift
 			self.body.position = amc('+', self.body.position, shift);

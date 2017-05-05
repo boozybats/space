@@ -12,9 +12,9 @@ class Update {
 
 		// Callbacks will be executed by each frame
 		this.callbacks = {
-			main: new Storage
+			start: new Storage
 		};
-		this.callbacks.main.filter = (data => typeof data === 'function');
+		this.callbacks.start.filter = (data => typeof data === 'function');
 
 		this.initialize();
 	}
@@ -33,7 +33,7 @@ class Update {
 
 	/* Setup update function by frequency, all added callbacks will be called once
 	per frame. Can be selected area of update:
-	main - call once per update */
+	start - call on update iteration start */
 	initialize() {
 		var callbacks = this.callbacks,
 			frequency = this.frequency;
@@ -45,7 +45,7 @@ class Update {
 			// difference between old and new times
 			var delta = n_time - o_time;
 
-			callbacks.main.each(callback => {
+			callbacks.start.each(callback => {
 				callback({
 					time: n_time,
 					deltaTime: delta
@@ -61,7 +61,7 @@ class Update {
 	/**
 	 * Sets new callback in choosen area.
 	 */
-	push(callback, area = 'main') {
+	push(callback, area = 'start') {
 		var arr = this.callbacks[area];
 		if (!arr) {
 			return false;
@@ -72,7 +72,7 @@ class Update {
 		return index;
 	}
 
-	remove(index, area = 'main') {
+	remove(index, area = 'start') {
 		var arr = this.callbacks[area];
 		if (!arr) {
 			return false;

@@ -20,7 +20,7 @@ var clients = 0;
 	}) {
 		var frequency = update.getFrequency();
 
-		// If delta time bigger than default frequenct by x times
+		// If delta time bigger than default frequency by x times
 		if (deltaTime > frequency * multiplier) {
 			// If overload times bigger than overloads allowed at all
 			if (overloads > overloadsAllowed) {

@@ -140,7 +140,7 @@ class Item {
 		this.physic_ = val;
 	}
 
-	frameupdate(options) {
+	frameUpdate(options) {
 		this.onupdate(options);
 		if (this.physic) {
 			this.physic.onupdate(options);

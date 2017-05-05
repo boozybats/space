@@ -16,6 +16,15 @@ class Client {
 		it needs for optimization: handlers array will not be inifnite big,
 		freehandlers will fill empty key-positions */
 		this.freehandlers = [];
+
+		// b/ms
+		this.throughput_ = 0;
+		// latency between server and client
+		this.ping_ = 0;
+		// Time to next distribution
+		this.distributionTime = 0;
+
+		this.updateConnectionInfo();
 	}
 
 	get ip() {
@@ -40,6 +49,30 @@ class Client {
 		this.websocket_ = val;
 	}
 
+	// Are executed on distribution callback and uses client's data
+	distribution(latency, data) {
+		var player = this.player;
+		if (player) {
+			var heaven = player.heaven,
+				actions = data.actions;
+
+			if (heaven && typeof actions === 'object') {
+				heaven.applyActions(latency, actions);
+			}
+		}
+	}
+
+	get distributionTime() {
+		return this.distributionTime_;
+	}
+	set distributionTime(val) {
+		if (typeof val !== 'number') {
+			val = 0;
+		}
+
+		this.distributionTime_ = val;
+	}
+
 	// Executes handler and remove, is called by answer.
 	execHandler(key, data) {
 		if (!this.isHandler(key)) {
@@ -58,14 +91,39 @@ class Client {
 		return (this.handlers[key] instanceof Handler);
 	}
 
+	get lastActionsUpdateReceivetime() {
+		return this.lastActionsUpdateReceivetime_;
+	}
+	set lastActionsUpdateReceivetime(val) {
+		if (typeof val !== 'number') {
+			val = Date.now();
+		}
+
+		this.lastActionsUpdateReceivetime_ = val;
+	}
+
+	get lastActionsUpdateStarttime() {
+		return this.lastActionsUpdateStarttime_;
+	}
+	set lastActionsUpdateStarttime(val) {
+		if (typeof val !== 'number') {
+			val = Date.now();
+		}
+
+		this.lastActionsUpdateStarttime_ = val;
+	}
+
 	get player() {
 		return this.player_;
 	}
-
 	set player(val) {
 		if (!val || val instanceof Player) {
 			this.player_ = val;
 		}
+	}
+
+	get ping() {
+		return this.ping_;
 	}
 
 	remove() {
@@ -129,13 +187,16 @@ class Client {
 		}
 
 		try {
-			this.websocket.send(JSON.stringify(wrap));
+			var json = JSON.stringify(wrap);
+			this.websocket.send(json);
 		}
 		catch (err) {
 			if (err) {
-				return false;
+				return 0;
 			}
 		}
+
+		return json.length;
 	}
 
 	// Sets answer-callback
@@ -177,6 +238,69 @@ class Client {
 
 		this.player = player;
 		player.client = this;
+	}
+
+	get throughput() {
+		return this.throughput_;
+	}
+
+	// Updates client throughput and ping
+	updateConnectionInfo() {
+		// Data to send to client
+		var wrap = {
+			handler: 'client',
+			data: {
+				method: 'connectionTest'
+			}
+		};
+
+		var self = this;
+		// Start position of message size
+		var size = 0;
+		// How much time passes between server and client
+		var ping = 0;
+		/* How much time latency needs to stop tests, the more it is bigger
+		the more specific results it have but spends more time */
+		var boundtime = 300;
+		var date;
+
+		// First callback defines ping then change on detemined
+		wrap.callback = function() {
+			/* Approximate value of ping, divided on two because client->server
+			have latency too, needs only server->client */
+			ping = (Date.now() - date) / 2;
+			self.ping_ = ping;
+
+			wrap.callback = callback;
+
+			send();
+		}
+		this.send(wrap);
+		date = Date.now();
+
+		// Sends data with message by index "size" to client
+		function send() {
+			wrap.data.message = bigdata[size];
+			self.send(wrap);
+
+			date = Date.now();
+		}
+
+		function callback() {
+			// Approximate latency, this shouldn't take latency from client to server
+			var latency = (Date.now() - date) - ping;
+
+			// If message are got faster than bound time then send bigger one
+			if (latency < boundtime && bigdata[size + 1]) {
+				size++;
+				send();
+			}
+			else {
+				size = bigdata[size].length;
+
+				self.throughput_ = Math.trunc(size / latency);
+			}
+		}
 	}
 }
 
@@ -229,3 +353,48 @@ class Handler {
 module.exports = Client;
 
 const Player = require('./player');
+
+// Big message to send user and check throughput
+var bigdata = ['', '', '', '', '', ''];
+;(function() {
+	// 1 Kb
+	for (var i = 1024; i--;) {
+		bigdata[0] += '0';
+	}
+
+	// 10 Kb
+	for (var i = 10; i--;) {
+		bigdata[1] += bigdata[0];
+	}
+
+	// 100 Kb
+	for (var i = 10; i--;) {
+		bigdata[2] += bigdata[1];
+	}
+
+	// 1 Mb
+	for (var i = 1024; i--;) {
+		bigdata[3] += bigdata[0];
+	}
+
+
+	// 10 Mb
+	for (var i = 10; i--;) {
+		bigdata[4] += bigdata[3];
+	}
+
+	// 20 Mb
+	for (var i = 2; i--;) {
+		bigdata[5] += bigdata[4];
+	}
+
+	// 40 Mb
+	for (var i = 2; i--;) {
+		bigdata[6] += bigdata[5];
+	}
+
+	// 80 Mb
+	for (var i = 2; i--;) {
+		bigdata[7] += bigdata[6];
+	}
+})();
