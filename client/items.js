@@ -19,7 +19,7 @@ function getEachData() {
 	var out = [];
 
 	_items.each(function(item) {
-		out.push(item.toJSON(['body']));
+		out.push(item.toJSON(['body', 'physic']));
 	});
 
 	return out;

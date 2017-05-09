@@ -113,9 +113,9 @@ function amc(operand, ...terms) {
 
 /**
  * Returns sum of terms.
- * @param  {Mat | Vec | Number} term1
- * @param  {Mat | Vec | Number} term2
- * @return {Mat | Vec | Number}
+ * @param  {Mat | Vec | Quaternion | Number} term1
+ * @param  {Mat | Vec | Quaternion | Number} term2
+ * @return {Mat | Vec | Quaternion | Number}
  * @private
  * @function amc_sum
  */
@@ -127,6 +127,9 @@ function amc_sum(term1, term2) {
 	}
 	else if (term1 instanceof Vec && term2 instanceof Vec) {
 		out = Vec.sum(term1, term2);
+	}
+	else if (term1 instanceof Quaternion && term2 instanceof Quaternion) {
+		out = Quaternion.sum(term1, term2);
 	}
 	else if ((term1 instanceof Mat && typeof term2 === 'number') ||
 		(typeof term1 === 'number' && term2 instanceof Mat)) {
@@ -142,6 +145,13 @@ function amc_sum(term1, term2) {
 
 		out = vec.sum(num);
 	}
+	else if ((term1 instanceof Quaternion && typeof term2 === 'number') ||
+		(typeof term1 === 'number' && term2 instanceof Quaternion)) {
+		var qua = term1 instanceof Quaternion ? term1 : term2;
+		var num = typeof term1 === 'number' ? term1 : term2;
+
+		out = qua.sum(num);
+	}
 	else {
 		out = term1 + term2;
 	}
@@ -151,9 +161,9 @@ function amc_sum(term1, term2) {
 
 /**
  * Returns difference of terms.
- * @param  {Mat | Vec | Number} term1
- * @param  {Mat | Vec | Number} term2
- * @return {Mat | Vec | Number}
+ * @param  {Mat | Vec | Quaternion | Number} term1
+ * @param  {Mat | Vec | Quaternion | Number} term2
+ * @return {Mat | Vec | Quaternion | Number}
  * @private
  * @function amc_dif
  */
@@ -165,6 +175,9 @@ function amc_dif(term1, term2) {
 	}
 	else if (term1 instanceof Vec && term2 instanceof Vec) {
 		out = Vec.dif(term1, term2);
+	}
+	else if (term1 instanceof Vec && term2 instanceof Vec) {
+		out = Quaternion.dif(term1, term2);
 	}
 	else if ((term1 instanceof Mat && typeof term2 === 'number') ||
 		(typeof term1 === 'number' && term2 instanceof Mat)) {
@@ -180,6 +193,13 @@ function amc_dif(term1, term2) {
 
 		out = vec.sum(-num);
 	}
+	else if ((term1 instanceof Quaternion && typeof term2 === 'number') ||
+		(typeof term1 === 'number' && term2 instanceof Quaternion)) {
+		var qua = term1 instanceof Quaternion ? term1 : term2;
+		var num = typeof term1 === 'number' ? term1 : term2;
+
+		out = qua.sum(-num);
+	}
 	else {
 		out = term1 - term2;
 	}
@@ -189,9 +209,9 @@ function amc_dif(term1, term2) {
 
 /**
  * Returns multiply of terms.
- * @param  {Mat | Vec | Number} term1
- * @param  {Mat | Vec | Number} term2
- * @return {Mat | Vec | Number}
+ * @param  {Mat | Vec | Quaternion} term1
+ * @param  {Mat | Vec | Quaternion | Number} term2
+ * @return {Mat | Vec | Quaternion | Number}
  * @private
  * @function amc_multi
  */
@@ -238,6 +258,13 @@ function amc_multi(term1, term2) {
 
 		out = vec.multi(num);
 	}
+	else if ((term1 instanceof Quaternion && typeof term2 === 'number') ||
+		(typeof term1 === 'number' && term2 instanceof Quaternion)) {
+		var qua = term1 instanceof Quaternion ? term1 : term2;
+		var num = typeof term1 === 'number' ? term1 : term2;
+
+		out = qua.multi(num);
+	}
 	else {
 		out = term1 * term2;
 	}
@@ -247,9 +274,9 @@ function amc_multi(term1, term2) {
 
 /**
  * Returns divide of terms.
- * @param  {Mat | Vec} term1
- * @param  {Mat | Vec | Number} term2
- * @return {Mat | Vec | Number}
+ * @param  {Mat | Vec | Quaternion} term1
+ * @param  {Mat | Vec | Quaternion | Number} term2
+ * @return {Mat | Vec | Quaternion | Number}
  * @private
  * @function amc_divide
  */
@@ -269,6 +296,13 @@ function amc_divide(term1, term2) {
 		var num = typeof term1 === 'number' ? term1 : term2;
 
 		out = vec.multi(1 / num);
+	}
+	else if ((term1 instanceof Quaternion && typeof term2 === 'number') ||
+		(typeof term1 === 'number' && term2 instanceof Quaternion)) {
+		var qua = term1 instanceof Quaternion ? term1 : term2;
+		var num = typeof term1 === 'number' ? term1 : term2;
+
+		out = qua.multi(1 / num);
 	}
 	else {
 		out = term1 / term2;

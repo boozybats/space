@@ -334,6 +334,9 @@ class Matter {
 		this.volume_ = 0;
 		this.layers_ = [];
 
+		// Is this matter empty
+		this.empty_ = true;
+
 		var subs = new Storage;
 		subs.filter = (data => typeof data === 'number');
 		this.substances = subs;
@@ -352,6 +355,8 @@ class Matter {
 		if (!periodic) {
 			return false;
 		}
+
+		this.empty_ = false;
 
 		this.volume_ += volume;
 
@@ -434,6 +439,10 @@ class Matter {
 				break;
 			}
 		}
+	}
+
+	get empty() {
+		return this.empty_;
 	}
 
 	/**

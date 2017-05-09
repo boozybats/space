@@ -95,6 +95,10 @@ class Storage {
 		return this.data[key];
 	}
 
+	getLast() {
+		return this.data[this.numberkeyLength - 1];
+	}
+
 	get length() {
 		var length = 0;
 		for (var key in this.data) {
@@ -193,6 +197,35 @@ class Storage {
 		}
 
 		return result;
+	}
+
+	splice(index, count = Infinity) {
+		if (index < 0) {
+			index = this.numberkeyLength + index;
+		}
+
+		var cuted = [];
+		this.each(function(data, ind) {
+			if (ind >= index && ind < index + count) {
+				cuted.push(data);
+			}
+		});
+
+		var length = cuted.length;
+		var self = this;
+		this.each(function(data, ind) {
+			if (ind >= index + length) {
+				self.numberkeyLength_--;
+				self.data[ind - length] = data;
+				delete self.data[ind];
+			}
+			else if (ind >= index) {
+				self.numberkeyLength_--;
+				delete self.data[ind];
+			}
+		});
+
+		return cuted;
 	}
 
 	/**

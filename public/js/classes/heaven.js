@@ -32,6 +32,15 @@ class Heaven extends Sphere {
 		this.initializeMesh();
 		this.initializeRigidbody();
 		this.initialize();
+
+		// Latency of animation
+		this.interpolationDelay = 100;
+		// How much time needs to predict future after losing connection
+		this.extrapolationDuration = 250;
+
+		var tmpData = new Storage;
+		tmpData.filter = (data => typeof data === 'object');
+		this.temporaryData = tmpData;
 	}
 
 	get body() {
@@ -114,6 +123,74 @@ class Heaven extends Sphere {
 		this.player_ = val;
 	}
 
+	// Sets changes for item
+	applyChanges(state) {
+		if (state.body) {
+			var pos = state.body.position,
+				rot = state.body.rotation,
+				sca = state.body.scale;
+
+			this.body.position = new Vec3(pos[0], pos[1], pos[2]);
+			// this.body.rotation = new Quaternion(rot[0], rot[1], rot[2], rot[3]);
+			// this.body.scale = new Vec3(sca[0], sca[1], sca[2]);
+		}
+
+		if (state.physic) {
+			var matter = state.physic.matter;
+			if (this.physic.matter.empty) {
+				this.physic.matter = new Matter(matter);
+			}
+		}
+	}
+
+	// Are called by interpolation, sets interstitial changes for item between 2 states
+	applyInterstitialChanges(state1, state2, time) { 
+		var state = {};
+
+		var deltaTime = state2.receiveTime - state1.receiveTime;
+		var relTime = state2.receiveTime - time;
+		var precision = relTime / deltaTime;
+
+		if (state1.body && state2.body) {
+			var pos = vec3avg(state1.body.position, state2.body.position),
+				// rot = qua3avg(state1.body.rotation, state2.body.rotation),
+				sca = vec3avg(state1.body.scale, state2.body.scale);
+
+			state.body = {
+				position: pos,
+				rotation: state2.body.rotation,
+				scale: sca
+			};
+		}
+
+		if (state1.physic) {
+			state.physic = state1.physic;
+		}
+
+		this.applyChanges(state);
+
+		function vec3avg(arr1, arr2) {
+			var result = [
+				arr1[0] + (arr2[0] - arr1[0]) * precision,
+				arr1[1] + (arr2[1] - arr1[1]) * precision,
+				arr1[2] + (arr2[2] - arr1[2]) * precision
+			];
+
+			return result;
+		}
+
+		function qua3avg(arr1, arr2) {
+			var qua1 = new Quaternion(arr1[0], arr1[1], arr1[2], arr1[3]),
+				qua2 = new Quaternion(arr2[0], arr2[1], arr2[2], arr2[3]);
+
+			var difference = amc('-', qua2, qua1);
+			var bud = amc('*', difference, precision);
+			var result = amc('+', qua1, bud);
+
+			return result;
+		}
+	}
+
 	/**
 	 * Binds camera to object, so it's follows object
 	 * @param  {Camera} camera
@@ -127,10 +204,30 @@ class Heaven extends Sphere {
 		this.camera = camera;
 	}
 
+	// Predicts further actions if server distribution isn't received
+	extrapolate() {
+	}
+
+	get extrapolationDuration() {
+		return this.extrapolationDuration_;
+	}
+	set extrapolationDuration(val) {
+		if (typeof val !== 'number') {
+			val = 0;
+		}
+
+		this.extrapolationDuration_ = val;
+	}
+
+	// Sets onupdate function for heaven
 	initialize() {
 		var _private = this.private;
 		var self = this;
-		this.onupdate = function() {
+		this.onupdate = function({
+			time
+		}) {
+			this.interpolate(time);
+
 			var oldDiameter = _private.diameter,
 				diameter = self.physic.diameter;
 			if (oldDiameter !== diameter) {
@@ -165,6 +262,7 @@ class Heaven extends Sphere {
 		}
 	}
 
+	// Sets maps to shader
 	initializeMesh() {
 		// Add maps to shader
 		var normalmap = new Image();
@@ -181,6 +279,7 @@ class Heaven extends Sphere {
 		});
 	}
 
+	// Sets onupdate function for heaven's rigidbody
 	initializeRigidbody() {
 		var self = this;
 		this.rigidbody.onupdate = function({
@@ -201,18 +300,54 @@ class Heaven extends Sphere {
 		}
 	}
 
-	toJSON() {
-		var out = {};
+	// Smooths actions between server distributions
+	interpolate(time) {
+		var isNext = false,
+			startIndex;
+		var interstitial = this.temporaryData.find((data, index) => {
+			if (isNext) {
+				isNext = false;
+				return true;
+			}
+			else if (data.receiveTime + this.interpolationDelay >= time) {
+				startIndex = index;
+				isNext = true;
+				return true;
+			}
 
-		if (this.body) {
-			out.body = this.body.toJSON();
+			return false;
+		});
+
+		if (interstitial.length < 2) {
+			this.extrapolate(time);
+			return;
 		}
 
-		return out;
+		this.temporaryData.splice(0, startIndex);
+
+		this.applyInterstitialChanges(interstitial[0], interstitial[1], time);
 	}
 
-	uptodate(data) {
+	get interpolationDelay() {
+		return this.interpolationDelay_;
+	}
+	set interpolationDelay(val) {
+		if (typeof val !== 'number') {
+			val = 0;
+		}
+
+		this.interpolationDelay_ = val;
+	}
+
+	/* Receives data from server and stores into temporary storage to use
+	by interpolation */
+	receiveData(data, time) {
 		if (typeof data !== 'object') {
+			return;
+		}
+
+		var lastReceive = this.temporaryData.getLast();
+		if (lastReceive && lastReceive.receiveTime >= time) {
 			return;
 		}
 
@@ -224,35 +359,26 @@ class Heaven extends Sphere {
 			if (typeof pos !== 'object' ||
 				typeof rot !== 'object' ||
 				typeof sca !== 'object') {
-				console.warn('Heaven: uptodate: "body" bad request from server');
 				return;
 			}
-
-			if (!this.body) {
-				this.body = new Body;
-			}
-
-			this.body.position = new Vec3(pos[0], pos[1], pos[2]);
-			this.body.rotation = new Quaternion(rot[0], rot[1], rot[2], rot[3]);
-			// this.body.scale = new Vec3(sca[0], sca[1], sca[2]);
 		}
 
-		if (typeof data.physic === 'object') {
-			var matter = data.physic.matter;
-
-			if (typeof matter !== 'object') {
-				console.warn('Heaven: uptodate: "physic" bad request from server');
-				return;
-			}
-
-			if (this.physic) {
-				this.physic.matter = new Matter(matter);
-			}
-			else {
-				this.physic = new Physic({
-					matter: new Matter(matter)
-				});
-			}
+		if (this.player) {
+			this.applyChanges(data);
 		}
+		else {
+			data.receiveTime = time;
+			this.temporaryData.push(data);
+		}
+	}
+
+	toJSON() {
+		var out = {};
+
+		if (this.body) {
+			out.body = this.body.toJSON();
+		}
+
+		return out;
 	}
 }

@@ -42,6 +42,20 @@ class Quaternion {
 		return out;
 	}
 
+	static avg(...quaternions) {
+		if (quaternions.length == 0) {
+			return new Quaternion;
+		}
+
+		var out = amc('/', amc('+', ...quaternions), quaternions.length);
+
+		if (!(out instanceof Quaternion)) {
+			out = new Quaternion;
+		}
+
+		return out;
+	}
+
 	/**
 	 * Compares two quaternions by x, y, z and w coordinates
 	 * and returns true if them equal else returns false.
@@ -67,35 +81,6 @@ class Quaternion {
 				out = false;
 			}
 		}
-
-		return out;
-	}
-
-	/**
-	 * Calculates difference between two quaternions and returns
-	 * result quaternion. P.S. Better use {@link amc} function, it is
-	 * much optimizing.
-	 * @param {Quaternion} quat1
-	 * @param {Quaternion} quat2
-	 * @return {Quaternion}
-	 * @method
-	 * @static
-	 */
-	static dif(quat1, quat2) {
-		if (!(quat1 instanceof Quaternion) ||
-			!(quat2 instanceof Quaternion)) {
-			throw new Error('Quaternion: dif: must be a Quaternions');
-		}
-
-		var euler1 = quat1.euler,
-			euler2 = quat2.euler;
-		var euler = new Euler(
-			euler1.x - euler2.x,
-			euler1.y - euler2.y,
-			euler1.z - euler2.z
-		);
-
-		var out = Quaternion.Euler(euler);
 
 		return out;
 	}
@@ -177,6 +162,24 @@ class Quaternion {
 		return out;
 	}
 
+	multi(num) {
+		if (typeof num !== 'number') {
+			num = 1;
+		}
+
+		var euler = this.euler;
+
+		var eul = new Euler(
+			euler.x * num,
+			euler.y * num,
+			euler.z * num
+		);
+
+		var out = Quaternion.Euler(eul);
+
+		return out;
+	}
+
 	/**
 	 * Calculates sum between two quaternions and returns
 	 * result quaternion. P.S. Better use {@link amc} function, it is
@@ -187,18 +190,51 @@ class Quaternion {
 	 * @method
 	 * @static
 	 */
-	static sum(quat1, quat2) {
-		if (!(quat1 instanceof Quaternion) ||
-			!(quat2 instanceof Quaternion)) {
-			throw new Error('Quaternion: sum: must be a Quaternions');
+	static sum(...quaternions) {
+		if (quaternions.length == 0) {
+			return new Quaternion;
+		}
+
+		var qua1 = quaternions[0],
+			qua2 = quaternions[1];
+
+		if (!(qua1 instanceof Quaternion)) {
+			qua1 = new Quaternion;
+		}
+		if (!(qua2 instanceof Quaternion)) {
+			qua2 = new Quaternion;
 		}
 
 		var euler1 = quat1.euler,
 			euler2 = quat2.euler;
+
 		var eul = new Euler(
 			euler1.x + euler2.x,
 			euler1.y + euler2.y,
 			euler1.z + euler2.z
+		);
+
+		if (quaternions.length > 2) {
+			quaternions.splice(0, 2, out);
+			out = Quaternion.sum(...quaternions);
+		}
+
+		var out = Quaternion.Euler(eul);
+
+		return out;
+	}
+
+	sum(num) {
+		if (typeof num !== 'number') {
+			return this;
+		}
+
+		var euler = this.euler;
+
+		var eul = new Euler(
+			euler.x + num,
+			euler.y + num,
+			euler.z + num
 		);
 
 		var out = Quaternion.Euler(eul);

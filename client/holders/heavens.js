@@ -1,6 +1,7 @@
-const ws_    = require('../ws');
-const Heaven = require('../../classes/heaven');
-const Player = require('../../classes/player');
+const ws_          = require('../ws');
+const Heaven       = require('../../classes/heaven');
+const Player       = require('../../classes/player');
+const distribution = require('../distribution');
 
 const _players = global.storages.players;
 const _items   = global.storages.items;
@@ -33,25 +34,30 @@ ws_.set('heavens', response => {
 
 		break;
 	}
-
-	function instance(id) {
-		var player = _players.get(id);
-		if (!(player instanceof Player) || typeof player.items !== 'object') {
-			return;
-		}
-
-		var heaven = new Heaven({
-			id
-		});
-		player.heaven = heaven;
-
-		heaven.generatePlayerData(0);
-		heaven.onremove = function() {
-			_items.remove(id);
-		}
-
-		_items.set(id, heaven);
-
-		return heaven;
-	}
 });
+
+function instance(id) {
+	var player = _players.get(id);
+	if (!(player instanceof Player) || typeof player.items !== 'object') {
+		return;
+	}
+
+	var heaven = new Heaven({
+		id
+	});
+	player.heaven = heaven;
+
+	heaven.generatePlayerData(0);
+	heaven.onremove = function() {
+		var removed = distribution.get('remove') || [];
+		if (removed instanceof Array) {
+			removed.push(id);
+		}
+		distribution.set('remove', removed);
+		_items.remove(id);
+	}
+
+	_items.set(id, heaven);
+
+	return heaven;
+}

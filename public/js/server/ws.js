@@ -26,12 +26,10 @@ const ws = {
 	/**
 	 * Sends json to server-side, if callback selected then makes an answer-
 	 * callback function into client.
-	 * 
-	 * @param  {Object} options Required params: handler (name),
-	 *  not required: data (any type), callback
-	 * @param {String} handler
-	 * @param {*} data
-	 * @param {Function} callback
+	 * @param  {Object} options
+	 * @param {String} options.handler
+	 * @param {*} options.data
+	 * @param {Function} options.callback
 	 */
 	send: function(options) {
 		if (typeof options !== 'object') {
@@ -72,7 +70,7 @@ const ws = {
 		}
 		catch (err) {
 			if (err) {
-				console.warn('Websocket error: ', err.text);
+				console.warn(`Websocket error: ${err.text}`);
 				return false;
 			}
 		}

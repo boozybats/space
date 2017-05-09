@@ -35,7 +35,7 @@ class Logic {
 				id: data.id
 			});
 			item.instance(this.scene);
-			item.uptodate(data);
+			item.receiveData(data);
 
 			break;
 		}
@@ -87,7 +87,7 @@ class Logic {
 			heaven.id = id;
 
 			Server.heavens.getData(data => {
-				heaven.uptodate(data);
+				heaven.receiveData(data);
 
 				project.requestAnimationFrame();
 			});
@@ -120,6 +120,8 @@ class Logic {
 
 		var scene = this.scene;
 		var usedId = [];
+
+		var time = new Date().getTime();
 		
 		// for every item
 		for (var i = 0; i < data.length; i++) {
@@ -132,7 +134,7 @@ class Logic {
 			var item = scene.findItem('id', id);
 
 			if (item) {
-				item.uptodate(wrap);
+				item.receiveData(wrap, time);
 				item.enabled = true;
 			}
 			else {
