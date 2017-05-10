@@ -29,9 +29,13 @@ class Heaven extends Sphere {
 		// Binds object movements depends on mouse axis
 		this.mouseControl = mouseControl;
 
-		this.initializeMesh();
-		this.initializeRigidbody();
 		this.initialize();
+		this.initializeMesh();
+
+		// Set events to rigidbody to send on server user's acions
+		if (this.player) {
+			this.initializeRigidbody();
+		}
 
 		// Latency of animation
 		this.interpolationDelay = 100;
@@ -281,23 +285,16 @@ class Heaven extends Sphere {
 
 	// Sets onupdate function for heaven's rigidbody
 	initializeRigidbody() {
-		var self = this;
-		this.rigidbody.onupdate = function({
-			deltaTime
-		} = {}) {
-			if (!self.player) {
-				return;
-			}
-
-			var body = self.body;
-
-			var velocity = self.rigidbody.velocity;
-			if (velocity.length() !== 0) {
-				if (self.player) {
-					self.player.addAction('velocity', velocity.array());
-				}
-			}
+		if (!this.player) {
+			return;
 		}
+
+		this.rigidbody.onchange('velocity', (value, duration) => {
+			this.player.addAction('velocity', {
+				value: value,
+				duration: duration
+			});
+		});
 	}
 
 	// Smooths actions between server distributions

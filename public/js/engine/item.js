@@ -12,21 +12,6 @@
  * @param {Physic} options.physic
  * @param {Collider} options.collider
  * @class
- * @property {Boolean} enabled Does item exist on scene.
- * @property {Number} id
- * @property {String} name
- * @property {Body} body
- * @property {Mesh} mesh
- * @property {Physic} physic
- * @property {Collider} collider
- * @property {Object} public A variable environment that can be
- * obtained by external methods.
- * @property {Object} private A variable environment that can be
- * obtained only in this object.
- * @property {Scene} scene On wich scene was instantiated.
- * @property {Project} project Binded project.
- * @property {WebGLRenderingContext} webGL WebGL item of {@link Project}'s
- * {@link WebGLRenderer}.
  */
 
 class Item {
@@ -68,7 +53,7 @@ class Item {
 	}
 	set enabled(val) {
 		if (typeof val !== 'boolean') {
-			throw new Error('Item: enabled: must be a bool');
+			this.enabled_ = false;
 		}
 
 		this.enabled_ = val;
@@ -138,6 +123,17 @@ class Item {
 		}
 
 		this.physic_ = val;
+	}
+
+	get rigidbody() {
+		return this.rigidbody_;
+	}
+	set rigidbody(val) {
+		if (val && !(val instanceof Rigidbody)) {
+			val = undefined;
+		}
+
+		this.rigidbody_ = val;
 	}
 
 	frameUpdate(options) {
@@ -262,17 +258,6 @@ class Item {
 		if (this.scene) {
 			this.scene.removeItem(this);
 		}
-	}
-
-	get rigidbody() {
-		return this.rigidbody_;
-	}
-	set rigidbody(val) {
-		if (val && !(val instanceof Rigidbody)) {
-			val = undefined;
-		}
-
-		this.rigidbody_ = val;
 	}
 
 	get scene() {
