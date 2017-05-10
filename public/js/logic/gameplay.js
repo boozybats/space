@@ -36,11 +36,6 @@ function gameplay({
 	});
 	scene.addLight(light);
 
-	// game logic item, needs to complete functions on each frame
-	var logic = new Logic(scene);
-	// each data distribution from server are using in logic
-	Server.client.ondistribution = logic.distribution;
-
 	/**
 	 * Determine player's object, bind cursor, scale
 	 * to the required diameter to skip perframe scaling
@@ -51,6 +46,11 @@ function gameplay({
 		cursor: cursor,
 		camera: camera
 	});
+
+	// game logic item, needs to complete functions on each frame
+	var logic = new Logic(scene);
+	// each data distribution from server are using in logic
+	Server.client.ondistribution = logic.distribution;
 
 	// direction pointer
 	var facebox = new FaceBox({

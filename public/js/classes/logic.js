@@ -64,9 +64,12 @@ class Logic {
 			this.removeItems(array);
 		}
 
+		// Trigger and collect all actions
+		player.heaven.rigidbody.tug();
 		var wrap = {
 			actions: player.getActions()
 		}
+		player.clearActions();
 		callback(wrap);
 	}
 

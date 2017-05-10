@@ -1,7 +1,7 @@
 class Rigidbody {
 	constructor({
 		body
-	}) {
+	} = {}) {
 		this.body = body;
 
 		// Stores a custom handlers, are called on change values
@@ -32,27 +32,26 @@ class Rigidbody {
 		this.body_ = val;
 	}
 
+	// Updates properties and send them to callbacks onchange
 	initialize() {
 		var self = this;
 		this.onupdate = function({
 			deltaTime
 		}) {
+			var tugged = [];
+
 			var dataVelocity = self.data.velocity;
-			var velocity = self.rigidbody.velocity,
+			var velocity = self.velocity,
 				shift = amc('*', velocity, deltaTime);
 
 			if (amc('=', dataVelocity.value, velocity)) {
 				dataVelocity.duration += deltaTime;
 			}
 			else {
-				var callback = self.handlers.get('velocity');
-				if (callback) {
-					callback(dataVelocity.value, dataVelocity.duration);
-
-					dataVelocity.value = velocity;
-					dataVelocity.duration = 0;
-				}
+				tugged.push('velocity');
 			}
+
+			self.tug(tugged);
 
 			var body = self.body;
 			if (body) {
@@ -74,6 +73,23 @@ class Rigidbody {
 		}
 
 		this.onupdate_ = val;
+	}
+
+	// Triggers selected changes, if list aren't selected when choose every property
+	tug(list) {
+		var self = this;
+		if (!list || ~list.indexOf('velocity')) {
+			var dataVelocity = self.data.velocity;
+			var velocity = self.velocity;
+
+			var callback = self.handlers.get('velocity');
+			if (callback) {
+				callback(dataVelocity.value, dataVelocity.duration);
+			}
+
+			dataVelocity.value = velocity;
+			dataVelocity.duration = 0;
+		}
 	}
 
 	get velocity() {
