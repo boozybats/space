@@ -13,274 +13,275 @@
  * @param {Collider} options.collider
  * @class
  */
+function Item(options = {}) {
+    this.enabled = options.enabled || true;
+    this.id = options.id || -2;
+    this.name = options.name || 'anonymous';
+    this.body = options.body || new Body;
+    this.mesh = options.mesh;
+    this.collider = options.collider;
+    this.physic = options.physic;
+    this.rigidbody = options.rigidbody;
 
-class Item {
-	constructor({
-		enabled = true,
-		id,
-		name,
-		body,
-		mesh,
-		collider,
-		physic,
-		rigidbody
-	} = {}) {
-		this.enabled = enabled;
-		this.id = id;
-		this.name = name;
-		this.body = body;
-		this.mesh = mesh;
-		this.collider = collider;
-		this.physic = physic;
-		this.rigidbody = rigidbody;
+    // Has been item instantiated
+    this.isInstanced = false;
+    // If item corrupted it will not be instantiated
+    this.isCorrupted = false;
+    // A variable environment that can be obtained by external methods
+    this.public_ = {};
+    // A variable environment that can be obtained only in this object
+    this.private_ = {};
 
-		// Has been item instantiated
-		this.isInstanced = false;
-		// If item corrupted it will not be instantiated
-		this.isCorrupted = false;
-		// A variable environment that can be obtained by external methods
-		this.public_ = {};
-		// A variable environment that can be obtained only in this object
-		this.private_ = {};
+    this.oninstance = function() {};
+    this.onremove = function() {};
+    this.onupdate = function() {};
+}
 
-		this.oninstance = function() {};
-		this.onremove   = function() {};
-		this.onupdate   = function() {};
-	}
+Object.defineProperties(Item, {
+    body: {
+        get: function() {
+            return this.body_;
+        },
+        set: function(val) {
+            if (!(val instanceof Body)) {
+                warn('Item#body', 'val', val);
+                val = new Body;
+            }
 
-	get enabled() {
-		return this.enabled_;
-	}
-	set enabled(val) {
-		if (typeof val !== 'boolean') {
-			this.enabled_ = false;
-		}
+            this.body_ = val;
+        }
+    },
+    collider: {
+        get: function() {
+            return this.collider_;
+        },
+        set: function(val) {
+            if (val && !(val instanceof Collider)) {
+                warn('Item#collider', 'val', val);
+                val = undefined;
+            }
 
-		this.enabled_ = val;
-	}
+            this.collider_ = val;
+        }
+    },
+    enabled: {
+        get: function() {
+            return this.enabled_;
+        },
+        set: function(val) {
+            if (typeof val !== 'boolean') {
+                warn('Item#enabled', 'val', val);
+                val = true;
+            }
 
-	get id() {
-		return this.id_;
-	}
-	set id(val) {
-		if (typeof val !== 'number') {
-			val = -2;
-		}
+            this.enabled_ = val;
+        }
+    },
+    id: {
+        get: function() {
+            return this.id_;
+        },
+        set: function(val) {
+            if (typeof val !== 'number') {
+                warn('Item#id', 'val', val);
+                val = -2;
+            }
 
-		this.id_ = val;
-	}
+            this.id_ = val;
+        }
+    },
+    mesh: {
+        get: function() {
+            return this.mesh_;
+        },
+        set: function(val) {
+            if (val && !(val instanceof Mesh)) {
+                warn('Item#mesh', 'val', val);
+                val = undefined;
+            }
 
-	get name() {
-		return this.name_;
-	}
-	set name(val) {
-		if (typeof val !== 'string') {
-			val = 'anonymous';
-		}
+            this.mesh_ = val;
+        }
+    },
+    name: {
+        get: function() {
+            return this.name_;
+        },
+        set: function(val) {
+            if (typeof val !== 'string') {
+                warn('Item#name', 'val', val);
+                val = 'anonymous';
+            }
 
-		this.name_ = val;
-	}
+            this.name_ = val;
+        }
+    },
+    oninstance: {
+        get: function() {
+            return this.oninstance_;
+        },
+        set: function(val) {
+            if (typeof val !== 'function') {
+                val = function() {};
+            }
 
-	get body() {
-		return this.body_;
-	}
-	set body(val) {
-		if (val && !(val instanceof Body)) {
-			val = undefined;
-		}
+            this.oninstance_ = val;
+        }
+    },
+    onremove: {
+        get: function() {
+            return this.onremove_;
+        },
+        set: function(val) {
+            if (typeof val !== 'function') {
+                val = function() {};
+            }
 
-		this.body_ = val;
-	}
+            this.onremove_ = val;
+        }
+    },
+    onupdate: {
+        get: function() {
+            return this.onupdate_;
+        },
+        set: function(val) {
+            if (typeof val !== 'function') {
+                val = function() {};
+            }
 
-	get mesh() {
-		return this.mesh_;
-	}
-	set mesh(val) {
-		if (val && !(val instanceof Mesh)) {
-			val = undefined;
-		}
+            this.onupdate_ = val;
+        }
+    },
+    physic: {
+        get: function() {
+            return this.physic_;
+        },
+        set: function(val) {
+            if (val && !(val instanceof Physic)) {
+                warn('Item#physic', 'val', val);
+                val = undefined;
+            }
 
-		this.mesh_ = val;
-	}
+            this.physic_ = val;
+        }
+    },
+    private: {
+        get: function() {
+            return this.private_;
+        }
+    },
+    project: {
+        get: function() {
+            return this.project_;
+        }
+    },
+    public: {
+        get: function() {
+            return this.public_;
+        }
+    },
+    rigidbody: {
+        get: function() {
+            return this.rigidbody_;
+        },
+        set: function(val) {
+            if (val && !(val instanceof Rigidbody)) {
+                warn('Item#rigidbody', 'val', val);
+                val = undefined;
+            }
 
-	get collider() {
-		return this.collider_;
-	}
-	set collider(val) {
-		if (val && !(val instanceof Collider)) {
-			val = undefined;
-		}
+            this.rigidbody_ = val;
+        }
+    },
+    scene: {
+        get: function() {
+            return this.scene_;
+        }
+    },
+    webGL: {
+        get: function() {
+            return this.webGL_;
+        }
+    }
+});
 
-		this.collider_ = val;
-	}
+Item.prototype.frameUpdate = function(options) {
+    this.onupdate(options);
+    if (this.physic) {
+        this.physic.onupdate(options);
+    }
+    if (this.rigidbody) {
+        this.rigidbody.onupdate(options);
+    }
+}
 
-	get physic() {
-		return this.physic_;
-	}
-	set physic(val) {
-		if (val && !(val instanceof Physic)) {
-			val = undefined;
-		}
+/**
+ * Instances item to scene. Intializes shader, attributes, uniforms
+ * and write it to the shader, defines vertexIndices. Adds to
+ * item's properties "scene", "project" and "webGL".
+ * @param {Scene} scene
+ * @param {Boolean} system Defines object type: system or regular
+ * @method
+ * @example
+ * var item = new Item(options);
+ *
+ * var scene = new Scene('main');
+ *
+ * item.instance(scene, true);
+ */
+Item.prototype.instance = function(scene, isSystem = false) {
+    if (this.isCorrupted) {
+        log(`Warn: Item#instance: item is corrupted and can not be instantiated, id: ${this.id}`);
+        return;
+    }
 
-		this.physic_ = val;
-	}
+    if (!(scene instanceof Scene)) {
+        warn('Item#instance', 'scene', scene);
+        return;
+    }
 
-	get rigidbody() {
-		return this.rigidbody_;
-	}
-	set rigidbody(val) {
-		if (val && !(val instanceof Rigidbody)) {
-			val = undefined;
-		}
+    if (isSystem) {
+        scene.appendSystemItem(this);
+    } else {
+        scene.appendItem(this);
+    }
 
-		this.rigidbody_ = val;
-	}
+    this.isInstanced = true;
+    this.scene_ = scene;
+    this.project_ = scene.project;
+    this.webGL_ = this.project.webGLRenderer.webGL;
 
-	frameUpdate(options) {
-		this.onupdate(options);
-		if (this.physic) {
-			this.physic.onupdate(options);
-		}
-		if (this.rigidbody) {
-			this.rigidbody.onupdate(options);
-		}
-	}
+    this.oninstance();
+}
 
-	/**
-	 * Instances item to scene. Intializes shader, attributes, uniforms
-	 * and write it to the shader, defines vertexIndices. Adds to
-	 * item's properties "scene", "project" and "webGL".
-	 * @param {Scene} scene
-	 * @param {Boolean} system Defines object type: system or regular
-	 * @method
-	 * @example
-	 * var item = new Item(options);
-	 *
-	 * var scene = new Scene('main');
-	 *
-	 * item.instance(scene, true);
-	 */
-	instance(scene, isSystem = false) {
-		if (this.isCorrupted) {
-			console.once(this.id, () => console.log(`Item: instance: item corrupted and wont be instantiated, id: ${this.id}, name: ${this.name}`));
-		}
+/**
+ * Removes item from {@link Scene}'s objects. After
+ * remove item can not be instantiated again, it needs
+ * to create new item.
+ * @method
+ */
+Item.prototype.remove = function() {
+    if (this.onremove) {
+        this.onremove();
+    }
 
-		if (!(scene instanceof Scene)) {
-			throw new Error('Item: instance: must be a Scene');
-		}
+    if (this.scene) {
+        this.scene.removeItem(this);
+    }
+}
 
-		if (isSystem) {
-			scene.appendSystemItem(this);
-		}
-		else {
-			scene.appendItem(this);
-		}
+Item.prototype.toJSON = function() {
+    var out = {};
 
-		this.isInstanced = true;
-		this.scene_ = scene;
-		this.project_ = scene.project;
-		this.webGL_ = this.project.webGLRenderer.webGL;
+    out.id = this.id;
 
-		this.oninstance();
-	}
+    if (this.body) {
+        out.body = this.body.toJSON();
+    }
 
-	/**
-	 * Called after item instantiation
-	 * @method
-	 * @callback
-	 */
-	get oninstance() {
-		return this.oninstance_;
-	}
-	set oninstance(val) {
-		if (typeof val !== 'function') {
-			val = function() {};
-		}
+    if (this.physic) {
+        out.physic = this.physic.toJSON();
+    }
 
-		this.oninstance_ = val;
-	}
-
-	/**
-	 * Called after item remove
-	 * @method
-	 * @callback
-	 */
-	get onremove() {
-		return this.onremove_;
-	}
-	set onremove(val) {
-		if (typeof val !== 'function') {
-			val = function() {};
-		}
-
-		this.onremove_ = val;
-	}
-
-	/**
-	 * Called after {@link Project} initialization on each frame
-	 * @method
-	 * @callback
-	 */
-	get onupdate() {
-		return this.onupdate_;
-	}
-	set onupdate(val) {
-		if (typeof val !== 'function') {
-			val = function() {};
-		}
-
-		this.onupdate_ = val;
-	}
-
-	get private() {
-		return this.private_;
-	}
-
-	get project() {
-		return this.project_;
-	}
-
-	get public() {
-		return this.public_;
-	}
-
-	/**
-	 * Removes item from {@link Scene}'s objects. After
-	 * remove item can not be instantiated again, it needs
-	 * to create new item.
-	 * @method
-	 */
-	remove() {
-		if (this.onremove) {
-			this.onremove();
-		}
-
-		if (this.scene) {
-			this.scene.removeItem(this);
-		}
-	}
-
-	get scene() {
-		return this.scene_;
-	}
-
-	toJSON() {
-		var out = {};
-
-		out.id = this.id;
-
-		if (this.body) {
-			out.body = this.body.toJSON();
-		}
-
-		if (this.physic) {
-			out.physic = this.physic.toJSON();
-		}
-
-		return out;
-	}
-
-	get webGL() {
-		return this.webGL_;
-	}
+    return out;
 }

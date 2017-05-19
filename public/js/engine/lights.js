@@ -11,108 +11,121 @@
  * @property {String} name
  * @property {Body} body
  */
+function Light(options = {}) {
+    this.name = options.name || 'light';
+    this.body = options.body || new Body;
 
-class Light {
-	constructor({
-		name = 'light',
-		body = new Body
-	} = {}) {
-		this.name = name;
-		this.body = body;
-	}
+    this.ambient = options.ambient || new Color(0, 0, 0, 1);
+    this.diffuse = options.diffuse || new Color(255, 255, 255, 1);
+    this.specular = options.specular || new Color(255, 255, 255, 1);
+    this.intensity = options.intensity || 1000000;
+}
 
-	get body() {
-		return this.body_;
-	}
-	set body(val) {
-		if (!(val instanceof Body)) {
-			throw new Error('Light: body: must be a Body');
-		}
+Object.defineProperties(Light.prototype, {
+    ambient: {
+        get: function() {
+            return this.ambient_;
+        },
+        set: function() {
+            if (!(val instanceof Color)) {
+                warn('Light#ambient', 'val', val);
+                val = new Color(255, 255, 255, 1);
+            }
 
-		this.body_ = val;
-	}
+            this.ambient_ = val;
+        }
+    }
+    body: {
+        get: function() {
+            return this.body_;
+        },
+        set: function(val) {
+            if (!(val instanceof Body)) {
+                warn('Light#body', 'val', val);
+                val = new Body;
+            }
 
-	get name() {
-		return this.name_;
-	}
-	set name(val) {
-		if (typeof val !== 'string') {
-			throw new Error('Light: name: must be a string');
-		}
+            this.body_ = val;
+        }
+    },
+    diffuse: {
+        get: function() {
+            return this.diffuse_;
+        },
+        set: function() {
+            if (!(val instanceof Color)) {
+                warn('Light#diffuse', 'val', val);
+                val = new Color(255, 255, 255, 1);
+            }
 
-		this.name_ = val;
-	}
+            this.diffuse_ = val;
+        }
+    },
+    intensity: {
+        get: function() {
+            return this.intensity_;
+        },
+        set: function(val) {
+            warn('Light#intensity', 'val', val);
+            val = 0;
+        }
 
-	get ambient() {
-		return this.ambient_;
-	}
-	set ambient(val) {
-		if (!(val instanceof Color)) {
-			throw new Error('Light: ambient: must be a Color');
-		}
+            this.intensity_ = val;
+    }
+}
+name: {
+    get: function() {
+        return this.name_;
+    },
+    set: function(val) {
+        if (typeof val !== 'string') {
+            warn('Light#name', 'val', val);
+            val = 'light';
+        }
 
-		this.ambient_ = val;
-	}
+        this.name_ = val;
+    }
+},
+specular: {
+    get: function() {
+        return this.specular_;
+    },
+    set: function() {
+        if (!(val instanceof Color)) {
+            warn('Light#specular', 'val', val);
+            val = new Color(255, 255, 255, 1);
+        }
 
-	/**
-	 * Makes an object from useful data.
-	 * @return {Object}
-	 */
-	data() {
-		var out = {};
+        this.specular_ = val;
+    }
+}
+});
 
-		switch (this.constructor) {
-			case DirectionalLight:
-			out.type = 1;
-			break;
+/**
+ * Makes an object from useful data.
+ * @return {Object}
+ */
+Light.prototype.data = function() {
+    var out = {};
 
-			case PointLight:
-			out.type = 2;
-			break;
-		}
+    switch (this.constructor) {
+        case DirectionalLight:
+            out.type = 1;
+            break;
 
-		var position = amc('*', this.body.mvmatrix(), Vec.homogeneouspos).tocartesian();
-		out.position = position;
-		out.intensity = this.intensity || 0.0;
-		out.ambient = this.ambient;
-		out.diffuse = this.diffuse;
-		out.specular = this.specular;
+        case PointLight:
+            out.type = 2;
+            break;
+    }
 
-		return out;
-	}
+    var position = amc('*', this.body.mvmatrix(), Vec.homogeneousPos).toCartesian();
+    out.position = position;
+    out.intensity = this.intensity;
+    out.ambient = this.ambient;
+    out.diffuse = this.diffuse;
+    out.specular = this.specular;
 
-	get diffuse() {
-		return this.diffuse_;
-	}
-	set diffuse(val) {
-		if (!(val instanceof Color)) {
-			throw new Error('Light: diffuse: must be a Color');
-		}
-
-		this.diffuse_ = val;
-	}
-
-	get intensity() {
-		return this.intensity_ || 0;
-	}
-	set intensity(val) {
-		if (typeof val !== 'number') {
-			throw new Error('Light: intensity: must be a number');
-		}
-
-		this.intensity_ = val;
-	}
-
-	get specular() {
-		return this.specular_;
-	}
-	set specular(val) {
-		if (!(val instanceof Color)) {
-			throw new Error('Light: specular: must be a Color');
-		}
-
-		this.specular_ = val;
-	}
+    return out;
 }
 
 /**
@@ -131,30 +144,13 @@ class Light {
  * @param {Color} options.specular Shininess, reflected light
  * @class
  * @extends Light
- * @property {String} name
- * @property {Body} body
- * @property {Color} ambient Maximally dark color of the light.
- * As if the light was reflected an infinite number of times.
- * @property {Color} diffuse Brightness. Takes values between
- * black and the brightest primary color (In this context max value
- * of the brightness doesn't make white from any color).
- * @property {Color} specular Shininess, reflected light
  */
-
-class DirectionalLight extends Light {
-	constructor({
-		name = 'directionallight',
-		body = new Body,
-		ambient = new Color(0, 0, 0, 1),
-		diffuse = new Color(255, 255, 255, 1),
-		specular = new Color(255, 255, 255, 1)
-	} = {}) {
-		super({
-			name,
-			body
-		});
-	}
+function DirectionalLight(options = {}) {
+    Light.call(this, options);
 }
+
+DirectionalLight.prototype = Object.create(Light.prototype);
+DirectionalLight.prototype.constructor = DirectionalLight;
 
 /**
  * Type of light that lights around itself, position
@@ -174,34 +170,10 @@ class DirectionalLight extends Light {
  * @param {Number} options.intensity
  * @class
  * @extends Light
- * @property {String} name
- * @property {Body} body
- * @property {Color} ambient Maximally dark color of the light.
- * As if the light was reflected an infinite number of times.
- * @property {Color} diffuse Brightness. Takes values between
- * black and the brightest primary color (In this context max value
- * of the brightness doesn't make white from any color).
- * @property {Color} specular Shininess, reflected light
- * @property {Number} intensity
  */
-
-class PointLight extends Light {
-	constructor({
-		name = 'pointlight',
-		body = new Body,
-		ambient = new Color(0, 0, 0, 1),
-		diffuse = new Color(255, 255, 255, 1),
-		specular = new Color(255, 255, 255, 1),
-		intensity = 1000000
-	} = {}) {
-		super({
-			name,
-			body
-		});
-
-		this.ambient = ambient;
-		this.diffuse = diffuse;
-		this.specular = specular;
-		this.intensity = intensity;
-	}
+function PointLight(options = {}) {
+    Light.call(this, options);
 }
+
+PointLight.prototype = Object.create(Light.prototype);
+PointLight.prototype.constructor = PointLight;

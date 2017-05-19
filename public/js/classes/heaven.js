@@ -291,7 +291,7 @@ class Heaven extends Sphere {
 
 		this.rigidbody.onсhange('velocity', (value, duration) => {
 			this.player.addAction('velocity', {
-				value: value,
+				value: value.array(),
 				duration: duration
 			});
 		});

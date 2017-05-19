@@ -1,5 +1,2 @@
-class Collider {
-	constructor() {
-
-	}
+function Collider() {
 }

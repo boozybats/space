@@ -17,13 +17,13 @@ const Action = {
 
 		var result = this.verify({
 			item: item,
+			latency: latency,
 			action: action
 		});
 
 		if (result) {
 			this.set({
 				item: item,
-				latency: latency,
 				action: action
 			});
 		}
@@ -33,7 +33,6 @@ const Action = {
 	 */
 	set: function({
 		item,
-		latency,
 		action
 	}) {
 		switch (action.type) {
@@ -51,6 +50,7 @@ const Action = {
 	 */
 	verify: function({
 		item,
+		latency,
 		action
 	}) {
 		if (typeof action !== 'object') {
@@ -63,24 +63,31 @@ const Action = {
 				return false;
 			}
 
-			var vec = action.data;
-			if (typeof vec !== 'object') {
+			var data = action.data;
+			if (typeof data !== 'object') {
+				return false;
+			}
+
+			var value = data.value,
+				duration = data.duration;
+
+			if (!(value instanceof Array) || typeof duration !== 'number') {
+				return false;
+			}
+
+			if (latency < duration) {
 				return false;
 			}
 
 			var maxspeed = item.physic.maxspeed;
-			var velocity = new Vec3(vec[0], vec[1], vec[2]);
+			var vec = new Vec3(value[0], value[1], value[2]);
 
-			return verifyVelocity(velocity, maxspeed);
+			return vec.length() <= maxspeed * duration;
+
+			break;
 		}
-
 	}
 };
-
-function verifyVelocity(vec, maxspeed) {
-	// If velocity vector smaller or equal to maximal speed then OK
-	return (vec.length() <= maxspeed);
-}
 
 module.exports = Action;
 

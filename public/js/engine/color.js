@@ -7,136 +7,162 @@
  * @param {Number} b Blue (0-255)
  * @param {Number} a Alpha-channel (0-1)
  * @class
- * @property {Number} r Red (0-255)
- * @property {Number} g Green (0-255)
- * @property {Number} b Blue (0-255)
- * @property {Number} a Alpha-channel (0-1)
  * @property {Number} size How much numbers in color (3-4)
  * @property {Color} rgb Red, Green and Blue channels color
  * @property {Color} rgba Red, Green, Blue and Alpha channels
  * color
  */
+function Color() {
+    var args = arguments;
+    var length = Math.min(args.length, 4);
 
-class Color {
-	constructor(...arr) {
-		arr.forEach(function(el, ind) {
-			switch (ind) {
-				case 0:
-				case 1:
-				case 2:
-				if (typeof el !== 'number' ||
-					!(el >= 0 && el <= 255)) {
-					throw new Error('Color: "rgb" must be a number "0-255"');
-				}
-				break;
+    for (var i = 0; i < length; i++) {
+        var element = args[i];
 
-				case 3:
-				if (typeof el !== 'number' ||
-					!(el >= 0 && el <= 1)) {
-					throw new Error('Color: "a" must be a number "0-1"');
-				}
-				break;
-			}
-		});
+        switch (i) {
+            case 0:
+            case 1:
+            case 2:
+                if (typeof element !== 'number') {
+                    warn('Color', 'element', element);
+                    element = 0;
+                } else if (element < 0 || element > 255) {
+                    log('Warn: Color: "rgb" must be in range 0-255');
+                    element = 0;
+                }
+                break;
 
-		this.r_ = arr[0];
-		this.g_ = arr[1];
-		this.b_ = arr[2];
-		this.a_ = arr[3];
+            case 3:
+                if (typeof element !== 'number') {
+                    warn('Color', 'element', element);
+                    element = 0;
+                } else if (element < 0 || element > 1) {
+                    log('Warn: Color: "alpha" must be in range 0-1');
+                    element = 0;
+                }
+                break;
+        }
+    }
 
-		this.size_ = arr.length;
+    this.r_ = arr[0];
+    this.g_ = arr[1];
+    this.b_ = arr[2];
+    this.a_ = arr[3];
 
-		if (this.size > 4) {
-			this.size_ = 4;
-		}
-		else if (this.size < 3) {
-			throw new Error('Color: must be a 3 or 4 arguments');
-		}
-	}
+    this.size_ = length;
+}
 
-	get a() {
-		return this.a_;
-	}
+Object.defineProperties(Color.prototype, {
+    a: {
+        get: function() {
+            return this.a_;
+        }
+    },
+    b: {
+        get: function() {
+            return this.b_;
+        }
+    },
+    g: {
+        get: function() {
+            return this.g_;
+        }
+    },
+    r: {
+        get: function() {
+            return this.r_;
+        }
+    },
+    rgb: {
+        get: function() {
+            if (this.size == 4) {
+                return new Color(this.x, this.y, this.z);
+            } else {
+                return this;
+            }
+        }
+    },
+    rgba: {
+        get: function() {
+            if (this.size == 3) {
+                return new Color(this.x, this.y, this.z, 0);
+            } else {
+                return this;
+            }
+        }
+    },
+    size: {
+        get: function() {
+            return this.size_;
+        }
+    },
+    x: {
+        get: function() {
+            return this.r_;
+        }
+    },
+    y: {
+        get: function() {
+            return this.g_;
+        }
+    },
+    z: {
+        get: function() {
+            return this.b_;
+        }
+    },
+    w: {
+        get: function() {
+            return this.a_;
+        }
+    }
+});
 
-	/**
-	 * Returns an array from color numbers.
-	 * @return {Array}
-	 * @method
-	 */
-	array() {
-		var out = [this.r, this.g, this.b];
+/**
+ * Returns an array from color numbers.
+ * @return {Array}
+ * @method
+ */
+Color.prototype.array = function() {
+    var out = [this.r, this.g, this.b];
 
-		if (typeof this.a !== 'undefined') {
-			out.push(this.a);
-		}
+    if (this.size === 4) {
+        out.push(this.a);
+    }
 
-		return out;
-	}
+    return out;
+}
 
-	get b() {
-		return this.b_;
-	}
+/**
+ * Returns color with divided Red, Green and Blue
+ * channels on 255.
+ * @return {Color}
+ * @method
+ */
+Color.prototype.toUnit = function() {
+    var arr = [
+        this.r / 255,
+        this.g / 255,
+        this.b / 255
+    ];
 
-	get g() {
-		return this.g_;
-	}
+    if (this.size === 4) {
+        var out = new Color(arr[0], arr[1], arr[2], this.a);
+    } else {
+        var out = new Color(arr[0], arr[1], arr[2]);
+    }
 
-	get r() {
-		return this.r_;
-	}
+    return out;
+}
 
-	get rgb() {
-		if (this.size == 4) {
-			return new Color(this.x, this.y, this.z);
-		}
-		else {
-			return this;
-		}
-	}
+/**
+ * Transforms Color in {@link Vec}.
+ * @return {Vec}
+ * @method
+ */
+Color.prototype.vec = function() {
+	var arr = this.array();
+    var out = new Vec(arr[0], arr[1], arr[2], arr[3]);
 
-	get rgba() {
-		if (this.size == 3) {
-			return new Color(this.x, this.y, this.z, 0);
-		}
-		else {
-			return this;
-		}
-	}
-
-	get size() {
-		return this.size_;
-	}
-
-	/**
-	 * Returns color with divided Red, Green and Blue
-	 * channels on 255.
-	 * @return {Color}
-	 * @method
-	 */
-	tounit() {
-		var arr = [
-			this.r / 255,
-			this.g / 255,
-			this.b / 255
-		];
-
-		if (typeof this.a !== 'undefined') {
-			arr.push(this.a);
-		}
-
-		var out = new Color(...arr);
-
-		return out;
-	}
-
-	/**
-	 * Transforms Color in {@link Vec}.
-	 * @return {Vec}
-	 * @method
-	 */
-	vec() {
-		var out = new Vec(...this.array());
-
-		return out;
-	}
+    return out;
 }

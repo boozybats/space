@@ -279,9 +279,9 @@ class Vec {
 	 * @return {Vec}
 	 * @method
 	 * @example
-	 * (new Vec4(1, 5, 3, 2)).tocartesian();  // Vec3 {x: 0.5, y: 2.5, z: 1.5}
+	 * (new Vec4(1, 5, 3, 2)).toCartesian();  // Vec3 {x: 0.5, y: 2.5, z: 1.5}
 	 */
-	tocartesian() {
+	toCartesian() {
 		var out;
 
 		switch (this.size) {
@@ -303,9 +303,9 @@ class Vec {
 	 * @return {Vec}
 	 * @method
 	 * @example
-	 * (new Vec3(1, 5, 3)).tohomogeneouspos();  // Vec3 {x: 1, y: 5, z: 3, w: 1}
+	 * (new Vec3(1, 5, 3)).toHomogeneousPos();  // Vec3 {x: 1, y: 5, z: 3, w: 1}
 	 */
-	tohomogeneouspos() {
+	toHomogeneousPos() {
 		var out;
 
 		switch (this.size) {

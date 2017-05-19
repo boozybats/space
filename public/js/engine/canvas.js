@@ -9,71 +9,73 @@
  * @property {Number} height
  * @property {Project} project Current binded project to the canvas
  */
+function Canvas(width, height) {
+    var canvas = document.createElement('canvas');
+    this.canvas_ = canvas;
+    // if browser doesn't support canvas
+    canvas.innerText = '';
 
-class Canvas {
-	constructor(width, height) {
-		var canvas = document.createElement('canvas');
-		this.canvas_ = canvas;
-		// if browser doesn't support canvas
-		canvas.innerText = '';
+    this.width = width;
+    this.height = height;
+}
 
-		this.width = width;
-		this.height = height;
-	}
+Object.defineProperties(Canvas.prototype, {
+    canvas: {
+        get: function() {
+            return this.canvas_;
+        }
+    },
+    height: {
+        get: function() {
+            return this.height_;
+        },
+        set: function(val) {
+            if (typeof val !== 'number') {
+                warn('Canvas#height', 'val', val);
+                val = 0;
+            }
 
-	get canvas() {
-		return this.canvas_;
-	}
+            this.canvas.height = val;
+            this.height_ = val;
+        }
+    },
+    width: {
+        get: function() {
+            return this.width_;
+        },
+        set: function(val) {
+            if (typeof val !== 'number') {
+                warn('Canvas#width', 'val', val);
+                val = 0;
+            }
 
-	get height() {
-		return this.height_;
-	}
-	set height(val) {
-		if (typeof val !== 'number') {
-			throw new Error('Canvas: height: must be a number');
-		}
+            this.canvas.width = val;
+            this.width_ = val;
+        }
+    }
+});
 
-		this.canvas.height = val;
-		this.height_ = val;
-	}
+/**
+ * Appends canvas dom-element to choosen dom-element,
+ * returns true if successful, else returns false.
+ * @return {Boolean}
+ * @method
+ * @example
+ * var canvasClass = new Canvas(1280, 768);
+ * canvasClass.apendTo(document.body);
+ */
+Canvas.prototype.appendTo = function(element) {
+    if (!(element instanceof HTMLElement)) {
+        warn('Canvas#appendTo', 'element', element);
+        return false;
+    }
 
-	get width() {
-		return this.width_;
-	}
-	set width(val) {
-		if (typeof val !== 'number') {
-			throw new Error('Canvas: width: must be a number');
-		}
-
-		this.canvas.width = val;
-		this.width_ = val;
-	}
-
-	/**
-	 * Appends canvas dom-element to choosen dom-element,
-	 * returns true if successful, else returns false.
-	 * @return {Boolean}
-	 * @method
-	 * @example
-	 * var canvasClass = new Canvas(1280, 768);
-	 * canvasClass.apendTo(document.body);
-	 */
-	appendTo(element) {
-		if (!(element instanceof HTMLElement)) {
-			throw new Error('Canvas: appendTo: must be a dom-element');
-		}
-
-		if (element.appendChild(this.canvas)) {
-			// calls any functions with resize events to adapt canvas
-			window.onresize();
-			return true;
-		}
-		else {
-			return false;
-		}
-	}
-
-	get project() {
-		return this.project_;
-	}
+    if (element.appendChild(this.canvas)) {
+        // calls any functions with resize events to adapt canvas
+        window.onresize();
+        return true;
+    } else {
+        warn('Canvas#appendTo', 'element', element);
+        return false;
+    }
 }
