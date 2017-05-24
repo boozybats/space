@@ -12,18 +12,17 @@
  * {@link Mat4.perspective}, sets proportions of screen and edits to
  * required values
  * @class
- * @property {String} name
- * @property {Body} body
- * @property {Number} deepOffset Front offset of the deduction point
- * @property {Mat4} projectionMatrix Usually is seted by function
- * {@link Mat4.perspective}, sets proportions of screen and edits to
- * required values
  */
 function Camera(options = {}) {
-    this.name = options.name;
-    this.body = options.body;
-    this.deepOffset = options.deepOffset;
-    this.projectionMatrix = options.projectionMatrix;
+    if (typeof options !== 'object') {
+        warn('Camera', 'options', options);
+        options = {};
+    }
+
+    this.name = options.name || 'camera';
+    this.body = options.body || new Body;
+    this.deepOffset = options.deepOffset || DEFAULT_NEARFIELD;
+    this.projectionMatrix = options.projectionMatrix || DEFAULT_PERSPECTIVE;
 
     // Stores last results of {@link Camera#mvmatrix} calculations
     this.matmem = [];
@@ -34,7 +33,7 @@ Object.defineProperties(Camera.prototype, {
         get: function() {
             return this.body_;
         },
-        set: function() {
+        set: function(val) {
             if (!(val instanceof Body)) {
                 warn('Camera#body', 'val', val);
                 val = new Body;

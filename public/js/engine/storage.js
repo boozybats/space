@@ -6,250 +6,252 @@ var anonymousfunction = function() {};
  * remove event by {@Storage#onremove}.
  * @class
  */
-class Storage {
-	constructor() {
-		this.data     = {};
-		this.filter   = null;
-		this.onadd    = null;
-		this.onremove = null;
+function Storage() {
+    this.data = {};
+    this.filter = null;
+    this.onadd = null;
+    this.onremove = null;
 
-		this.numberkeyLength_ = 0;
-	}
+    this.numberkeyLength_ = 0;
+}
 
-	clear() {
-		var self = this;
-		this.each((data, index) => {
-			self.remove(index);
-		});
+Object.defineProperties(Storage.prototype, {
+    filter: {
+        get: function() {
+            return this.filter_;
+        },
+        set: function(val) {
+            if (typeof val !== 'function') {
+                val = function() {
+                    return true;
+                }
+            }
 
-		this.numberkeyLength_ = 0;
-	}
+            this.filter_ = val;
+        }
+    },
+    length: {
+        get: function() {
+            var length = 0;
+            for (var key in this.data) {
+                if (this.data.hasOwnProperty(key)) {
+                    length++;
+                }
+            }
 
-	/**
-	 * Goes through all elements and stop cycling if callback is
-	 * returning "false".
-	 * @param  {Function} callback
-	 */
-	each(callback) {
-		if (typeof callback !== 'function') {
-			return;
-		}
+            return length;
+        }
+    },
+    numberkeyLength: {
+        get: function() {
+            return this.numberkeyLength_;
+        }
+    },
+    onadd: {
+        get: function() {
+            return this.onadd_;
+        },
+        set: function(val) {
+            if (typeof val !== 'function') {
+                val = anonymousfunction;
+            }
 
-		var data = this.data;
-		for (var key in data) {
-			if (data.hasOwnProperty(key)) {
-				var item = data[key];
-				var result = callback(item, key, data);
+            this.onadd_ = val;
+        }
+    },
+    onremove: {
+        get: function() {
+            return this.onremove_;
+        },
+        set: function(val) {
+            if (typeof val !== 'function') {
+                val = anonymousfunction;
+            }
 
-				if (result === false) {
-					break;
-				}
-			}
-		}
-	}
+            this.onremove_ = val;
+        }
+    }
+});
 
-	get filter() {
-		return this.filter_;
-	}
-	set filter(val) {
-		if (typeof val !== 'function') {
-			val = function() {
-				return true;
-			}
-		}
+Storage.prototype.clear = function() {
+    var self = this;
+    this.each((data, index) => {
+        self.remove(index);
+    });
 
-		this.filter_ = val;
-	}
+    this.numberkeyLength_ = 0;
+}
 
-	/**
-	 * Goes through all elements and adds to array if callback returns positive
-	 * value. Sends element, key-position, and data-array to callback.
-	 * @param  {Function} callback
-	 */
-	find(callback) {
-		if (typeof callback !== 'function') {
-			return;
-		}
+/**
+ * Goes through all elements and stop cycling if callback is
+ * returning "false".
+ * @param  {Function} callback
+ */
+Storage.prototype.each = function(callback) {
+    if (typeof callback !== 'function') {
+        return;
+    }
 
-		var out = [];
+    var data = this.data;
+    for (var key in data) {
+        if (data.hasOwnProperty(key)) {
+            var item = data[key];
+            var result = callback(item, key, data);
 
-		var data = this.data;
-		for (var key in data) {
-			if (data.hasOwnProperty(key)) {
-				bust(data[key]);
-			}
-		}
+            if (result === false) {
+                break;
+            }
+        }
+    }
+}
 
-		return out;
+/**
+ * Goes through all elements and adds to array if callback returns positive
+ * value. Sends element, key-position, and data-array to callback.
+ * @param  {Function} callback
+ */
+Storage.prototype.find = function(callback) {
+    if (typeof callback !== 'function') {
+        return;
+    }
 
-		function bust(item) {
-			var result = callback(item);
+    var out = [];
 
-			if (result) {
-				out.push(item);
-			}
-		}
-	}
+    var data = this.data;
+    for (var key in data) {
+        if (data.hasOwnProperty(key)) {
+            bust(data[key]);
+        }
+    }
 
-	get(key) {
-		return this.data[key];
-	}
+    return out;
 
-	getLast() {
-		return this.data[this.numberkeyLength - 1];
-	}
+    function bust(item) {
+        var result = callback(item);
 
-	get length() {
-		var length = 0;
-		for (var key in this.data) {
-			if (this.data.hasOwnProperty(key)) {
-				length++;
-			}
-		}
+        if (result) {
+            out.push(item);
+        }
+    }
+}
 
-		return length;
-	}
+Storage.prototype.get = function(key) {
+    return this.data[key];
+}
 
-	/**
-	 * Returns length of object as it's array.
-	 * @return {Number}
-	 */
-	get numberkeyLength() {
-		return this.numberkeyLength_;
-	}
+Storage.prototype.getLast = function() {
+    return this.data[this.numberkeyLength - 1];
+}
 
-	get onadd() {
-		return this.onadd_;
-	}
-	set onadd(val) {
-		if (typeof val !== 'function') {
-			val = anonymousfunction;
-		}
+/**
+ * Equal to native "push"-function for array, but returns element's
+ * key-position.
+ * @return {Number}
+ */
+Storage.prototype.push = function() {
+    var args = arguments;
 
-		this.onadd_ = val;
-	}
+    var index = this.numberkeyLength,
+        result;
+    for (var i = 0; i < args.length; i++) {
+        var value = args[i];
 
-	get onremove() {
-		return this.onremove_;
-	}
-	set onremove(val) {
-		if (typeof val !== 'function') {
-			val = anonymousfunction;
-		}
+        result = true;
+        if (this.filter) {
+            result = this.filter(value);
+        }
 
-		this.onremove_ = val;
-	}
+        if (result) {
+            this.numberkeyLength_++;
+            this.data[index] = value;
+            this.onadd(value, index, this);
 
-	/**
-	 * Equal to native "push"-function for array, but returns element's
-	 * key-position.
-	 * @return {Number}
-	 */
-	push() {
-		var args = arguments;
+            index++;
+        }
+    }
 
-		var index = this.numberkeyLength, result;
-		for (var i = 0; i < args.length; i++) {
-			var value = args[i];
+    return index;
+}
 
-			result = true;
-			if (this.filter) {
-				result = this.filter(value);
-			}
+Storage.prototype.remove = function(key) {
+    var data = this.data[key];
 
-			if (result) {
-				this.numberkeyLength_++;
-				this.data[index] = value;
-				this.onadd(value, index, this);
+    if (this.onremove) {
+        this.onremove(data, key, this.data);
+    }
 
-				index++;
-			}
-		}
+    if (typeof data === 'undefined') {
+        return false;
+    }
 
-		return index;
-	}
+    delete this.data[key];
 
-	remove(key) {
-		var data = this.data[key];
+    return true;
+}
 
-		if (this.onremove) {
-			this.onremove(data, key, this.data);
-		}
+Storage.prototype.set = function(key, value) {
+    var result = true;
+    if (this.filter) {
+        result = this.filter(value);
+    }
 
-		if (typeof data === 'undefined') {
-			return false;
-		}
+    if (result) {
+        this.data[key] = value;
+        this.onadd(value, key, this);
+    }
 
-		delete this.data[key];
+    return result;
+}
 
-		return true;
-	}
+Storage.prototype.splice = function(index, count = Infinity) {
+    if (index < 0) {
+        index = this.numberkeyLength + index;
+    }
 
-	set(key, value) {
-		var result = true;
-		if (this.filter) {
-			result = this.filter(value);
-		}
+    var cuted = [];
+    this.each(function(data, ind) {
+        if (ind >= index && ind < index + count) {
+            cuted.push(data);
+        }
+    });
 
-		if (result) {
-			this.data[key] = value;
-			this.onadd(value, key, this);
-		}
+    var length = cuted.length;
+    var self = this;
+    this.each(function(data, ind) {
+        if (ind >= index + length) {
+            self.numberkeyLength_--;
+            self.data[ind - length] = data;
+            delete self.data[ind];
+        } else if (ind >= index) {
+            self.numberkeyLength_--;
+            delete self.data[ind];
+        }
+    });
 
-		return result;
-	}
+    return cuted;
+}
 
-	splice(index, count = Infinity) {
-		if (index < 0) {
-			index = this.numberkeyLength + index;
-		}
+/**
+ * Returns array with numberic-keys elements in data leading in order.
+ * @return {Array}
+ */
+Storage.prototype.toArray = function() {
+    var out = [];
+    var length = this.numberkeyLength;
 
-		var cuted = [];
-		this.each(function(data, ind) {
-			if (ind >= index && ind < index + count) {
-				cuted.push(data);
-			}
-		});
+    for (var i = 0; i < length; i++) {
+        out.push(this.data[i]);
+    }
 
-		var length = cuted.length;
-		var self = this;
-		this.each(function(data, ind) {
-			if (ind >= index + length) {
-				self.numberkeyLength_--;
-				self.data[ind - length] = data;
-				delete self.data[ind];
-			}
-			else if (ind >= index) {
-				self.numberkeyLength_--;
-				delete self.data[ind];
-			}
-		});
+    return out;
+}
 
-		return cuted;
-	}
+Storage.prototype.toObject = function() {
+    var out = {};
 
-	/**
-	 * Returns array with numberic-keys elements in data leading in order.
-	 * @return {Array}
-	 */
-	toArray() {
-		var out = [];
-		var length = this.numberkeyLength;
+    this.each((data, index) => {
+        out[index] = data;
+    });
 
-		for (var i = 0; i < length; i++) {
-			out.push(this.data[i]);
-		}
-
-		return out;
-	}
-
-	toObject() {
-		var out = {};
-
-		this.each((data, index) => {
-			out[index] = data;
-		});
-
-		return out;
-	}
+    return out;
 }

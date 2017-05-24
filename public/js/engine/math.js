@@ -35,6 +35,10 @@ Math.clamp = (num, min, max) => Math.min(Math.max(num, min), max);
  * @memberOf Math
  */
 Math.isPowerOfTwo = function(num) {
+    if (typeof num !== 'number') {
+        num = 0;
+    }
+
     var c = 2;
     while (num > c) {
         c *= 2;
@@ -52,6 +56,10 @@ Math.isPowerOfTwo = function(num) {
  * @memberOf Math
  */
 Math.ceilPowerOfTwo = function(num) {
+    if (typeof num !== 'number') {
+        num = 0;
+    }
+
     var c = 2;
     while (num > c) {
         c *= 2;
@@ -61,22 +69,19 @@ Math.ceilPowerOfTwo = function(num) {
 }
 
 /**
- * Gives available to mathematical calculations with
- * {@link Mat} and {@link Vec}.
- * +, -, *, /: {@link Mat}, {@link Vec}, Number
- * =: {@link Mat}, {@link Vec}, {@link Body}, {@link Quaternion},
- * {@link Euler}, Array, Float32Array, Image, Number.
+ * Gives available to mathematical calculations with engine classes
  * @param  {String}    operand +, -, *, /, =
- * @param  {...*} terms   Can be selected more than one,
- * will be calculated by order.
- * @return {*} Returns appropriate class.
+ * @param  {*} terms   Can be selected more than one,
+ * will be calculated by order
+ * @return {*} Returns appropriate class
  * @function amc
  */
-function amc(operand, ...terms) {
+function amc(operand) {
     var out = 0;
 
-    var term1 = terms[0],
-        term2 = terms[1];
+    var args = arguments;
+    var term1 = args[1],
+        term2 = args[2];
 
     switch (operand) {
         case '+':
@@ -100,12 +105,12 @@ function amc(operand, ...terms) {
             break;
 
         default:
-            console.warn('arifmetic error');
+            warnfree(`amc: arithmetic calculations error, wrong operand, value: ${operand}`);
     }
 
-    if (terms.length > 2) {
-        terms.splice(0, 2, out);
-        out = amc(operand, ...terms);
+    if (args.length > 2) {
+        Array.prototype.splice.call(args, 1, 2, out);
+        out = amc.apply(amc, args);
     }
 
     return out;

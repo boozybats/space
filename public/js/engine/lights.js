@@ -8,10 +8,13 @@
  * @param {String} options.name
  * @param {Body}   options.body
  * @class
- * @property {String} name
- * @property {Body} body
  */
 function Light(options = {}) {
+    if (typeof options !== 'object') {
+        warn('Light', 'options', options);
+        options = {};
+    }
+
     this.name = options.name || 'light';
     this.body = options.body || new Body;
 
@@ -34,7 +37,7 @@ Object.defineProperties(Light.prototype, {
 
             this.ambient_ = val;
         }
-    }
+    },
     body: {
         get: function() {
             return this.body_;
@@ -66,39 +69,40 @@ Object.defineProperties(Light.prototype, {
             return this.intensity_;
         },
         set: function(val) {
-            warn('Light#intensity', 'val', val);
-            val = 0;
-        }
+            if (typeof val !== 'number') {
+                warn('Light#intensity', 'val', val);
+                val = 0;
+            }
 
             this.intensity_ = val;
-    }
-}
-name: {
-    get: function() {
-        return this.name_;
-    },
-    set: function(val) {
-        if (typeof val !== 'string') {
-            warn('Light#name', 'val', val);
-            val = 'light';
         }
-
-        this.name_ = val;
-    }
-},
-specular: {
-    get: function() {
-        return this.specular_;
     },
-    set: function() {
-        if (!(val instanceof Color)) {
-            warn('Light#specular', 'val', val);
-            val = new Color(255, 255, 255, 1);
-        }
+    name: {
+        get: function() {
+            return this.name_;
+        },
+        set: function(val) {
+            if (typeof val !== 'string') {
+                warn('Light#name', 'val', val);
+                val = 'light';
+            }
 
-        this.specular_ = val;
+            this.name_ = val;
+        }
+    },
+    specular: {
+        get: function() {
+            return this.specular_;
+        },
+        set: function() {
+            if (!(val instanceof Color)) {
+                warn('Light#specular', 'val', val);
+                val = new Color(255, 255, 255, 1);
+            }
+
+            this.specular_ = val;
+        }
     }
-}
 });
 
 /**

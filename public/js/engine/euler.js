@@ -7,19 +7,19 @@
  * @param {Number} y
  * @param {Number} z
  * @class
- * @property {Number} x
- * @property {Number} y
- * @property {Number} z
  */
 function Euler(x = 0, y = 0, z = 0) {
     if (typeof x !== 'number') {
-        throw new Error('Euler', 'x', x);
+        warn('Euler', 'x', x);
+        x = 0;
     }
     if (typeof y !== 'number') {
-        throw new Error('Euler', 'y', y);
+        warn('Euler', 'y', y);
+        y = 0;
     }
     if (typeof z !== 'number') {
-        throw new Error('Euler', 'z', z);
+        warn('Euler', 'z', z);
+        z = 0;
     }
 
     while (x >= 360) {
@@ -51,7 +51,7 @@ function Euler(x = 0, y = 0, z = 0) {
  * @return {Array}
  * @method
  */
-Object.defineProperties(Euler, {
+Object.defineProperties(Euler.prototype, {
     x: {
         get: function() {
             return this.x_;

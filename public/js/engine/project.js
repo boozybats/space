@@ -10,322 +10,333 @@
  * @property {WebGLRenderer} webGLRenderer
  * @property {Scene} currentScene
  */
+function Project() {
+    this.scenes_ = [];
+    this.layers_ = [];
 
-class Project {
-	constructor() {
-		this.scenes_ = [];
-		this.layers_ = [];
+    this.requestAnimationFrame = this.requestAnimationFrame.bind(this);
+}
 
-		this.requestAnimationFrame = this.requestAnimationFrame.bind(this);
-	}
+Object.defineProperties(Project.prototype, {
+    canvas: {
+        get: function() {
+            return this.canvas_;
+        }
+    },
+    currentScene: {
+        get: function() {
+            return this.currentScene_;
+        }
+    },
+    layers: {
+        get: function() {
+            return this.layers_;
+        }
+    },
+    scenes: {
+        get: function() {
+            return this.scenes_;
+        }
+    },
+    webGLRenderer: {
+        get: function() {
+            return this.webGLRenderer_;
+        }
+    }
+});
 
-	/**
-	 * Adds layer-function to project, every layer-function executes
-	 * each frame. All function runs reversely (in decreasing order
-	 * ..., 2, 1, 0), this is necessary to add main function first
-	 * and draw last one (the last layer is what see user).
-	 * @param {Function} fun Executable function
-	 * @param {Number} index Index of function or can be a null
-	 * @method
-	 * @example
-	 * var project = new Project(options);
-	 * project.addLayer(callback, 'main');
-	 * project.layers;  // {main: function}
-	 */
-	addLayer(fun, index) {
-		if (typeof fun !== 'function') {
-			throw new Error('Project: addLayer: must be a function');
-		}
+/**
+ * Adds layer-function to project, every layer-function executes
+ * each frame. All function runs reversely (in decreasing order
+ * ..., 2, 1, 0), this is necessary to add main function first
+ * and draw last one (the last layer is what see user).
+ * @param {Function} fun Executable function
+ * @param {Number} index Index of function or can be a null
+ * @method
+ * @example
+ * var project = new Project(options);
+ * project.addLayer(callback, 'main');
+ * project.layers;  // {main: function}
+ */
+Project.prototype.addLayer = function(fun, index) {
+    if (typeof fun !== 'function') {
+        warn('Project#addLayer', 'fun', fun);
+        fun = function() {};
+    }
 
-		if (typeof index === 'number') {
-			this.layers[index] = fun;
-		}
-		else {
-			this.layers.push(fun);
-		}
-	}
+    if (typeof index === 'number') {
+        this.layers[index] = fun;
+    } else {
+        this.layers.push(fun);
+    }
+}
 
-	/**
-	 * Binds canvas to project and sets viewport width.
-	 * and height.
-	 * @param {Canvas} canvas
-	 * @method
-	 */
-	attachCanvas(canvas) {
-		if (!(canvas instanceof Canvas)) {
-			throw new Error('Project: attachCanvas: must be a Canvas');
-		}
+/**
+ * Binds canvas to project and sets viewport width.
+ * and height.
+ * @param {Canvas} canvas
+ * @method
+ */
+Project.prototype.attachCanvas = function(canvas) {
+    if (!(canvas instanceof Canvas)) {
+        throw new Error('Error: Project#attachCanvas: canvas must be a Canvas class');
+    }
 
-		this.canvas_ = canvas;
-		canvas.project_ = this;
+    this.canvas_ = canvas;
+    canvas.project_ = this;
 
-		this.viewportWidth = canvas.canvas.width;
-		this.viewportHeight = canvas.canvas.height;
-	}
+    this.viewportWidth = canvas.canvas.width;
+    this.viewportHeight = canvas.canvas.height;
+}
 
-	get canvas() {
-		return this.canvas_;
-	}
+/**
+ * Fills scene with selected colors on canvas width and height.
+ * Possible types:
+ * 'fill' - fill area with selected color
+ * 'transparent' - fill area transparent black
+ * @param {String} skyBoxType
+ * @param {Color} skyBoxColor
+ * @method
+ * @example
+ * var project = new Project(options);
+ * project.clearScene('fill', new Color(255, 100, 0, 1));
+ */
+Project.prototype.clearScene = function() {
+    var renderer = this.webGLRenderer,
+        gl = renderer.webGL,
+        scene = this.currentScene;
 
-	/**
-	 * Fills scene with selected colors on canvas width and height.
-	 * Possible types:
-	 * 'fill' - fill area with selected color
-	 * 'transparent' - fill area transparent black
-	 * @param {String} skyBoxType
-	 * @param {Color} skyBoxColor
-	 * @method
-	 * @example
-	 * var project = new Project(options);
-	 * project.clearScene('fill', new Color(255, 100, 0, 1));
-	 */
-	clearScene() {
-		var renderer = this.webGLRenderer,
-			gl = renderer.webGL,
-			scene = this.currentScene;
+    var skyBoxType = scene.skyBoxType,
+        skyBoxColor = scene.skyBoxColor;
 
-		var skyBoxType = scene.skyBoxType,
-			skyBoxColor = scene.skyBoxColor;
+    switch (skyBoxType) {
+        case 'fill':
+            gl.clearColor(skyBoxColor.r, skyBoxColor.g, skyBoxColor.b, skyBoxColor.a);
+            break;
 
-		switch(skyBoxType) {
-			case 'fill':
-			gl.clearColor(...skyBoxColor.array());
-			break;
+        case 'transparent':
+            gl.clearColor(0, 0, 0, 0);
+            break;
+    }
 
-			case 'transparent':
-			gl.clearColor(0, 0, 0, 0);
-			break;
-		}
+    gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+}
 
-		gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-	}
+/**
+ * Creates and returns a new scene this selected name,
+ * choose as current if "isCurrent" = true
+ * @param {String} name
+ * @param {Boolean} isCurrent
+ * @return {Scene}
+ * @method
+ */
+Project.prototype.createScene = function(name, isCurrent = false) {
+    if (typeof name !== 'string') {
+        warn('Project#createScene', 'name', name);
+        name = 'scene';
+    }
 
-	/**
-	 * Creates and returns a new scene this selected name,
-	 * choose as current if "isCurrent" = true
-	 * @param {String} name
-	 * @param {Boolean} isCurrent
-	 * @return {Scene}
-	 * @method
-	 */
-	createScene(name, isCurrent = false) {
-		if (typeof name !== 'string') {
-			throw new Error('Project: createNewScene: "name" must be a string');
-		}
+    var scene = new Scene({
+        name: name,
+        project: this
+    });
+    this.scenes.push(scene);
 
-		var scene = new Scene({
-			name,
-			project: this
-		});
-		this.scenes.push(scene);
+    if (isCurrent) {
+        this.selectScene(scene);
+    }
 
-		if (isCurrent) {
-			this.selectScene(scene);
-		}
+    return scene;
+}
 
-		return scene;
-	}
+Project.prototype.defaultviewport = function() {
+    var gl = this.webGLRenderer.webGL;
 
-	get currentScene() {
-		return this.currentScene_;
-	}
+    gl.viewport(0, 0, this.viewportWidth, this.viewportHeight);
+}
 
-	defaultviewport() {
-		var gl = this.webGLRenderer.webGL;
+/**
+ * Detaches canvas from project.
+ * @method
+ */
+Project.prototype.detachCanvasElement = function() {
+    if (this.canvas) {
+        this.canvas.project = undefined;
+        this.canvas = undefined;
+    }
+}
 
-		gl.viewport(0, 0, this.viewportWidth, this.viewportHeight);
-	}
+/**
+ * Adds a new main layer-function that draws items in a regular
+ * vision for user. Usual is drawed the last one. Goes through all
+ * cameras in scene and draws for each camera all scene's items,
+ * adds to items uniform a mvpmatrix, mvmatrix, lights, etc,
+ * updates all attributes, uniforms and textures.
+ * P.S. May be called once in code.
+ * @method
+ */
+Project.prototype.initialize = function() {
+    var self = this;
+    this.addLayer(options => {
+        var webGLRenderer = self.webGLRenderer,
+            scene = self.currentScene,
+            cameras = scene.cameras,
+            sysitems = scene.systemitems,
+            items = scene.items;
 
-	/**
-	 * Detaches canvas from project.
-	 * @method
-	 */
-	detachCanvasElement() {
-		if (this.canvas) {
-			this.canvas.project = undefined;
-			this.canvas = undefined;
-		}
-	}
+        webGLRenderer.renderer.start();
 
-	/**
-	 * Adds a new main layer-function that draws items in a regular
-	 * vision for user. Usual is drawed the last one. Goes through all
-	 * cameras in scene and draws for each camera all scene's items,
-	 * adds to items uniform a mvpmatrix, mvmatrix, lights, etc,
-	 * updates all attributes, uniforms and textures.
-	 * P.S. May be called once in code.
-	 * @method
-	 */
-	initialize() {
-		var self = this;
-		this.addLayer(options => {
-			var webGLRenderer = self.webGLRenderer,
-				scene = self.currentScene,
-				cameras = scene.cameras,
-				sysitems = scene.systemitems,
-				items = scene.items;
+        self.clearScene();
+        cameras.each(camera => {
+            // Execute onupdate functions at first
+            items.each(item => {
+                if (!item.enabled) {
+                    return;
+                }
+                update(item, options);
+            });
+            sysitems.each(item => {
+                if (!item.enabled) {
+                    return;
+                }
+                update(item, options);
+            });
 
-			webGLRenderer.renderer.start();
+            // Initialze perspective matrix by camera body
+            var mvpmatrix = camera.mvpmatrix();
 
-			self.clearScene();
-			cameras.each(camera => {
-				// Execute onupdate functions at first
-				items.each(item => {
-					if (!item.enabled) {
-						return;
-					}
-					update(item, options);
-				});
-				sysitems.each(item => {
-					if (!item.enabled) {
-						return;
-					}
-					update(item, options);
-				});
+            // Then draw items
+            items.each(item => {
+                if (!item.enabled) {
+                    return;
+                }
+                draw(item, mvpmatrix);
+            });
+            sysitems.each(item => {
+                if (!item.enabled) {
+                    return;
+                }
+                draw(item, mvpmatrix);
+            });
+        });
 
-				// Initialze perspective matrix by camera body
-				var mvpmatrix = camera.mvpmatrix();
+        webGLRenderer.renderer.end();
+    });
 
-				// Then draw items
-				items.each(item => {
-					if (!item.enabled) {
-						return;
-					}
-					draw(item, mvpmatrix);
-				});
-				sysitems.each(item => {
-					if (!item.enabled) {
-						return;
-					}
-					draw(item, mvpmatrix);
-				});
-			});
+    function update(item, options) {
+        // update by custrom scripts
+        item.frameUpdate(options);
+    }
 
-			webGLRenderer.renderer.end();
-		});
+    function draw(item, mvpmatrix) {
+        var gl = self.webGLRenderer.webGL;
+        var scene = self.currentScene;
 
-		function update(item, options) {
-			// update by custrom scripts
-			item.frameUpdate(options);
-		}
+        var mesh = item.mesh;
+        if (mesh) {
+            var uniforms = {
+                u_MVPMatrix: mvpmatrix
+            };
 
-		function draw(item, mvpmatrix) {
-			var gl = self.webGLRenderer.webGL;
-			var scene = self.currentScene;
+            if (mesh.material) {
+                uniforms.u_Material = mesh.material.data();
+            }
 
-			var mesh = item.mesh;
-			if (mesh) {
-				var uniforms = {
-					u_MVPMatrix: mvpmatrix
-				};
+            if (item.body) {
+                var mvmatrix = item.body.mvmatrix();
+                uniforms.u_MVMatrix = mvmatrix;
+                uniforms.u_MVNMatrix = mvmatrix.normalize();
+            }
 
-				if (mesh.material) {
-					uniforms.u_Material = mesh.material.data();
-				}
+            var lights = scene.getLights();
+            uniforms.u_Lights = lights;
 
-				if (item.body) {
-					var mvmatrix = item.body.mvmatrix();
-					uniforms.u_MVMatrix = mvmatrix;
-					uniforms.u_MVNMatrix = mvmatrix.normalize();
-				}
+            var shader = item.mesh.shader;
+            if (self.lastUsedShader !== shader) {
+                self.lastUsedShader = shader;
+                shader.useProgram();
+            }
 
-				var lights = scene.getLights();
-				uniforms.u_Lights = lights;
+            mesh.changeUniforms(uniforms);
 
-				var shader = item.mesh.shader;
-				if (self.lastUsedShader !== shader) {
-					self.lastUsedShader = shader;
-					shader.useProgram();
-				}
+            mesh.update();
 
-				mesh.changeUniforms(uniforms);
+            var VIOBuffer = mesh.VIOBuffer;
+            gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, VIOBuffer);
 
-				mesh.update();
+            gl.drawElements(gl[mesh.drawStyle], VIOBuffer.size, gl.UNSIGNED_SHORT, 0);
+        }
+    }
+}
 
-				var VIOBuffer = mesh.VIOBuffer;
-				gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, VIOBuffer);
+/**
+ * Initializes WebGLRenderer.
+ * @param {Object} properties
+ * @param {Object} properties.attributes
+ * @param {Object} properties.webglattributes WebGLRendererContext attributes.
+ */
+Project.prototype.initializeWebGLRenderer = function(options = {}) {
+    if (typeof options !== 'object') {
+        warn('Project#initializeWebGLRenderer', 'options', options);
+        options = {};
+    }
 
-				gl.drawElements(gl[mesh.drawStyle], VIOBuffer.size, gl.UNSIGNED_SHORT, 0);
-			}
-		}
-	}
+    this.webGLRenderer_ = new WebGLRenderer({
+        project: this,
+        attributes: options.attributes,
+        webglattributes: options.webglattributes
+    });
 
-	/**
-	 * Initializes WebGLRenderer.
-	 * @param {Object} properties
-	 * @param {Object} properties.attributes
-	 * @param {Object} properties.webglattributes WebGLRendererContext attributes.
-	 */
-	initializeWebGLRenderer({
-		attributes,
-		webglattributes
-	} = {}) {
-		this.webGLRenderer_ = new WebGLRenderer({
-			project: this,
-			attributes,
-			webglattributes
-		});
+    this.defaultviewport();
+}
 
-		this.defaultviewport();
-	}
+/**
+ * updates function "update" of project by requestAnimationFrame-timer
+ * @method
+ */
+Project.prototype.requestAnimationFrame = function() {
+    var canvas = this.canvas.canvas;
+    this.update();
 
-	get layers() {
-		return this.layers_;
-	}
+    requestAnimationFrame(this.requestAnimationFrame, canvas);
+}
 
-	/**
-	 * updates function "update" of project by requestAnimationFrame-timer
-	 * @method
-	 */
-	requestAnimationFrame() {
-		var canvas = this.canvas.canvas;
-		this.update();
+/**
+ * Selects scene as current scene in project.
+ * @param {Scene} scene
+ * @method
+ */
+Project.prototype.selectScene = function(scene) {
+    if (!(scene instanceof Scene)) {
+        warn('Project#selectScene', 'scene', scene);
+        return;
+    } else if (this.scenes.indexOf(scene) === -1) {
+        log('Warn: Project#selectScene: scene not binded to project');
+        return;
+    }
 
-		requestAnimationFrame(this.requestAnimationFrame, canvas);
-	}
+    this.currentScene_ = scene;
+}
 
-	get scenes() {
-		return this.scenes_;
-	}
+/**
+ * Updates all layer-functions and clears scene on each function
+ * @method
+ */
+Project.prototype.update = function() {
+    var layers = this.layers;
 
-	/**
-	 * Selects scene as current scene in project.
-	 * @param {Scene} scene
-	 * @method
-	 */
-	selectScene(scene) {
-		if (!(scene instanceof Scene) ||
-			this.scenes.indexOf(scene) === -1) {
-			throw new Error('Project: selectScene: must be a Scene of this project');
-		}
+    var olddate = this.olddate || Date.now(),
+        newdate = Date.now(),
+        delta = newdate - olddate;
+    this.olddate = newdate;
 
-		this.currentScene_ = scene;
-	}
+    var options = {
+        time: newdate,
+        deltaTime: delta
+    };
 
-	/**
-	 * Updates all layer-functions and clears scene on each function
-	 * @method
-	 */
-	update() {
-		var layers = this.layers;
-
-		var olddate = this.olddate || Date.now(),
-			newdate = Date.now(),
-			delta = newdate - olddate;
-		this.olddate = newdate;
-
-		var options = {
-			time: newdate,
-			deltaTime: delta
-		};
-
-		for (var i = layers.length; i--;) {
-			var layer = layers[i];
-			layer(options);
-		}
-	}
-
-	get webGLRenderer() {
-		return this.webGLRenderer_;
-	}
+    for (var i = layers.length; i--;) {
+        var layer = layers[i];
+        layer(options);
+    }
 }

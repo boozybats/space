@@ -5,15 +5,13 @@
  * @param {Number} width
  * @param {Number} height
  * @class
- * @property {Number} width
- * @property {Number} height
  * @property {Project} project Current binded project to the canvas
  */
 function Canvas(width, height) {
     var canvas = document.createElement('canvas');
     this.canvas_ = canvas;
     // if browser doesn't support canvas
-    canvas.innerText = '';
+    canvas.innerText = "Your browser doesn't support html5, please install another one";
 
     this.width = width;
     this.height = height;
@@ -73,9 +71,10 @@ Canvas.prototype.appendTo = function(element) {
     if (element.appendChild(this.canvas)) {
         // calls any functions with resize events to adapt canvas
         window.onresize();
+
         return true;
     } else {
-        warn('Canvas#appendTo', 'element', element);
+        console.warn(`Warn: Canvas#appendTo: canvas can not be appended to element ${element}`);
         return false;
     }
 }

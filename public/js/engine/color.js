@@ -14,6 +14,7 @@
  */
 function Color() {
     var args = arguments;
+
     var length = Math.min(args.length, 4);
 
     for (var i = 0; i < length; i++) {
@@ -30,6 +31,7 @@ function Color() {
                     log('Warn: Color: "rgb" must be in range 0-255');
                     element = 0;
                 }
+
                 break;
 
             case 3:
@@ -40,6 +42,7 @@ function Color() {
                     log('Warn: Color: "alpha" must be in range 0-1');
                     element = 0;
                 }
+
                 break;
         }
     }
@@ -161,8 +164,7 @@ Color.prototype.toUnit = function() {
  * @method
  */
 Color.prototype.vec = function() {
-	var arr = this.array();
-    var out = new Vec(arr[0], arr[1], arr[2], arr[3]);
+    var out = new Vec(this.r, this.g, this.b, this.a);
 
     return out;
 }

@@ -16,9 +16,14 @@
  * removes children if parent has been changed.
  */
 function Body(options = {}) {
-    this.position = options.position;
-    this.rotation = options.rotation;
-    this.scale = options.scale;
+    if (typeof options !== 'object') {
+        warn('Body', 'options', options);
+        options = {};
+    }
+
+    this.position = options.position || new Vec3;
+    this.rotation = options.rotation || new Quaternion;
+    this.scale = options.scale || new Vec3(1, 1, 1);
     this.parent = options.parent;
 
     // Stores children of a body
@@ -39,6 +44,7 @@ Object.defineProperties(Body.prototype, {
         },
         set: function(val) {
             if (!(val instanceof Vec3)) {
+                warn('Body#position', 'val', val);
                 val = new Vec3;
             }
 
@@ -51,6 +57,7 @@ Object.defineProperties(Body.prototype, {
         },
         set: function(val) {
             if (!(val instanceof Quaternion)) {
+                warn('Body#rotation', 'val', val);
                 val = new Quaternion;
             }
 
@@ -63,6 +70,7 @@ Object.defineProperties(Body.prototype, {
         },
         set: function(val) {
             if (!(val instanceof Vec3)) {
+                warn('Body#scale', 'val', val);
                 val = new Vec3(1, 1, 1);
             }
 
@@ -75,8 +83,8 @@ Object.defineProperties(Body.prototype, {
         },
         set: function(val) {
             if (val && !(val instanceof Body)) {
+                warn('Body#parent', 'val', val);
                 val = undefined;
-                warn('Body#parent', 'body', val);
             }
 
             // if body had a parent when remove from parent's children

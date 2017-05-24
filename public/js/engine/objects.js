@@ -267,7 +267,7 @@ Sphere.mesh = function(options = {}) {
 
     // break all triangles on 4 triangles
     for (var i = 0; i < indices.length; i += 3) {
-        // deine 3 indinces to make a face
+        // define 3 indices to make a face
         var i0 = indices[i],
             i1 = indices[i + 1],
             i2 = indices[i + 2];
@@ -643,9 +643,17 @@ Empty.prototype.constructor = Empty;
  * @example
  * TBN(Icosahedron.mesh());  // {indices, vertices, uvs, normals, tangents, bitangents}
  */
-function TBN({ indices, vertices, uvs, normals } = {}) {
-    if (!indices || !vertices) {
-        throw new Error('TBN: indices and array must be an arrays');
+function TBN(options = {}) {
+    var indices = options.indices,
+        vertices = options.vertices,
+        uvs = options.uvs,
+        normals = options.normals;
+
+    if (!indices) {
+        warn('TBN', 'indices', indices);
+    }
+    if (!vertices) {
+        warn('TBN', 'vertices', vertices);
     }
 
     var out = {};
@@ -694,8 +702,8 @@ function TBN({ indices, vertices, uvs, normals } = {}) {
         }
 
         for (var i = 0; i < vertices.length / 3; i++) {
-            var normal = Vec.avg(...memory[i]);
-            normals.push(...normal.array());
+            var normal = Vec.avg.apply(Vec, memory[i]);
+            normals.push(normal.x, normal.y, normal.z);
         }
 
         out.normals = normals;
@@ -754,19 +762,20 @@ function TBN({ indices, vertices, uvs, normals } = {}) {
             var tg = tangents[i];
             var btg = bitangents[i];
 
-            tr = Vec.avg(...tg);
-            br = Vec.avg(...btg);
+            tr = Vec.avg.apply(Vec, tg);
+            br = Vec.avg.apply(Vec, btg);
 
             var normal = new Vec3(
                 normals[i * 3],
                 normals[i * 3 + 1],
                 normals[i * 3 + 2]
             );
+
             tr = ortogonalize(normal, tr);
             br = ortogonalize(normal, br);
 
-            out.tangents.push(...tr.array());
-            out.bitangents.push(...br.array());
+            out.tangents.push(tr.x, tr.y, tr.z);
+            out.bitangents.push(br.x, br.y, br.z);
         }
     }
 

@@ -591,7 +591,7 @@ Vec.avg = function() {
         var vec = args[i];
 
         if (!vec instanceof Vec) {
-            warn('Vec->avg', 'Vec', vec);
+            warn('Vec->avg', 'vec', vec);
             return new Vec2;
         }
 

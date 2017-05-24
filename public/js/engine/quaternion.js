@@ -13,258 +13,301 @@
  * @property {Number} w
  * @property {Euler} euler
  */
+function Quaternion(x = 0, y = 0, z = 0, w = 1) {
+    if (typeof x !== 'number') {
+        throw new Error('Quaternion', 'x', x);
+        x = 0;
+    }
+    if (typeof y !== 'number') {
+        throw new Error('Quaternion', 'y', y);
+        y = 0;
+    }
+    if (typeof z !== 'number') {
+        throw new Error('Quaternion', 'z', z);
+        z = 0;
+    }
+    if (typeof w !== 'number') {
+        throw new Error('Quaternion', 'w', w);
+        w = 1;
+    }
 
-class Quaternion {
-	constructor(x = 0, y = 0, z = 0, w = 1) {
-		if (typeof x !== 'number' ||
-			typeof y !== 'number' ||
-			typeof z !== 'number' ||
-			typeof w !== 'number') {
-			throw new Error('Quaternion: xyzw must be a numbers');
+    this.x_ = x;
+    this.y_ = y;
+    this.z_ = z;
+    this.w_ = w;
+
+    this.euler_ = Euler.Quaternion(x, y, z, w);
+}
+
+Object.defineProperties(Quaternion, {
+	euler: {
+		get: function() {
+			return this.euler_;
 		}
-
-		this.x_ = x;
-		this.y_ = y;
-		this.z_ = z;
-		this.w_ = w;
-
-		this.euler_ = Euler.Quaternion(x, y, z, w);
-	}
-
-	/**
-	 * Returns an array of quaternion numbers.
-	 * @return {Arrat}
-	 * @method
-	 */
-	array() {
-		var out = [this.x, this.y, this.z, this.w];
-
-		return out;
-	}
-
-	static avg(...quaternions) {
-		if (quaternions.length == 0) {
-			return new Quaternion;
+	},
+	w: {
+		get: function() {
+			return this.w_;
 		}
-
-		var out = amc('/', amc('+', ...quaternions), quaternions.length);
-
-		if (!(out instanceof Quaternion)) {
-			out = new Quaternion;
+	},
+	x: {
+		get: function() {
+			return this.x_;
 		}
-
-		return out;
-	}
-
-	/**
-	 * Compares two quaternions by x, y, z and w coordinates
-	 * and returns true if them equal else returns false.
-	 * P.S. Better use {@link amc} function, it is
-	 * much optimizing.
-	 * @param  {Quaternion} quat1
-	 * @param  {Quaternion} quat2
-	 * @return {Boolean}
-	 * @method
-	 * @static
-	 */
-	static compare(quat1, quat2) {
-		var out = true;
-
-		if (typeof quat1 === 'undefined' || typeof quat2 === 'undefined') {
-			out = false;
+	},
+	y: {
+		get: function() {
+			return this.y_;
 		}
-		else {
-			if (quat1.x !== quat2.x ||
-				quat1.y !== quat2.y ||
-				quat1.z !== quat2.z ||
-				quat1.w !== quat2.w) {
-				out = false;
-			}
+	},
+	z: {
+		get: function() {
+			return this.z_;
 		}
-
-		return out;
 	}
+});
 
-	get euler() {
-		return this.euler_;
-	}
+/**
+ * Returns an array of quaternion numbers.
+ * @return {Arrat}
+ * @method
+ */
+Quaternion.prototype.array = function() {
+    return [this.x, this.y, this.z, this.w];
+}
 
-	/**
-	 * Transforms eulers to quaternions,
-	 * function gets {@link Euler} or x, y, and z coordinates.
-	 * @param {Euler|number} x, y, z, w
-	 * @return {Quaternion}
-	 * @method
-	 * @static
-	 */
-	static Euler(...args) {
-		var roll, pitch, yaw;
-		if (args[0] instanceof Quaternion) {
-			var euler = args[0];
+Quaternion.avg = function() {
+    var args = arguments;
 
-			roll = euler.x;
-			pitch = euler.y;
-			yaw = euler.z;
-		}
-		else if (typeof args[0] === 'number' &&
-			typeof args[1] === 'number' &&
-			typeof args[2] === 'number') {
-			roll = args[0];
-			pitch = args[1];
-			yaw = args[2];
-		}
-		else {
-			throw new Error('Quaternion: Euler: must be a Euler or xyz numbers');
-		}
+    if (args.length == 0) {
+        return new Quaternion;
+    }
 
-		var nroll = Math.DTR(roll),
-			npitch = Math.DTR(pitch),
-			nyaw = Math.DTR(yaw);
+    var out = args[0];
+    for (var i = 0; i < args.length; i++) {
+        var quat = args[i];
 
-		var sr, sp, sy, cr, cp, cy;
+        if (!quat instanceof Quaternion) {
+            warn('Quaternion->avg', 'quat', quat);
+            return new Quaternion;
+        }
 
-		sy = Math.sin(nyaw * 0.5);
-		cy = Math.cos(nyaw * 0.5);
-		sp = Math.sin(npitch * 0.5);
-		cp = Math.cos(npitch * 0.5);
-		sr = Math.sin(nroll * 0.5);
-		cr = Math.cos(nroll * 0.5);
+        if (i === 0) {
+            continue;
+        }
 
-		var srcp = sr * cp,
-			crsp = cr * sp,
-			crcp = cr * cp,
-			srsp = sr * sp;
+        out = amc('+', out, quat);
+    }
 
-		var quat = new Quaternion(
-			srcp * cy - crsp * sy,
-			crsp * cy + srcp * sy,
-			crcp * sy - srsp * cy,
-			crcp * cy + srsp * sy
-		);
-		quat.euler_ = new Euler(roll, pitch, yaw);
+    out = amc('/', out, args.length);
 
-		return quat;
-	}
+    if (!(out instanceof Quaternion)) {
+        warn('Quaternion->avg', 'out', out);
+        return new Quaternion;
+    }
 
-	/**
-	 * Returns inversed quaternion.
-	 * @return {Quaternion}
-	 * @method
-	 */
-	inverse() {
-		var euler = this.euler;
-		var x = -euler.x,
-			y = -euler.y,
-			z = -euler.z;
+    return out;
+}
 
-		var out = Quaternion.Euler(x, y, z);
+/**
+ * Compares two quaternions by x, y, z and w coordinates
+ * and returns true if them equal else returns false.
+ * P.S. Better use {@link amc} function, it is
+ * much optimizing.
+ * @param  {Quaternion} quat1
+ * @param  {Quaternion} quat2
+ * @return {Boolean}
+ * @method
+ * @static
+ */
+Quaternion.compare = function(quat1, quat2) {
+    var out = true;
 
-		return out;
-	}
+    if (typeof quat1 === 'undefined' || typeof quat2 === 'undefined') {
+        out = false;
+    } else {
+        if (quat1.x !== quat2.x ||
+            quat1.y !== quat2.y ||
+            quat1.z !== quat2.z ||
+            quat1.w !== quat2.w) {
+            out = false;
+        }
+    }
 
-	multi(num) {
-		if (typeof num !== 'number') {
-			num = 1;
-		}
+    return out;
+}
 
-		var euler = this.euler;
+/**
+ * Transforms eulers to quaternions,
+ * function gets {@link Euler} or x, y, and z coordinates.
+ * @param {Euler|number} x, y, z, w
+ * @return {Quaternion}
+ * @method
+ * @static
+ */
+Quaternion.Euler = function() {
+	var args = arguments;
 
-		var eul = new Euler(
-			euler.x * num,
-			euler.y * num,
-			euler.z * num
-		);
+    var roll, pitch, yaw;
+    if (args[0] instanceof Quaternion) {
+        var euler = args[0];
 
-		var out = Quaternion.Euler(eul);
+        roll = euler.x;
+        pitch = euler.y;
+        yaw = euler.z;
+    } else {
+        roll = args[0];
+        pitch = args[1];
+        yaw = args[2];
 
-		return out;
-	}
+        if (typeof roll !== 'number') {
+        	warn('Quaternion->Euler', 'roll', roll);
+        	roll = 0;
+        }
+        if (typeof pitch !== 'number') {
+        	warn('Quaternion->Euler', 'pitch', pitch);
+        	pitch = 0;
+        }
+        if (typeof yaw !== 'number') {
+        	warn('Quaternion->Euler', 'yaw', yaw);
+        	yaw = 0;
+        }
+    }
 
-	/**
-	 * Calculates sum between two quaternions and returns
-	 * result quaternion. P.S. Better use {@link amc} function, it is
-	 * much optimizing.
-	 * @param {Quaternion} quat1
-	 * @param {Quaternion} quat2
-	 * @return {Quaternion}
-	 * @method
-	 * @static
-	 */
-	static sum(...quaternions) {
-		if (quaternions.length == 0) {
-			return new Quaternion;
-		}
+    var nroll = Math.DTR(roll),
+        npitch = Math.DTR(pitch),
+        nyaw = Math.DTR(yaw);
 
-		var qua1 = quaternions[0],
-			qua2 = quaternions[1];
+    var sr, sp, sy, cr, cp, cy;
 
-		if (!(qua1 instanceof Quaternion)) {
-			qua1 = new Quaternion;
-		}
-		if (!(qua2 instanceof Quaternion)) {
-			qua2 = new Quaternion;
-		}
+    sy = Math.sin(nyaw * 0.5);
+    cy = Math.cos(nyaw * 0.5);
+    sp = Math.sin(npitch * 0.5);
+    cp = Math.cos(npitch * 0.5);
+    sr = Math.sin(nroll * 0.5);
+    cr = Math.cos(nroll * 0.5);
 
-		var euler1 = quat1.euler,
-			euler2 = quat2.euler;
+    var srcp = sr * cp,
+        crsp = cr * sp,
+        crcp = cr * cp,
+        srsp = sr * sp;
 
-		var eul = new Euler(
-			euler1.x + euler2.x,
-			euler1.y + euler2.y,
-			euler1.z + euler2.z
-		);
+    var quat = new Quaternion(
+        srcp * cy - crsp * sy,
+        crsp * cy + srcp * sy,
+        crcp * sy - srsp * cy,
+        crcp * cy + srsp * sy
+    );
+    quat.euler_ = new Euler(roll, pitch, yaw);
 
-		if (quaternions.length > 2) {
-			quaternions.splice(0, 2, out);
-			out = Quaternion.sum(...quaternions);
-		}
+    return quat;
+}
 
-		var out = Quaternion.Euler(eul);
+/**
+ * Returns inversed quaternion.
+ * @return {Quaternion}
+ * @method
+ */
+Quaternion.prototype.inverse = function() {
+    var euler = this.euler;
+    var x = -euler.x,
+        y = -euler.y,
+        z = -euler.z;
 
-		return out;
-	}
+    var out = Quaternion.Euler(x, y, z);
 
-	sum(num) {
-		if (typeof num !== 'number') {
-			return this;
-		}
+    return out;
+}
 
-		var euler = this.euler;
+Quaternion.prototype.multi = function(num) {
+    if (typeof num !== 'number') {
+    	warn('Quaternion#multi', 'num', num);
+        num = 1;
+    }
 
-		var eul = new Euler(
-			euler.x + num,
-			euler.y + num,
-			euler.z + num
-		);
+    var euler = this.euler;
 
-		var out = Quaternion.Euler(eul);
+    var eul = new Euler(
+        euler.x * num,
+        euler.y * num,
+        euler.z * num
+    );
 
-		return out;
-	}
+    var out = Quaternion.Euler(eul);
 
-	/**
-	 * Transforms quaternion to {@link Vec4}.
-	 * @return {Vec4}
-	 * @method
-	 */
-	vec() {
-		var out = new Vec4(this.x, this.y, this.z, this.w);
-		return out;
-	}
+    return out;
+}
 
-	get x() {
-		return this.x_;
-	}
+/**
+ * Calculates sum between two quaternions and returns
+ * result quaternion. P.S. Better use {@link amc} function, it is
+ * much optimizing.
+ * @param {Quaternion} quat1
+ * @param {Quaternion} quat2
+ * @return {Quaternion}
+ * @method
+ * @static
+ */
+Quaternion.sum = function() {
+	var args = arguments;
 
-	get y() {
-		return this.y_;
-	}
+    if (args.length == 0) {
+        return new Quaternion;
+    }
 
-	get z() {
-		return this.z_;
-	}
+    var qua1 = quaternions[0],
+        qua2 = quaternions[1];
 
-	get w() {
-		return this.w_;
-	}
+    if (!(qua1 instanceof Quaternion)) {
+        qua1 = new Quaternion;
+    }
+    if (!(qua2 instanceof Quaternion)) {
+        qua2 = new Quaternion;
+    }
+
+    var euler1 = quat1.euler,
+        euler2 = quat2.euler;
+
+    var eul = new Euler(
+        euler1.x + euler2.x,
+        euler1.y + euler2.y,
+        euler1.z + euler2.z
+    );
+
+    if (args.length > 2) {
+        Array.prototype.splice.call(args, 0, 2, out);
+        out = Quaternion.sum.apply(Quaternion, args);
+    }
+
+    var out = Quaternion.Euler(eul);
+
+    return out;
+}
+
+Quaternion.prototype.sum = function(num) {
+    if (typeof num !== 'number') {
+        warn('Quaternion#sum', 'num', num);
+        num = 0;
+    }
+
+    var euler = this.euler;
+
+    var eul = new Euler(
+        euler.x + num,
+        euler.y + num,
+        euler.z + num
+    );
+
+    var out = Quaternion.Euler(eul);
+
+    return out;
+}
+
+/**
+ * Transforms quaternion to {@link Vec4}.
+ * @return {Vec4}
+ * @method
+ */
+Quaternion.prototype.vec = function() {
+    return new Vec4(this.x, this.y, this.z, this.w);
 }

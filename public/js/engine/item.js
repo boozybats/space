@@ -14,6 +14,11 @@
  * @class
  */
 function Item(options = {}) {
+    if (typeof options !== 'object') {
+        warn('Item', 'options', options);
+        options = {};
+    }
+
     this.enabled = options.enabled || true;
     this.id = options.id || -2;
     this.name = options.name || 'anonymous';
@@ -37,7 +42,7 @@ function Item(options = {}) {
     this.onupdate = function() {};
 }
 
-Object.defineProperties(Item, {
+Object.defineProperties(Item.prototype, {
     body: {
         get: function() {
             return this.body_;
@@ -207,9 +212,11 @@ Object.defineProperties(Item, {
 
 Item.prototype.frameUpdate = function(options) {
     this.onupdate(options);
+
     if (this.physic) {
         this.physic.onupdate(options);
     }
+
     if (this.rigidbody) {
         this.rigidbody.onupdate(options);
     }
@@ -231,7 +238,7 @@ Item.prototype.frameUpdate = function(options) {
  */
 Item.prototype.instance = function(scene, isSystem = false) {
     if (this.isCorrupted) {
-        log(`Warn: Item#instance: item is corrupted and can not be instantiated, id: ${this.id}`);
+        warnfree(`Item#instance: item is corrupted and can not be instantiated, id: ${this.id}`);
         return;
     }
 

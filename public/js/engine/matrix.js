@@ -8,12 +8,10 @@
  * @param {Number} b Quantity of a columns
  * @param {Array} arr If need a custom matrix then throw array
  * @class
- * @property {Number} a Quantity of a rows
- * @property {Number} b Quantity of a columns
  * @example
  * var mat = new Mat(2, 3, [
- * 	1, 2, 2
- * 	4, 3, 1
+ *  1, 2, 2
+ *  4, 3, 1
  * ]);
  * mat;  // [[1, 2, 2], [4, 3, 1]]
  */
@@ -89,6 +87,12 @@ Mat.prototype.columnmajor = function() {
  */
 Mat.compare = function(mat0, mat1) {
     var out = true;
+
+    if (!(mat0 instanceof Mat) || !(mat1 instanceof Mat)) {
+        out = false;
+        return out;
+    }
+
     var a0 = mat0.a,
         b0 = mat0.b;
     var a1 = mat1.a,
@@ -158,7 +162,7 @@ Mat.prototype.det = function() {
         b = this.b;
 
     if (a !== b) {
-        log('Warn: Mat#det: matrix must be squad');
+        warnfree('Mat#det: matrix must be squad');
         return 0;
     }
 
@@ -201,13 +205,23 @@ Mat.dif = function() {
 
     var mat1 = args[0],
         mat2 = args[1];
+
+    if (!(mat1 instanceof Mat)) {
+        warn('Mat->dif', 'mat1', mat1);
+        return new Mat2;
+    }
+    if (!(mat2 instanceof Mat)) {
+        warn('Mat->dif', 'mat2', mat2);
+        return mat1;
+    }
+
     var a = mat1.a,
         b = mat1.b,
         a1 = mat2.a,
         b1 = mat2.b;
 
     if (a != a1 || b != b1) {
-        log('Warn: Mat->dif: matrices must have same size');
+        warn('Mat->dif: matrices must have same size');
         return mat1;
     }
 
@@ -238,7 +252,7 @@ Mat.prototype.inverse = function() {
         b = this.b;
 
     if (a !== b) {
-        log('Warn: Mat#inverse: matrix must be squad');
+        warnfree('Mat#inverse: matrix must be squad');
         return out;
     }
 
@@ -306,13 +320,22 @@ Mat.multi = function() {
     var mat1 = args[0],
         mat2 = args[1];
 
+    if (!(mat1 instanceof Mat)) {
+        warn('Mat->multi', 'mat1', mat1);
+        return new Mat2;
+    }
+    if (!(mat2 instanceof Mat)) {
+        warn('Mat->multi', 'mat2', mat2);
+        return mat1;
+    }
+
     var a = mat1.a,
         b = mat1.b,
         c = mat2.a,
         b1 = mat2.b;
 
     if (b !== c) {
-        log(`Warn: Mat->multi: 1-st matrix columns count must be equal to 2-nd matrix rows, b: ${b}, c: ${c}`);
+        warnfree(`Mat->multi: 1-st matrix columns count must be equal to 2-nd matrix rows, b: ${b}, c: ${c}`);
         return mat1;
     }
 
@@ -381,8 +404,6 @@ Mat.prototype.rowmajor = function() {
 Mat.prototype.slice = function(x, y) {
     var a = this.a,
         b = this.b;
-    var s = 0,
-        z = 0;
 
     var out = this.slicer(x);
     out = out.slicec(y);
@@ -537,6 +558,16 @@ Mat.sum = function() {
 
     var mat1 = args[0],
         mat2 = args[1];
+
+    if (!(mat1 instanceof Mat)) {
+        warn('Mat->sum', 'mat1', mat1);
+        return new Mat2;
+    }
+    if (!(mat2 instanceof Mat)) {
+        warn('Mat->sum', 'mat2', mat2);
+        return mat1;
+    }
+
     var a = mat1.a,
         b = mat1.b,
         a1 = mat2.a,

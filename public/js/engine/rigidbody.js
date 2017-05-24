@@ -1,106 +1,119 @@
-class Rigidbody {
-	constructor({
-		body
-	} = {}) {
-		this.body = body;
+function Rigidbody(options = {}) {
+    if (typeof options !== 'object') {
+        warn('Rigidbody', 'options', options);
+        options = {};
+    }
 
-		// Stores a custom handlers, are called on change values
-		var handlers = new Storage;
-		handlers.filter = (data => typeof data === 'function');
-		this.handlers = handlers;
+    this.body = options.body;
 
-		// Stores last values of properties
-		this.data = {
-			velocity: {
-				value: new Vec3,
-				duration: 0
-			}
-		};
-		this.velocity = new Vec3;
+    // Stores a custom handlers, are called on change values
+    var handlers = new Storage;
+    handlers.filter = (data => typeof data === 'function');
+    this.handlers = handlers;
 
-		this.initialize();
-	}
+    // Stores last values of properties
+    this.data = {
+        velocity: {
+            value: new Vec3,
+            duration: 0
+        }
+    };
+    this.velocity = new Vec3;
 
-	get body() {
-		return this.body_;
-	}
-	set body(val) {
-		if (val && !(val instanceof Body)) {
-			body = undefined;
-		}
+    this.initialize();
+}
 
-		this.body_ = val;
-	}
+Object.defineProperties(Rigidbody.prototype, {
+    body: {
+        get: function() {
+            return this.body_;
+        },
+        set: function(val) {
+            if (val && !(val instanceof Body)) {
+                warn('Rigidbody#body', 'val', val);
+                body = undefined;
+            }
 
-	// Updates properties and send them to callbacks onchange
-	initialize() {
-		var self = this;
-		this.onupdate = function({
-			deltaTime
-		}) {
-			var tugged = [];
+            this.body_ = val;
+        }
+    },
+    onupdate: {
+        get: function() {
+            return this.onupdate_;
+        },
+        set: function(val) {
+            if (typeof val !== 'function') {
+                warn('Rigidbody#onupdate', 'val', val);
+                val = function() {};
+            }
 
-			var dataVelocity = self.data.velocity;
-			var velocity = self.velocity,
-				shift = amc('*', velocity, deltaTime);
+            this.onupdate_ = val;
+        }
+    },
+    velocity: {
+        get: function() {
+            return this.velocity_;
+        },
+        set: function(val) {
+            if (!(val instanceof Vec3)) {
+                warn('Rigidbody#velocity', 'val', val);
+                val = new Vec3;
+            }
 
-			if (amc('=', dataVelocity.value, velocity)) {
-				dataVelocity.duration += deltaTime;
-			}
-			else {
-				tugged.push('velocity');
-			}
+            this.velocity_ = val;
+        }
+    }
+});
 
-			self.tug(tugged);
+// Updates properties and send them to callbacks onchange
+Rigidbody.prototype.initialize = function() {
+    var self = this;
+    this.onupdate = function({
+        deltaTime
+    }) {
+        var tugged = [];
 
-			var body = self.body;
-			if (body) {
-				body.position = amc('+', body.position, shift);
-			}
-		}
-	}
+        var dataVelocity = self.data.velocity;
+        var velocity = self.velocity,
+            shift = amc('*', velocity, deltaTime);
 
-	onсhange(handler, callback) {
-		this.handlers.set(handler, callback);
-	}
+        if (amc('=', dataVelocity.value, velocity)) {
+            dataVelocity.duration += deltaTime;
+        } else {
+            tugged.push('velocity');
+        }
 
-	get onupdate() {
-		return this.onupdate_;
-	}
-	set onupdate(val) {
-		if (typeof val !== 'function') {
-			val = function() {};
-		}
+        self.tug(tugged);
 
-		this.onupdate_ = val;
-	}
+        var body = self.body;
+        if (body) {
+            body.position = amc('+', body.position, shift);
+        }
+    }
+}
 
-	// Triggers selected changes, if list aren't selected when choose every property
-	tug(list) {
-		var self = this;
-		if (!list || ~list.indexOf('velocity')) {
-			var dataVelocity = self.data.velocity;
-			var velocity = self.velocity;
+Rigidbody.prototype.onсhange = function(handler, callback) {
+    this.handlers.set(handler, callback);
+}
 
-			var callback = self.handlers.get('velocity');
-			if (callback) {
-				callback(dataVelocity.value, dataVelocity.duration);
-			}
+// Triggers selected changes, if list aren't selected when choose every property
+Rigidbody.prototype.tug = function(list) {
+    if (list && !(list instanceof Array)) {
+        warn('Rigidbody#tug', 'list', list);
+        return;
+    }
 
-			dataVelocity.value = velocity;
-			dataVelocity.duration = 0;
-		}
-	}
+    var self = this;
+    if (!list || ~list.indexOf('velocity')) {
+        var dataVelocity = self.data.velocity;
+        var velocity = self.velocity;
 
-	get velocity() {
-		return this.velocity_;
-	}
+        var callback = self.handlers.get('velocity');
+        if (callback) {
+            callback(dataVelocity.value, dataVelocity.duration);
+        }
 
-	set velocity(val) {
-		if (!(val instanceof Vec3)) {
-			val = new Vec3;
-		}
-
-		this.velocity_ = val;
-	}
+        dataVelocity.value = velocity;
+        dataVelocity.duration = 0;
+    }
 }
