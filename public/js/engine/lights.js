@@ -21,7 +21,7 @@ function Light(options = {}) {
     this.ambient = options.ambient || new Color(0, 0, 0, 1);
     this.diffuse = options.diffuse || new Color(255, 255, 255, 1);
     this.specular = options.specular || new Color(255, 255, 255, 1);
-    this.intensity = options.intensity || 1000000;
+    this.intensity = options.intensity || 1e+3;
 }
 
 Object.defineProperties(Light.prototype, {
@@ -29,7 +29,7 @@ Object.defineProperties(Light.prototype, {
         get: function() {
             return this.ambient_;
         },
-        set: function() {
+        set: function(val) {
             if (!(val instanceof Color)) {
                 warn('Light#ambient', 'val', val);
                 val = new Color(255, 255, 255, 1);
@@ -55,7 +55,7 @@ Object.defineProperties(Light.prototype, {
         get: function() {
             return this.diffuse_;
         },
-        set: function() {
+        set: function(val) {
             if (!(val instanceof Color)) {
                 warn('Light#diffuse', 'val', val);
                 val = new Color(255, 255, 255, 1);
@@ -94,7 +94,7 @@ Object.defineProperties(Light.prototype, {
         get: function() {
             return this.specular_;
         },
-        set: function() {
+        set: function(val) {
             if (!(val instanceof Color)) {
                 warn('Light#specular', 'val', val);
                 val = new Color(255, 255, 255, 1);

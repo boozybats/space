@@ -84,6 +84,16 @@ function Phys() {}
  * @return {number} F
  */
 Phys.gravity = function(m0, m1, l) {
+    if (typeof m0 !== 'number') {
+        warn('Phys#gravity', 'm0', m0);
+    }
+    if (typeof m1 !== 'number') {
+        warn('Phys#gravity', 'm1', m1);
+    }
+    if (typeof l !== 'number') {
+        warn('Phys#gravity', 'l', l);
+    }
+
     return G * ((m0 + m1) / Math.pow(l, 2));
 }
 
@@ -96,6 +106,13 @@ Phys.gravity = function(m0, m1, l) {
  * @return {number} R
  */
 Phys.layerHeight = function(V0, V1 = 0) {
+    if (typeof V0 !== 'number') {
+        warn('Phys#layerHeight', 'V0', V0);
+    }
+    if (typeof V1 !== 'number') {
+        warn('Phys#layerHeight', 'V1', V1);
+    }
+
     var V = V0 + V1;
     var R = Math.pow(V / (4 / 3 * Math.PI), 1 / 3);
     var R1 = Math.pow(V1 / (4 / 3 * Math.PI), 1 / 3);
@@ -104,8 +121,24 @@ Phys.layerHeight = function(V0, V1 = 0) {
     return out;
 }
 
+Phys.layerVolume = function(h, R = 0) {
+    if (typeof h !== 'number') {
+        warn('Phys#layerHeight', 'h', h);
+    }
+    if (typeof R !== 'number') {
+        warn('Phys#layerHeight', 'R', R);
+    }
+
+    var l = R + h;
+    var V = 4 / 3 * Math.PI * Math.pow(l, 3);
+    var V1 = 4 / 3 * Math.PI * Math.pow(R, 3);
+    var out = V - V1;
+
+    return out;
+}
+
 /**
- * Defines: decreasing or increasing function sended.
+ * Defines decreasing or increasing function sended.
  * @param {Function} func Check function
  * @param {number} to End value to send as parameter
  * @param {number} precision How much times check the function
@@ -136,6 +169,13 @@ Phys.infLim = function(func, to = 9999999, precision = 100) {
 }
 
 Phys.mass = function(p, V) {
+    if (typeof p !== 'number') {
+        warn('Phys#mass', 'v', p);
+    }
+    if (typeof V !== 'number') {
+        warn('Phys#mass', 'V', V);
+    }
+
     return p * V;
 }
 
@@ -224,6 +264,7 @@ Object.defineProperties(Physic.prototype, {
 
 Physic.prototype.Density = function(R) {
     if (typeof R !== 'number') {
+        warn('Physic#Density', 'R', R);
         R = 0;
     }
 
@@ -242,6 +283,7 @@ Physic.prototype.Density = function(R) {
 
 Physic.prototype.Mass = function(R) {
     if (typeof R !== 'number') {
+        warn('Physic#Mass', 'R', R);
         R = 0;
     }
 
@@ -264,6 +306,7 @@ Physic.prototype.Mass = function(R) {
 
 Physic.prototype.MassTotal = function(R = Infinity) {
     if (typeof R !== 'number') {
+        warn('Physic#MassTotal', 'R', R);
         R = Infinity;
     }
 
@@ -285,6 +328,7 @@ Physic.prototype.MassTotal = function(R = Infinity) {
 
 Physic.prototype.Pressure = function(R) {
     if (typeof R !== 'number') {
+        warn('Physic#Pressure', 'R', R);
         R = 0;
     }
 
@@ -304,6 +348,7 @@ Physic.prototype.Pressure = function(R) {
 
 Physic.prototype.Temperature = function(R) {
     if (typeof R !== 'number') {
+        warn('Physic#Temperature', 'R', R);
         R = 0;
     }
 
@@ -320,6 +365,7 @@ Physic.prototype.toJSON = function() {
 
 Physic.prototype.VolumeTotal = function(R = Infinity) {
     if (typeof R !== 'number') {
+        warn('Physic#VolumeTotal', 'R', R);
         R = Infinity;
     }
 
@@ -339,7 +385,7 @@ Physic.prototype.VolumeTotal = function(R = Infinity) {
  * Matter creates layers by substances added or removed from it.
  * @constructor
  */
-function Matter(substances) {
+function Matter(substances = {}) {
     this.volume_ = 0;
     this.layers_ = [];
 
@@ -408,6 +454,11 @@ Object.defineProperties(Matter.prototype, {
  * @param {Number} volume
  */
 Matter.prototype.addSubstance = function(name, volume) {
+    if (typeof volume !== 'number') {
+        warn('Matter#addSubstance', 'volume', volume);
+        volume = 0;
+    }
+
     var periodic = PeriodicTable[name];
     if (!periodic) {
         return false;
@@ -433,6 +484,7 @@ Matter.prototype.addSubstance = function(name, volume) {
  */
 Matter.prototype.addSubstances = function(substances) {
     if (typeof substances !== 'object') {
+        warn('Matter#addSubstances', 'substances', substances);
         substances = {};
     }
 
@@ -471,7 +523,7 @@ Matter.prototype.defineParameters = function() {
  */
 Matter.prototype.each = function(callback) {
     if (typeof callback !== 'function') {
-        console.warn('Matter: each: "callback" must be a function');
+        warn('Matter#each', 'callback', callback);
         return;
     }
 
@@ -534,6 +586,11 @@ Matter.prototype.layerHeight = function() {
  * @return {Object}
  */
 Matter.prototype.nextSibling = function(layer) {
+    if (!layer) {
+        warn('Matter#nextSibling', 'layer', layer);
+        return layer;
+    }
+
     var out;
     var radius = layer.radius;
 

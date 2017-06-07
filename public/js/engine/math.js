@@ -108,7 +108,7 @@ function amc(operand) {
             warnfree(`amc: arithmetic calculations error, wrong operand, value: ${operand}`);
     }
 
-    if (args.length > 2) {
+    if (args.length > 3) {
         Array.prototype.splice.call(args, 1, 2, out);
         out = amc.apply(amc, args);
     }
@@ -173,7 +173,7 @@ function amc_dif(term1, term2) {
         out = Mat.dif(term1, term2);
     } else if (term1 instanceof Vec && term2 instanceof Vec) {
         out = Vec.dif(term1, term2);
-    } else if (term1 instanceof Vec && term2 instanceof Vec) {
+    } else if (term1 instanceof Quaternion && term2 instanceof Quaternion) {
         out = Quaternion.dif(term1, term2);
     } else if ((term1 instanceof Mat && typeof term2 === 'number') ||
         (typeof term1 === 'number' && term2 instanceof Mat)) {

@@ -42,7 +42,9 @@ function WebGLRenderer(options = {}) {
     var canvas = project.canvas.canvas;
     var methods = ['webgl', 'experimental-webgl', 'webkit-3d', 'moz-webgl'];
 
-    for (var method of methods) {
+    for (var i = 0; i < methods.length; i++) {
+        var method = methods[i];
+
         try {
             gl = canvas.getContext(method, webglattributes);
             if (!gl) {
@@ -51,7 +53,7 @@ function WebGLRenderer(options = {}) {
                 if (!gl) {
                     gl = canvas.getContext(method);
                     if (gl) {
-                        log('Warn: WebGLRenderer: wrong attributes');
+                        warnfree('WebGLRenderer: wrong attributes');
                     }
                 }
             }
@@ -63,7 +65,7 @@ function WebGLRenderer(options = {}) {
     }
 
     if (!gl) {
-        throw new Error('Error: WebGLRenderer: can not create WebGLRenderingContext');
+        errorfree('WebGLRenderer: cant create WebGLRenderingContext');
     }
 
     this.project = project;
@@ -113,6 +115,11 @@ Object.defineProperties(WebGLRenderer.prototype, {
  * @method
  */
 WebGLRenderer.prototype.createframe = function(multiplier) {
+    if (typeof multiplier !== 'number') {
+        warn('WebGLRenderer#createframe', 'multiplier', multiplier);
+        multiplier = 1;
+    }
+
     var canvas = this.canvas,
         width = canvas.width,
         height = canvas.height;
@@ -147,24 +154,23 @@ WebGLRenderer.prototype.createframe = function(multiplier) {
 
     var status = gl.checkFramebufferStatus(gl.FRAMEBUFFER);
     if (status !== gl.FRAMEBUFFER_COMPLETE) {
-        throw new error('Error: WebGLRenderer#createframebuffer: unavailabe to create framebuffer');
+        errorfree('WebGLRenderer#createframe: unavailabe to create framebuffer');
     }
 
     gl.bindTexture(gl.TEXTURE_2D, null);
     gl.bindRenderbuffer(gl.RENDERBUFFER, null);
     gl.bindFramebuffer(gl.FRAMEBUFFER, null);
 
-    var out = {
+    return {
         buffer,
         texture
     };
-
-    return out;
 }
 
 WebGLRenderer.prototype.initializeRenderer = function(attributes = {}) {
     if (typeof attributes !== 'object') {
         warn('WebGLRenderer#initializeRenderer', 'attributes', attributes);
+        attributes = {};
     }
 
     var self = this,
@@ -201,27 +207,27 @@ WebGLRenderer.prototype.initializeRenderer = function(attributes = {}) {
             gl,
 
             `attribute vec3 a_Position;
-				attribute vec2 a_UV;
+                attribute vec2 a_UV;
 
-				varying vec2 v_UV;
+                varying vec2 v_UV;
 
-				void main() {
-					gl_Position = vec4(a_Position, 1.0);
+                void main() {
+                    gl_Position = vec4(a_Position, 1.0);
 
-					v_UV = a_UV;
-				}`,
+                    v_UV = a_UV;
+                }`,
             `precision highp float;
 
-				uniform vec2 u_Pixel;
-				uniform sampler2D u_Texture;
+                uniform vec2 u_Pixel;
+                uniform sampler2D u_Texture;
 
-				varying vec2 v_UV;
+                varying vec2 v_UV;
 
-				void main() {
-					vec4 texel = texture2D(u_Texture, v_UV);
+                void main() {
+                    vec4 texel = texture2D(u_Texture, v_UV);
 
-					gl_FragColor = texel;
-				}`
+                    gl_FragColor = texel;
+                }`
         );
 
         var frame = self.createframe(1);
@@ -234,27 +240,27 @@ WebGLRenderer.prototype.initializeRenderer = function(attributes = {}) {
             gl,
 
             `attribute vec3 a_Position;
-				attribute vec2 a_UV;
+                attribute vec2 a_UV;
 
-				varying vec2 v_UV;
+                varying vec2 v_UV;
 
-				void main() {
-					gl_Position = vec4(a_Position, 1.0);
+                void main() {
+                    gl_Position = vec4(a_Position, 1.0);
 
-					v_UV = a_UV;
-				}`,
+                    v_UV = a_UV;
+                }`,
             `precision highp float;
 
-				uniform vec2 u_Pixel;
-				uniform sampler2D u_Texture;
+                uniform vec2 u_Pixel;
+                uniform sampler2D u_Texture;
 
-				varying vec2 v_UV;
+                varying vec2 v_UV;
 
-				void main() {
-					vec4 texel = texture2D(u_Texture, v_UV);
+                void main() {
+                    vec4 texel = texture2D(u_Texture, v_UV);
 
-					gl_FragColor = texel;
-				}`
+                    gl_FragColor = texel;
+                }`
         );
 
         var frame = self.createframe(2);
@@ -267,27 +273,27 @@ WebGLRenderer.prototype.initializeRenderer = function(attributes = {}) {
             gl,
 
             `attribute vec3 a_Position;
-				attribute vec2 a_UV;
+                attribute vec2 a_UV;
 
-				varying vec2 v_UV;
+                varying vec2 v_UV;
 
-				void main() {
-					gl_Position = vec4(a_Position, 1.0);
+                void main() {
+                    gl_Position = vec4(a_Position, 1.0);
 
-					v_UV = a_UV;
-				}`,
+                    v_UV = a_UV;
+                }`,
             `precision highp float;
 
-				uniform vec2 u_Pixel;
-				uniform sampler2D u_Texture;
+                uniform vec2 u_Pixel;
+                uniform sampler2D u_Texture;
 
-				varying vec2 v_UV;
+                varying vec2 v_UV;
 
-				void main() {
-					vec4 texel = texture2D(u_Texture, v_UV);
+                void main() {
+                    vec4 texel = texture2D(u_Texture, v_UV);
 
-					gl_FragColor = texel;
-				}`
+                    gl_FragColor = texel;
+                }`
         );
 
         var frame = self.createframe(4);
@@ -415,11 +421,11 @@ Object.defineProperties(Renderer.prototype, {
         },
         set: function(val) {
             if (typeof val !== 'number') {
-            	warn('Renderer#viewportHeight', 'val', val);
+                warn('Renderer#viewportHeight', 'val', val);
                 val = 0;
             }
 
-            this.viewportWidth_ = val;
+            this.viewportHeight_ = val;
         }
     },
     viewportWidth: {
@@ -428,7 +434,7 @@ Object.defineProperties(Renderer.prototype, {
         },
         set: function(val) {
             if (typeof val !== 'number') {
-            	warn('Renderer#viewportWidth', 'val', val);
+                warn('Renderer#viewportWidth', 'val', val);
                 val = 0;
             }
 

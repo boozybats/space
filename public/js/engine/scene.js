@@ -38,7 +38,7 @@ Object.defineProperties(Scene.prototype, {
             return this.cameras_;
         }
     },
-    directionalLights {
+    directionalLights: {
         get: function() {
             return this.directionalLights_;
         }

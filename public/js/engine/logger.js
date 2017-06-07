@@ -3,7 +3,7 @@ function log() {
 }
 
 function warn(place, argument, value) {
-    log(`Warn: ${place}: ${argument} is specified but corrupted, value: ${value}, type: ${typeof value}`);
+    log(`Warn: ${place}: "${argument}" is specified but corrupted, type: ${typeof value}, value:`,  value);
 }
 
 function warnfree(argument) {
@@ -11,9 +11,9 @@ function warnfree(argument) {
 }
 
 function error(place, argument, value) {
-    throw new Error(`Error: ${place}: ${argument} is specified but corrupted, value: ${value}, type: ${typeof value}`);
+    throw new Error(`${place}: "${argument}" is specified but corrupted, type: ${typeof value}, value:`, value);
 }
 
 function errorfree(argument) {
-    throw new Error(`Error: ${argument}`);
+    throw new Error(`${argument}`);
 }

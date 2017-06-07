@@ -7,27 +7,22 @@
  * @param {Number} z
  * @param {Number} w
  * @class
- * @property {Number} x
- * @property {Number} y
- * @property {Number} z
- * @property {Number} w
- * @property {Euler} euler
  */
 function Quaternion(x = 0, y = 0, z = 0, w = 1) {
     if (typeof x !== 'number') {
-        throw new Error('Quaternion', 'x', x);
+        warn('Quaternion', 'x', x);
         x = 0;
     }
     if (typeof y !== 'number') {
-        throw new Error('Quaternion', 'y', y);
+        warn('Quaternion', 'y', y);
         y = 0;
     }
     if (typeof z !== 'number') {
-        throw new Error('Quaternion', 'z', z);
+        warn('Quaternion', 'z', z);
         z = 0;
     }
     if (typeof w !== 'number') {
-        throw new Error('Quaternion', 'w', w);
+        warn('Quaternion', 'w', w);
         w = 1;
     }
 
@@ -39,7 +34,7 @@ function Quaternion(x = 0, y = 0, z = 0, w = 1) {
     this.euler_ = Euler.Quaternion(x, y, z, w);
 }
 
-Object.defineProperties(Quaternion, {
+Object.defineProperties(Quaternion.prototype, {
 	euler: {
 		get: function() {
 			return this.euler_;
@@ -222,7 +217,7 @@ Quaternion.prototype.inverse = function() {
 Quaternion.prototype.multi = function(num) {
     if (typeof num !== 'number') {
     	warn('Quaternion#multi', 'num', num);
-        num = 1;
+        return this;
     }
 
     var euler = this.euler;
@@ -287,7 +282,7 @@ Quaternion.sum = function() {
 Quaternion.prototype.sum = function(num) {
     if (typeof num !== 'number') {
         warn('Quaternion#sum', 'num', num);
-        num = 0;
+        return this;
     }
 
     var euler = this.euler;

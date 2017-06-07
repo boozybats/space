@@ -320,11 +320,11 @@ Mat.multi = function() {
     var mat1 = args[0],
         mat2 = args[1];
 
-    if (!(mat1 instanceof Mat)) {
+    if (!mat1) {
         warn('Mat->multi', 'mat1', mat1);
         return new Mat2;
     }
-    if (!(mat2 instanceof Mat)) {
+    if (!mat2) {
         warn('Mat->multi', 'mat2', mat2);
         return mat1;
     }
@@ -599,7 +599,7 @@ Mat.sum = function() {
  * @return {Mat}
  * @method
  */
-Math.prototype.transpose = function() {
+Mat.prototype.transpose = function() {
     var a = this.a,
         b = this.b;
     var out = new Mat(b, a);
@@ -889,7 +889,6 @@ Mat4.translate = function(vec) {
     out[2][3] = z;
 
     return out;
-}
 }
 
 /**

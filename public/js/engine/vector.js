@@ -23,29 +23,25 @@ function Vec() {
         if (x && typeof x !== 'number') {
             x = 0;
             size++;
-        }
-        else if (typeof x === 'number') {
+        } else if (typeof x === 'number') {
             size++;
         }
         if (y && typeof y !== 'number') {
             y = 0;
             size++;
-        }
-        else if (typeof y === 'number') {
+        } else if (typeof y === 'number') {
             size++;
         }
         if (z && typeof z !== 'number') {
             z = 0;
             size++;
-        }
-        else if (typeof z === 'number') {
+        } else if (typeof z === 'number') {
             size++;
         }
         if (w && typeof w !== 'number') {
             w = 0;
             size++;
-        }
-        else if (typeof w === 'number') {
+        } else if (typeof w === 'number') {
             size++;
         }
 
@@ -76,7 +72,7 @@ Object.defineProperties(Vec.prototype, {
             return this.x_;
         },
         set: function() {
-            log('Error: "Vec" coordinates can not be changed, instance new "Vec"');
+            warnfree('"Vec" coordinates can not be changed, instance new "Vec"');
         }
     },
     y: {
@@ -84,7 +80,7 @@ Object.defineProperties(Vec.prototype, {
             return this.y_;
         },
         set: function() {
-            log('Error: "Vec" coordinates can not be changed, instance new "Vec"');
+            warnfree('"Vec" coordinates can not be changed, instance new "Vec"');
         }
     },
     z: {
@@ -92,7 +88,7 @@ Object.defineProperties(Vec.prototype, {
             return this.z_;
         },
         set: function() {
-            log('Error: "Vec" coordinates can not be changed, instance new "Vec"');
+            warnfree('"Vec" coordinates can not be changed, instance new "Vec"');
         }
     },
     w: {
@@ -100,7 +96,7 @@ Object.defineProperties(Vec.prototype, {
             return this.w_;
         },
         set: function() {
-            log('Error: "Vec" coordinates can not be changed, instance new "Vec"');
+            warnfree('"Vec" coordinates can not be changed, instance new "Vec"');
         }
     },
     xy: {
@@ -670,6 +666,7 @@ Vec.cos = function(vec1, vec2) {
 
     return out;
 }
+
 /**
  * Calculates difference of two vectors and returns
  * result vector. P.S. Better use {@link amc} function, it is
@@ -846,8 +843,8 @@ Vec.prototype.inverse = function() {
  * @method
  */
 Vec.prototype.length = function() {
-    var out = Math.sqrt(this.x * this.x + this.y * this.y +
-        this.z * this.z + this.w * this.w);
+    var out = Math.sqrt(Math.pow(this.x, 2) + Math.pow(this.y, 2) +
+        Math.pow(this.z || 0, 2) + Math.pow(this.w || 0, 2));
 
     return out;
 }
@@ -863,7 +860,7 @@ Vec.prototype.length = function() {
 Vec.prototype.multi = function(num) {
     if (typeof num !== 'number') {
         warn('Vec#multi', 'num', num);
-        num = 1;
+        return this;
     }
 
     var out = new this.constructor(
@@ -949,7 +946,7 @@ Vec.prototype.normalize = function() {
 Vec.prototype.sum = function(num) {
     if (typeof num !== 'number') {
         warn('Vec#sum', 'num', num);
-        num = 0;
+        return this;
     }
 
     var out = new this.constructor(

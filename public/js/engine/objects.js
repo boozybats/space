@@ -4,18 +4,13 @@
  * Creates item with icosahedron's mesh
  * @this {Icosahedron}
  * @param {Object} options
- * @param {Number} options.id
- * @param {String} options.name
- * @param {Body} options.body
- * @param {Collider} options.collider
- * @param {Physic} options.physic
- * @param {Rigidbody} options.rigidbody
  * @class
  * @extends Item
  */
 function Icosahedron(options = {}) {
     if (typeof options !== 'object') {
         warn('Icosahedron', 'options', options);
+        options = {};
     }
 
     var icos = icosahedronMesh;
@@ -30,7 +25,9 @@ function Icosahedron(options = {}) {
         vertexIndices: icos.indices
     });
 
-    Item.apply(this, options);
+    Item.call(this, options);
+
+    console.log(this);
 }
 
 Icosahedron.prototype = Object.create(Item.prototype);
@@ -187,19 +184,13 @@ var icosahedronMesh = Icosahedron.mesh();
  * is the one of the best ways to make sphere's mesh
  * @this {Sphere}
  * @param {Object} options
- * @param {Number} options.id
- * @param {String} options.name
- * @param {Body} options.body
- * @param {Collider} options.collider
- * @param {Physic} options.physic
- * @param {Number} options.precision How much times sphere must be
- * updated by upgrade system, must be between 0 and 4
  * @class
  * @extends Item
  */
 function Sphere(options = {}) {
     if (typeof options !== 'object') {
         warn('Sphere', 'options', options);
+        options = {};
     }
 
     var sphere = sphereMesh[options.precision];
@@ -218,7 +209,7 @@ function Sphere(options = {}) {
         vertexIndices: sphere.indices
     });
 
-    Item.apply(this, options);
+    Item.call(this, options);
 }
 
 Sphere.prototype = Object.create(Item.prototype);
@@ -226,16 +217,21 @@ Sphere.prototype.constructor = Sphere;
 
 /**
  * Adds 4 new faces for each face of spher's mesh.
- * @return {Object}
- * @param {Array} vertices
- * @param {Array} normals
- * @param {Array} uvs
- * @param {Array} indices
+ * @return {Object} options
+ * @param {Array} options.vertices
+ * @param {Array} options.normals
+ * @param {Array} options.uvs
+ * @param {Array} options.indices
  * @example
  * var mesh = Sphere.mesh();
  * mesh;  // {vertices, indices, normals, uvs, tangents, bitangents}
  */
 Sphere.mesh = function(options = {}) {
+    if (typeof options !== 'object') {
+        warn('Sphere->mesh', 'options', options);
+        return options;
+    }
+
     var vertices = options.vertices,
         normals = options.normals,
         uvs = options.uvs,
@@ -363,7 +359,7 @@ Sphere.mesh = function(options = {}) {
         var length = nvertices.length / 3;
         nvertices.push(a.x, a.y, a.z, b.x, b.y, b.z, c.x, c.y, c.z);
         nnormals.push(an.x, an.y, an.z, bn.x, bn.y, bn.z, cn.x, cn.y, cn.z);
-        nuvs.push(uv[0], uv[1]);
+        nuvs.push(uv[0][0], uv[0][1], uv[1][0], uv[1][1], uv[2][0], uv[2][1]);
 
         a = length;
         b = length + 1;
@@ -419,17 +415,13 @@ var sphereMesh;
  * Creates item with cube's mesh.
  * @this {Cube}
  * @param {Object} options
- * @param {Number} options.id
- * @param {String}options. name
- * @param {Body} options.body
- * @param {Collider} options.collider
- * @param {Physic} options.physic
  * @class
  * @extends Item
  */
-function Cube(optins = {}) {
+function Cube(options = {}) {
     if (typeof options !== 'object') {
         warn('Cube', 'options', options);
+        options = {};
     }
 
     var cube = cubeMesh;
@@ -444,7 +436,7 @@ function Cube(optins = {}) {
         vertexIndices: cube.indices
     });
 
-    Item.apply(this, options);
+    Item.call(this, options);
 }
 
 Cube.prototype = Object.create(Item.prototype);
@@ -507,17 +499,12 @@ Cube.mesh = function() {
 
 var cubeMesh = Cube.mesh();
 
+// TODO: сделать Quad и UI его наследником
+
 /**
  * Creates item with quad's mesh.
  * @this {UI}
  * @param {Object} options
- * @param {Number} options.id
- * @param {String} options.name
- * @param {Body} options.body
- * @param {Collider} options.collider
- * @param {Physic} options.physic
- * @param {Number} options.width
- * @param {Number} options.height
  * @class
  * @property {Vec2} position Defines position
  * in the project space by screen position.
@@ -526,15 +513,23 @@ var cubeMesh = Cube.mesh();
 function UI(options = {}) {
     if (typeof options !== 'object') {
         warn('UI', 'options', options);
+        options = {};
     }
 
-    Item.apply(this, options);
+    var ui = uiMesh;
+    options.mesh = new Mesh({
+        attributes: {
+            a_Position: ui.vertices,
+            a_UV: ui.uvs
+        },
+        vertexIndices: ui.indices
+    });
+
+    Item.call(this, options);
 
     this.width = options.width || RESOLUTION_WIDTH;
     this.height = options.height || RESOLUTION_HEIGHT;
     this.position = new Vec3;
-
-    this.initializeMesh();
 }
 
 UI.prototype = Object.create(Item.prototype);
@@ -588,29 +583,27 @@ Object.defineProperties(UI.prototype, {
     }
 });
 
-UI.prototype.initializeMesh = function() {
+UI.mesh = function() {
     var vertices = [-1, -1, 0, -1, 1, 0,
         1, 1, 0, 1, -1, 0
     ];
     vertices.size = 3;
 
-    var uv = [
+    var uvs = [
         0, 0,
         0, 1,
         1, 1,
         1, 0
     ];
-    uv.size = 2;
+    uvs.size = 2;
 
     var indices = [0, 1, 2, 2, 3, 0];
 
-    this.mesh = new Mesh({
-        attributes: {
-            a_Position: vertices,
-            a_UV: uv
-        },
-        vertexIndices: indices
-    });
+    return {
+        vertices: vertices,
+        uvs: uvs,
+        indices: indices
+    };
 }
 
 UI.prototype.scale = function() {
@@ -621,18 +614,26 @@ UI.prototype.scale = function() {
     );
 }
 
+var uiMesh = UI.mesh();
+
 /**
  * An empty item
  * @this{Empty}
  * @class
  */
 function Empty(options = {}) {
-    Item.apply(this, options);
+    if (typeof options !== 'object') {
+        warn('Empty', 'options', options);
+        options = {};
+    }
+
+    Item.call(this, options);
 }
 
 Empty.prototype = Object.create(Item.prototype);
 Empty.prototype.constructor = Empty;
 
+// TODO: придать нормальный вид этой формуле
 /**
  * Generates tangents and bitangents and normals for mesh.
  * @param {Array} indices
@@ -644,6 +645,11 @@ Empty.prototype.constructor = Empty;
  * TBN(Icosahedron.mesh());  // {indices, vertices, uvs, normals, tangents, bitangents}
  */
 function TBN(options = {}) {
+    if (typeof options !== 'object') {
+        warn('TBN', 'options', options);
+        return options;
+    }
+
     var indices = options.indices,
         vertices = options.vertices,
         uvs = options.uvs,

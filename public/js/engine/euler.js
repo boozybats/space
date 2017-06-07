@@ -115,7 +115,7 @@ Euler.compare = function(eul0, eul1) {
 Euler.prototype.multi = function(num) {
     if (typeof num !== 'number') {
         warn('Euler#multi', 'num', num);
-        num = 1;
+        return this;
     }
 
     var x = this.x * num,
@@ -177,38 +177,42 @@ Euler.Quaternion = function(x, y, z, w) {
         w2 = w * 2,
         L = xx + yy + zz + ww;
 
+    if (L === 0) {
+        warnfree('Euler->Quaternion: quaternion can not be length 0');
+    }
+
     m[0] = (ww + xx - yy - zz) / L;
     m[1] = (x2 * y + w2 * z) / L;
     m[2] = (x2 * z - w2 * y) / L;
-    m[4] = (x2 * y - w2 * z) / L;
-    m[5] = (ww + yy - xx - zz) / L;
-    m[6] = (y2 * z + w2 * x) / L;
-    m[10] = (ww + zz - xx - yy) / L;
+    m[3] = (x2 * y - w2 * z) / L;
+    m[4] = (ww + yy - xx - zz) / L;
+    m[5] = (y2 * z + w2 * x) / L;
+    m[6] = (ww + zz - xx - yy) / L;
 
     var arr, xyDist = Math.sqrt(m[0] * m[0] + m[1] * m[1]);
 
     if (xyDist > Number.EPSILON) {
-        if (m[10] > 0) {
+        if (m[6] > 0) {
             arr = [
-                Math.atan2(m[6], m[10]),
+                Math.atan2(m[5], m[6]),
                 Math.atan2(m[1], m[0]),
                 Math.atan2(-m[2], xyDist)
             ];
         } else {
-            arr = [-Math.atan2(m[6], -m[10]), -Math.atan2(m[1], -m[0]), -Math.atan2(m[2], -xyDist)];
+            arr = [-Math.atan2(m[5], -m[6]), -Math.atan2(m[1], -m[0]), -Math.atan2(m[2], -xyDist)];
         }
     } else {
         arr = [
             0,
-            Math.atan2(-m[4], m[5]),
+            Math.atan2(-m[3], m[4]),
             Math.atan2(-m[2], xyDist)
         ];
     }
 
     var out = new Euler(
-        Math.RTD(arr.x),
-        Math.RTD(arr.y),
-        Math.RTD(arr.z)
+        Math.RTD(arr[0]),
+        Math.RTD(arr[1]),
+        Math.RTD(arr[2])
     );
 
     return out;

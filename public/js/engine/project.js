@@ -13,8 +13,6 @@
 function Project() {
     this.scenes_ = [];
     this.layers_ = [];
-
-    this.requestAnimationFrame = this.requestAnimationFrame.bind(this);
 }
 
 Object.defineProperties(Project.prototype, {
@@ -50,7 +48,7 @@ Object.defineProperties(Project.prototype, {
  * each frame. All function runs reversely (in decreasing order
  * ..., 2, 1, 0), this is necessary to add main function first
  * and draw last one (the last layer is what see user).
- * @param {Function} fun Executable function
+ * @param {Function} callback Executable function
  * @param {Number} index Index of function or can be a null
  * @method
  * @example
@@ -58,16 +56,16 @@ Object.defineProperties(Project.prototype, {
  * project.addLayer(callback, 'main');
  * project.layers;  // {main: function}
  */
-Project.prototype.addLayer = function(fun, index) {
-    if (typeof fun !== 'function') {
-        warn('Project#addLayer', 'fun', fun);
-        fun = function() {};
+Project.prototype.addLayer = function(callback, index) {
+    if (typeof callback !== 'function') {
+        warn('Project#addLayer', 'callback', callback);
+        callback = function() {};
     }
 
     if (typeof index === 'number') {
-        this.layers[index] = fun;
+        this.layers[index] = callback;
     } else {
-        this.layers.push(fun);
+        this.layers.push(callback);
     }
 }
 
@@ -79,7 +77,7 @@ Project.prototype.addLayer = function(fun, index) {
  */
 Project.prototype.attachCanvas = function(canvas) {
     if (!(canvas instanceof Canvas)) {
-        throw new Error('Error: Project#attachCanvas: canvas must be a Canvas class');
+        error('Project#attachCanvas', 'canvas', canvas);
     }
 
     this.canvas_ = canvas;
@@ -87,6 +85,16 @@ Project.prototype.attachCanvas = function(canvas) {
 
     this.viewportWidth = canvas.canvas.width;
     this.viewportHeight = canvas.canvas.height;
+}
+
+// If shader doesn't exist then show warning
+Project.prototype.checkInit = function(name) {
+    if (this.webGLRenderer) {
+        return true;
+    } else {
+        warnfree(`Project#${name}: webGLRenderer doesnt intialized for project, project: ${this}`);
+        return false;
+    }
 }
 
 /**
@@ -102,6 +110,10 @@ Project.prototype.attachCanvas = function(canvas) {
  * project.clearScene('fill', new Color(255, 100, 0, 1));
  */
 Project.prototype.clearScene = function() {
+    if (!this.checkInit('clearScene')) {
+        return;
+    }
+
     var renderer = this.webGLRenderer,
         gl = renderer.webGL,
         scene = this.currentScene;
@@ -130,7 +142,7 @@ Project.prototype.clearScene = function() {
  * @return {Scene}
  * @method
  */
-Project.prototype.createScene = function(name, isCurrent = false) {
+Project.prototype.createScene = function(name = 'scene', isCurrent = false) {
     if (typeof name !== 'string') {
         warn('Project#createScene', 'name', name);
         name = 'scene';
@@ -149,7 +161,11 @@ Project.prototype.createScene = function(name, isCurrent = false) {
     return scene;
 }
 
-Project.prototype.defaultviewport = function() {
+Project.prototype.defaultViewport = function() {
+    if (!this.checkInit('defaultViewport')) {
+        return;
+    }
+
     var gl = this.webGLRenderer.webGL;
 
     gl.viewport(0, 0, this.viewportWidth, this.viewportHeight);
@@ -179,8 +195,8 @@ Project.prototype.initialize = function() {
     var self = this;
     this.addLayer(options => {
         var webGLRenderer = self.webGLRenderer,
-            scene = self.currentScene,
-            cameras = scene.cameras,
+            scene = self.currentScene;
+        var cameras = scene.cameras,
             sysitems = scene.systemitems,
             items = scene.items;
 
@@ -287,7 +303,7 @@ Project.prototype.initializeWebGLRenderer = function(options = {}) {
         webglattributes: options.webglattributes
     });
 
-    this.defaultviewport();
+    this.defaultViewport();
 }
 
 /**
@@ -298,7 +314,10 @@ Project.prototype.requestAnimationFrame = function() {
     var canvas = this.canvas.canvas;
     this.update();
 
-    requestAnimationFrame(this.requestAnimationFrame, canvas);
+    var self = this;
+    requestAnimationFrame(function() {
+        self.requestAnimationFrame();
+    }, canvas);
 }
 
 /**
@@ -311,7 +330,7 @@ Project.prototype.selectScene = function(scene) {
         warn('Project#selectScene', 'scene', scene);
         return;
     } else if (this.scenes.indexOf(scene) === -1) {
-        log('Warn: Project#selectScene: scene not binded to project');
+        warnfree(`Project#selectScene: scene not binded to project, scene: ${scene}, project: ${this}`);
         return;
     }
 

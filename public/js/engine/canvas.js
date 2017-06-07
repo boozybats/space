@@ -13,8 +13,14 @@ function Canvas(width, height) {
     // if browser doesn't support canvas
     canvas.innerText = "Your browser doesn't support html5, please install another one";
 
+    this.handlers = {
+        axis: []
+    };
+
     this.width = width;
     this.height = height;
+
+    this.initialize();
 }
 
 Object.defineProperties(Canvas.prototype, {
@@ -69,12 +75,103 @@ Canvas.prototype.appendTo = function(element) {
     }
 
     if (element.appendChild(this.canvas)) {
-        // calls any functions with resize events to adapt canvas
-        window.onresize();
-
         return true;
     } else {
-        console.warn(`Warn: Canvas#appendTo: canvas can not be appended to element ${element}`);
+        warnfree(`Canvas#appendTo: canvas can not be appended to element ${element}`);
         return false;
+    }
+}
+
+Canvas.prototype.attachEvent = function(handler, callback) {
+    if (typeof callback !== 'function') {
+        warn('Canvas#attachEvent', 'callback', callback);
+        return;
+    }
+    if (!this.handlers[handler]) {
+        warnfree(`Canvas#attachEvent: unexpected handler, handler: ${handler}`);
+        return;
+    }
+
+    var index = `${handler}_${this.handlers[handler].push(callback) - 1}`;
+
+    return index;
+}
+
+Canvas.prototype.detachEvent = function(index) {
+    if (typeof index !== 'string') {
+        return;
+    }
+
+    var parsed = index.split('_');
+    var handler = parsed[0],
+        id = parsed[1];
+
+    if (!this.handlers[handler]) {
+        return;
+    }
+
+    this.handlers[handler].splice(id, 1);
+}
+
+// Makes availabale to use cursor in any area
+Canvas.prototype.enablePointerLock = function() {
+    var canvas = this.canvas;
+
+    // Check is last item in pointerLock equal to current canvas
+    function isLocked() {
+        return canvas === document.pointerLockElement ||
+            canvas === document.mozPointerLockElement ||
+            canvas === document.webkitPointerLockElement;
+    }
+
+    var exitPointerLock = document.exitPointerLock ||
+        document.mozExitPointerLock ||
+        document.webkitExitPointerLock;
+
+    canvas.requestPointerLock = canvas.requestPointerLock ||
+        canvas.mozRequestPointerLock ||
+        canvas.webkitRequestPointerLock;
+
+    // Enable pointerLock on click
+    canvas.addEventListener('click', function() {
+        if (!isLocked()) {
+            canvas.requestPointerLock();
+        }
+    });
+
+    this.pointerLock = {
+        isLocked: isLocked
+    };
+}
+
+Canvas.prototype.fireEvent = function(handler, args) {
+    if (!this.handlers[handler]) {
+        return;
+    }
+
+    var array = this.handlers[handler];
+
+    for (var i = 0; i < array.length; i++) {
+        var handler = array[i];
+        handler.apply(handler, args);
+    }
+}
+
+Canvas.prototype.initialize = function() {
+    var self = this;
+    this.canvas.addEventListener('mousemove', event => {
+        if (self.pointerLock) {
+            if (self.pointerLock.isLocked()) {
+                fireEvent([
+                    event.movementX / RESOLUTION_WIDTH, -event.movementY / RESOLUTION_HEIGHT
+                ]);
+            }
+        } else {
+            fireEvent([event.pageX, event.pageY]);
+        }
+    });
+
+    function fireEvent(data) {
+        self.fireEvent('axis', [data]);
     }
 }

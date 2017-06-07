@@ -1,4 +1,50 @@
 /**
+ * Auto-determined value by screen width.
+ * @type {Number}
+ * @const
+ */
+const RESOLUTION_WIDTH = screen.width;
+/**
+ * Auto-determined value by screen height.
+ * @type {Number}
+ * @const
+ */
+const RESOLUTION_HEIGHT = screen.height;
+/**
+ * Physical offset from deduction point, pseudo-origin.
+ * @type {Number}
+ * @const
+ */
+const DEFAULT_NEARFIELD = 0.9999;
+/**
+ * Maximum far plan position where you can see a point,
+ * doesn't brings a distortion on any value; needs only
+ * for depth-buffer.
+ * @type {Number}
+ * @const
+ */
+const DEFAULT_FARFIELD = 1e+20;
+/**
+ * How much degrees user see vertically
+ * (recommended value less than 55).
+ * @type {Number}
+ * @const
+ */
+const DEFAULT_FOVY = 50;
+/**
+ * Perspective matrix for projection matrix. Sets proportions of
+ * screen and edits to required values.
+ * @type {Mat4}
+ * @const
+ */
+const DEFAULT_PERSPECTIVE = Mat4.perspective(
+    RESOLUTION_WIDTH / RESOLUTION_HEIGHT,
+    DEFAULT_NEARFIELD,
+    DEFAULT_FARFIELD,
+    DEFAULT_FOVY
+);
+
+/**
  * Camera is user's field of vision, it can be moved
  * by position or rotation, can not be scaled. It have a
  * projection matrix (most known examples: perspective, orthographic)
@@ -46,7 +92,7 @@ Object.defineProperties(Camera.prototype, {
         get: function() {
             return this.deepOffset_;
         },
-        set: function() {
+        set: function(val) {
             if (!(typeof val === 'number')) {
                 warn('Camera#deepOffset', 'val', val);
                 val = DEFAULT_NEARFIELD;
@@ -59,7 +105,7 @@ Object.defineProperties(Camera.prototype, {
         get: function() {
             return this.name_;
         },
-        set: function() {
+        set: function(val) {
             if (typeof val !== 'string') {
                 warn('Camera#name', 'val', val);
                 val = 'camera';
@@ -72,7 +118,7 @@ Object.defineProperties(Camera.prototype, {
         get: function() {
             return this.projectionMatrix_;
         },
-        set: function() {
+        set: function(val) {
             if (!(val instanceof Mat)) {
                 warn('Camera#projectionMatrix', 'val', val);
                 val = DEFAULT_PERSPECTIVE;
@@ -125,49 +171,3 @@ Camera.prototype.mvpmatrix = function() {
 
     return mvpmatrix;
 }
-
-/**
- * Auto-determined value by screen width.
- * @type {Number}
- * @const
- */
-const RESOLUTION_WIDTH = screen.width;
-/**
- * Auto-determined value by screen height.
- * @type {Number}
- * @const
- */
-const RESOLUTION_HEIGHT = screen.height;
-/**
- * Physical offset from deduction point, pseudo-origin.
- * @type {Number}
- * @const
- */
-const DEFAULT_NEARFIELD = 0.9999;
-/**
- * Maximum far plan position where you can see a point,
- * doesn't brings a distortion on any value; needs only
- * for depth-buffer.
- * @type {Number}
- * @const
- */
-const DEFAULT_FARFIELD = 1e+20;
-/**
- * How much degrees user see vertically
- * (recommended value less than 55).
- * @type {Number}
- * @const
- */
-const DEFAULT_FOVY = 50;
-/**
- * Perspective matrix for projection matrix. Sets proportions of
- * screen and edits to required values.
- * @type {Mat4}
- * @const
- */
-const DEFAULT_PERSPECTIVE = Mat4.perspective(
-    RESOLUTION_WIDTH / RESOLUTION_HEIGHT,
-    DEFAULT_NEARFIELD,
-    DEFAULT_FARFIELD,
-    DEFAULT_FOVY
-);

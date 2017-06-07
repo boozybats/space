@@ -76,7 +76,7 @@ Object.defineProperties(Shader.prototype, {
         },
         set: function(val) {
             if (!(val instanceof WebGLRenderingContext)) {
-                throw new Error('Error: Shader#webGL: shader must be a WebGLRenderingContext');
+                error('Shader#webGL', 'val', val);
             }
 
             this.webGL_ = val;
@@ -106,14 +106,14 @@ Shader.prototype.initialize = function() {
     gl.compileShader(vs);
 
     if (!gl.getShaderParameter(vs, gl.COMPILE_STATUS)) {
-        throw new Error(`Initialization vertex shader error: ${gl.getShaderInfoLog(vs)}`);
+        errorfree(`Shader#initialize: vertex shader error: ${gl.getShaderInfoLog(vs)}`);
     }
 
     gl.shaderSource(fs, fragmentShader);
     gl.compileShader(fs);
 
     if (!gl.getShaderParameter(fs, gl.COMPILE_STATUS)) {
-        throw new Error(`Initialization fragment shader error: ${gl.getShaderInfoLog(fs)}`);
+        errorfree(`Shader#initialize: fragment shader error: ${gl.getShaderInfoLog(fs)}`);
     }
 
     var program = gl.createProgram();

@@ -31,7 +31,7 @@ Object.defineProperties(Rigidbody.prototype, {
         set: function(val) {
             if (val && !(val instanceof Body)) {
                 warn('Rigidbody#body', 'val', val);
-                body = undefined;
+                val = undefined;
             }
 
             this.body_ = val;

@@ -15,7 +15,7 @@
 function Color() {
     var args = arguments;
 
-    var length = Math.min(args.length, 4);
+    var length = Math.max(3, Math.min(args.length, 4));
 
     for (var i = 0; i < length; i++) {
         var element = args[i];
@@ -47,10 +47,10 @@ function Color() {
         }
     }
 
-    this.r_ = arr[0];
-    this.g_ = arr[1];
-    this.b_ = arr[2];
-    this.a_ = arr[3];
+    this.r_ = args[0];
+    this.g_ = args[1];
+    this.b_ = args[2];
+    this.a_ = args[3];
 
     this.size_ = length;
 }

@@ -14,6 +14,11 @@
  * @class
  */
 function Mesh(options = {}) {
+    if (typeof options !== 'object') {
+        warn('Mesh', 'options', options);
+        options = {};
+    }
+
     this.shader = options.shader;
     this.drawStyle = options.drawStyle || 'TRIANGLES';
     this.vertexIndices = options.vertexIndices || [];
@@ -29,6 +34,7 @@ Object.defineProperties(Mesh.prototype, {
         },
         set: function(val) {
             if (typeof val !== 'object') {
+                warn('Mesh#attributes', 'val', val);
                 val = {};
             }
 
@@ -41,6 +47,7 @@ Object.defineProperties(Mesh.prototype, {
         },
         set: function(val) {
             if (typeof val !== 'string') {
+                warn('Mesh#drawStyle', 'val', val);
                 val = 'TRIANGLES';
             }
 
@@ -80,7 +87,7 @@ Object.defineProperties(Mesh.prototype, {
             this.shader_ = val;
 
             if (val) {
-                this.webGL = val.webGL;
+                this.webGL_ = val.webGL;
                 this.shaderdata = {
                     attributes: {},
                     uniforms: {},
@@ -93,7 +100,7 @@ Object.defineProperties(Mesh.prototype, {
                 this.changeAttributes(this.attributes);
                 this.changeUniforms(this.uniforms);
             } else {
-                this.webGL = undefined;
+                this.webGL_ = undefined;
                 this.shaderdata = undefined;
             }
         }
@@ -103,7 +110,8 @@ Object.defineProperties(Mesh.prototype, {
             return this.uniforms_;
         },
         set: function(val) {
-            if (!(val instanceof Array)) {
+            if (typeof val !== 'object') {
+                warn('Mesh#uniforms', 'val', val);
                 val = {};
             }
 
@@ -131,14 +139,6 @@ Object.defineProperties(Mesh.prototype, {
     webGL: {
         get: function() {
             return this.webGL_;
-        },
-        set: function(val) {
-            if (val && !(val instanceof WebGLRenderingContext)) {
-                log(`Error: Mesh#webGL: must be a WebGLRenderingContext, value: ${val}`);
-                val = undefined;
-            }
-
-            this.webGL_ = val;
         }
     }
 });
@@ -149,11 +149,23 @@ Object.defineProperties(Mesh.prototype, {
  * @param  {WebGLBuffer} buf
  * @method
  */
-Mesh.prototype.activeTexture = function(ind, buf) {
+Mesh.prototype.activeTexture = function(index, texture) {
+    if (!this.checkInit('activeTexture')) {
+        return;
+    }
+    if (typeof index !== 'number' && typeof index !== 'string') {
+        warn('Mesh#activeTexture', 'index', index);
+        index = 0;
+    }
+    if (!(texture instanceof WebGLTexture)) {
+        warn('Mesh#activeTexture', 'texture', texture);
+        return;
+    }
+
     var gl = this.webGL;
 
-    gl.activeTexture(gl.TEXTURE0 + +ind);
-    gl.bindTexture(gl.TEXTURE_2D, buf);
+    gl.activeTexture(gl.TEXTURE0 + +index);
+    gl.bindTexture(gl.TEXTURE_2D, texture);
 }
 
 /**
@@ -172,6 +184,14 @@ Mesh.prototype.activeTexture = function(ind, buf) {
  * var index = item.addImage(img);  // 0
  */
 Mesh.prototype.addImage = function(image) {
+    if (!this.checkInit('addImage')) {
+        return;
+    }
+    if (!(image instanceof Image)) {
+        warn('Mesh#addImage', 'image', image);
+        return;
+    }
+
     var gl = this.webGL;
     var shader = this.shader;
 
@@ -190,11 +210,12 @@ Mesh.prototype.addImage = function(image) {
     gl.bindTexture(gl.TEXTURE_2D, null);
 
     image.onload = function() {
-            gl.bindTexture(gl.TEXTURE_2D, buffer);
-            gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, this);
-            gl.bindTexture(gl.TEXTURE_2D, null);
-        }
-        // update onload event (if it was yet)
+        gl.bindTexture(gl.TEXTURE_2D, buffer);
+        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, this);
+        gl.bindTexture(gl.TEXTURE_2D, null);
+    }
+
+    // update onload event (if it was yet)
     image.src = image.src;
 
     var index = this.addTexture(buffer);
@@ -203,15 +224,23 @@ Mesh.prototype.addImage = function(image) {
 }
 
 /**
- * Adds texture buffer to shader.
- * @param {WebGLBuffer} buffer
+ * Adds texture to shader.
+ * @param {WebGLBuffer} texture
  * @method
  */
-Mesh.prototype.addTexture = function(buffer) {
+Mesh.prototype.addTexture = function(texture) {
+    if (!this.checkInit('addTexture')) {
+        return;
+    }
+    if (!(texture instanceof WebGLTexture)) {
+        warn('Mesh#addTexture', 'texture', texture);
+        return;
+    }
+
     var data = this.shaderdata;
 
     var index = data.texturesCount++;
-    data.textures[index] = buffer;
+    data.textures[index] = texture;
 
     return index;
 }
@@ -232,8 +261,7 @@ Mesh.prototype.addTexture = function(buffer) {
  * item.changeAttributes({a_Position: vertices});
  */
 Mesh.prototype.changeAttributes = function(options = {}) {
-    if (!this.shader) {
-        log('Warn: Mesh#changeAttributes: attributes can not be applied without binded shader');
+    if (!this.checkInit('changeAttributes')) {
         return;
     }
     if (typeof options !== 'object') {
@@ -265,8 +293,7 @@ Mesh.prototype.changeAttributes = function(options = {}) {
  * })
  */
 Mesh.prototype.changeUniforms = function(options = {}) {
-    if (!this.shader) {
-        log('Warn: Mesh#changeUniforms: uniforms can not be applied without binded shader');
+    if (!this.checkInit('changeUniforms')) {
         return;
     }
     if (typeof options !== 'object') {
@@ -282,6 +309,16 @@ Mesh.prototype.changeUniforms = function(options = {}) {
 
             this.initializeUniform(i, val, data.uniforms);
         }
+    }
+}
+
+// If shader doesn't exist then show warning
+Mesh.prototype.checkInit = function(name) {
+    if (this.shader) {
+        return true;
+    } else {
+        warnfree(`Mesh#${name}: shader doesnt intialized for mesh, mesh: ${this}`);
+        return false;
     }
 }
 
@@ -303,13 +340,11 @@ Mesh.prototype.changeUniforms = function(options = {}) {
  * attributes;  // Object {a_Position: {buffer, size, location}}
  */
 Mesh.prototype.initializeAttribute = function(key, val, out) {
-    // if attribute already exists and equal to new then skip
-    if (out[key] && amc('=', out[key].value, val)) {
+    if (!this.checkInit('initializeAttribute')) {
         return;
     }
-
-    if (!this.shader) {
-        log('Warn: Mesh#initializeAttribute: attributes can not be applied without binded shader');
+    // if attribute already exists and equal to new then skip
+    if (out && out[key] && amc('=', out[key].value, val)) {
         return;
     }
 
@@ -321,7 +356,7 @@ Mesh.prototype.initializeAttribute = function(key, val, out) {
 
     var size = val.size;
     if (typeof size === 'undefined') {
-        log(`Warn: Item#initializeAttribute: not selected size for attribute '${key}'`);
+        warnfree(`Item#initializeAttribute: not selected 'size' for attribute '${key}'`);
     }
 
     var location = shader.attributes[key];
@@ -329,6 +364,7 @@ Mesh.prototype.initializeAttribute = function(key, val, out) {
         location = gl.getAttribLocation(program, key);
         shader.attributes[key] = location;
     }
+
     if (location < 0) {
         // console.warn(`Shader doesnt contain '${key}' attribute or this is unusable`);
     }
@@ -363,13 +399,11 @@ Mesh.prototype.initializeAttribute = function(key, val, out) {
  * uniforms;  // Object {u_MVMatrix: {location, method, type, value}}
  */
 Mesh.prototype.initializeUniform = function(key, val, out) {
-    // if uniform already exists and equal to new then skip
-    if (out[key] && amc('=', out[key].value, val)) {
+    if (!this.checkInit('initializeUniform')) {
         return;
     }
-
-    if (!this.shader) {
-        log('Warn: Mesh#initializeUniform: uniforms can not be applied without binded shader');
+    // if uniform already exists and equal to new then skip
+    if (out && out[key] && amc('=', out[key].value, val)) {
         return;
     }
 
@@ -499,6 +533,10 @@ Mesh.prototype.initializeUniform = function(key, val, out) {
  * uniforms;  // Object {u_MVMatrix: {location, type, method, value: 0}}
  */
 Mesh.prototype.nullifyUniform = function(key, out) {
+    if (!this.checkInit('nullifyUniform')) {
+        return;
+    }
+
     var uniform = out[key];
 
     var value, count;
@@ -568,6 +606,10 @@ Mesh.prototype.nullifyUniform = function(key, out) {
  * @method
  */
 Mesh.prototype.setVIOBuffer = function() {
+    if (!this.checkInit('setVIOBuffer')) {
+        return;
+    }
+
     var gl = this.webGL;
     var indices = this.vertexIndices;
 
@@ -588,6 +630,10 @@ Mesh.prototype.setVIOBuffer = function() {
  * @method
  */
 Mesh.prototype.update = function() {
+    if (!this.checkInit('update')) {
+        return;
+    }
+
     var gl = this.webGL;
     var data = this.shaderdata,
         attributes = data.attributes,
@@ -622,18 +668,28 @@ Mesh.prototype.update = function() {
  * @param  {Number} options.size
  * @method
  */
-Mesh.prototype.updateAttribute = function(options) {
+Mesh.prototype.updateAttribute = function(options = {}) {
+    if (!this.checkInit('updateAttribute')) {
+        return;
+    }
+    if (typeof options !== 'object') {
+        warn('Mesh#updateAttribute', 'options', options);
+        return;
+    }
+
+    if (options.location < 0) {
+        return;
+    }
+
     var gl = this.webGL;
     var shader = this.shader;
 
     shader.useProgram();
 
-    if (location >= 0) {
-        gl.bindBuffer(gl.ARRAY_BUFFER, options.buffer);
-        gl.vertexAttribPointer(options.location, options.size, gl.FLOAT, false, 0, 0);
-        gl.enableVertexAttribArray(options.location);
-        gl.bindBuffer(gl.ARRAY_BUFFER, null);
-    }
+    gl.bindBuffer(gl.ARRAY_BUFFER, options.buffer);
+    gl.vertexAttribPointer(options.location, options.size, gl.FLOAT, false, 0, 0);
+    gl.enableVertexAttribArray(options.location);
+    gl.bindBuffer(gl.ARRAY_BUFFER, null);
 }
 
 /**
@@ -647,7 +703,15 @@ Mesh.prototype.updateAttribute = function(options) {
  * Image | Number | Array | Object} options.value
  * @method
  */
-Mesh.prototype.updateUniform = function(options) {
+Mesh.prototype.updateUniform = function(options = {}) {
+    if (!this.checkInit('updateUniform')) {
+        return;
+    }
+    if (typeof options !== 'object') {
+        warn('Mesh#updateUniform', 'options', options);
+        return;
+    }
+
     if (!options.location) {
         return;
     }
@@ -689,15 +753,15 @@ Mesh.prototype.updateUniform = function(options) {
  * @constant
  */
 const DEFAULT_VALUES = {
-    mat4: new Mat4(0),
-    mat3: new Mat3(0),
-    mat2: new Mat2(0),
+    mat4: new Mat4,
+    mat3: new Mat3,
+    mat2: new Mat2,
     vec4: new Vec4,
     vec3: new Vec3,
     vec2: new Vec2,
     col: new Color(0, 0, 0, 0),
-    qua: new Quaternion(0, 0, 0, 0),
-    eul: new Euler(0, 0, 0),
+    qua: new Quaternion,
+    eul: new Euler,
     tex: 0,
     num: 0
 };
@@ -712,6 +776,11 @@ const DEFAULT_VALUES = {
  * @class
  */
 function Material(options = {}) {
+    if (typeof options !== 'object') {
+        warn('Material', 'options', options);
+        options = {};
+    }
+
     this.ambient = options.ambient || new Color(0, 0, 0, 1);
     this.diffuse = options.diffuse || new Color(161, 250, 206, 1);
     this.specular = options.specular || new Color(230, 255, 247, 1);
@@ -799,7 +868,7 @@ Object.defineProperties(Material.prototype, {
 
             this.specular_ = val;
         }
-    }
+    },
     specularmap: {
         get: function() {
             return this.specularmap_;
@@ -821,17 +890,12 @@ Object.defineProperties(Material.prototype, {
  * @method
  */
 Material.prototype.data = function() {
-    var out = {};
+    var out = {
+        ambient: this.ambient,
+        diffuse: this.diffuse,
+        specular: this.specular
+    };
 
-    if (this.ambient) {
-        out.ambient = this.ambient;
-    }
-    if (this.diffuse) {
-        out.diffuse = this.diffuse;
-    }
-    if (this.specular) {
-        out.specular = this.specular;
-    }
     if (this.normalmap) {
         out.normalmap = this.normalmap;
     }
@@ -849,4 +913,20 @@ Material.prototype.data = function() {
     }
 
     return out;
+}
+
+Material.diffuseShader = function() {
+    return [
+        `attribute vec3 a_Position;
+
+        uniform mat4 u_MVMatrix;
+        uniform mat4 u_MVPMatrix;
+
+        void main() {
+            gl_Position = u_MVPMatrix * u_MVMatrix * vec4(a_Position, 1.0);
+        }`,
+        `void main() {
+            gl_FragColor = vec4(1.0, 1.0, 1.0, 1.0);
+        }`
+    ];
 }

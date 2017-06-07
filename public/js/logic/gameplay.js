@@ -1,64 +1,38 @@
-function gameplay({
-	images,
-	canvas,
-	cursor
-}) {
-	canvas.appendTo(document.body);
+;
+(function() {
+    // Make game and initialize it by custom options
+    var game = new Game;
+    game.initialize({
+        canvas: {
+            dom: document.body
+        },
+        graphic: {
+            antialias: 'FXAAx2'
+        }
+    });
 
-	// initialize project, set as default image "Transparent"
-	var project = new Project;
-	project.attachCanvas(canvas);
+    // Set dependency transparent image for shaders
+    game.setDependencies([{
+        type: 'image',
+        name: 'transparentImage',
+        src: 'images/default/transparent.png'
+    }]);
 
-	// initialize webGLRenderer and set attributes
-	project.initializeWebGLRenderer({
-		attributes: {
-			antialias: 'FXAAx2'
-		}
-	});
+    // Start without waiting a connection to server
+    game.start();
 
-	// Initialize all shaders in project
-	initializeShaders(project.webGLRenderer.webGL, {
-		transparentImage: images.transparent
-	});
+    // Make connection to sockets and setup functions
+    game.connectToServer({
+        socket: 'ws://localhost:5611'
+    });
 
-	// set first layer for webGL drawning in project
-	project.initialize();
-
-	var scene = project.createScene('main', true);
-	var camera = new Camera;
-	scene.appendCamera(camera);
-
-	// make camera as flashlight
-	var light = new PointLight({
-		body: new Body({
-			parent: camera.body
-		})
-	});
-	scene.addLight(light);
-
-	/**
-	 * Determine player's object, bind cursor, scale
-	 * to the required diameter to skip perframe scaling
-	 * at the begin
-	 */
-	player = new Player({
-		scene: scene,
-		cursor: cursor,
-		camera: camera
-	});
-
-	// game logic item, needs to complete functions on each frame
-	var logic = new Logic(scene);
-	// each data distribution from server are using in logic
-	Server.client.ondistribution = logic.distribution;
-
-	// direction pointer
-	var facebox = new FaceBox({
-		cursor: cursor
-	});
-	facebox.instance(scene, true);
-
-	project.requestAnimationFrame();
-	// get all data from server for playing and start project
-	logic.getData(project);
-}
+    game.attachEvent('started', function(scene, camera) {
+        // make camera as a flashlight
+        var light = new PointLight({
+            body: new Body({
+                parent: camera.body
+            })
+        });
+        scene.addLight(light);
+    });
+})();
