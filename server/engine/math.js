@@ -5,7 +5,7 @@
  * @method RTD
  * @memberOf Math
  */
-Math.RTD = (rad) => rad * 180 / Math.PI;
+var RTD = (rad) => rad * 180 / Math.PI;
 
 /**
  * Converts degrees to radians.
@@ -14,7 +14,7 @@ Math.RTD = (rad) => rad * 180 / Math.PI;
  * @method DTR
  * @memberOf Math
  */
-Math.DTR = (deg) => deg * Math.PI / 180;
+var DTR = (deg) => deg * Math.PI / 180;
 
 /**
  * Returns num if value bigger than minimal and lower than maximal
@@ -24,49 +24,7 @@ Math.DTR = (deg) => deg * Math.PI / 180;
  * @param  {Number} max Maximal
  * @return {Number}
  */
-Math.clamp = (num, min, max) => Math.min(Math.max(num, min), max);
-
-/**
- * If number is degree of two then returns true
- * else returns false.
- * @param  {Number}  num
- * @return {Boolean}
- * @method  isPowerOfTwo
- * @memberOf Math
- */
-Math.isPowerOfTwo = function(num) {
-    if (typeof num !== 'number') {
-        num = 0;
-    }
-
-    var c = 2;
-    while (num > c) {
-        c *= 2;
-    }
-
-    return num == c;
-}
-
-/**
- * Returns the nearest number of power of two
- * after sended number.
- * @param  {Number}  num
- * @return {Number}
- * @method  ceilPowerOfTwo
- * @memberOf Math
- */
-Math.ceilPowerOfTwo = function(num) {
-    if (typeof num !== 'number') {
-        num = 0;
-    }
-
-    var c = 2;
-    while (num > c) {
-        c *= 2;
-    }
-
-    return c;
-}
+var clamp = (num, min, max) => Math.min(Math.max(num, min), max);
 
 /**
  * Gives available to mathematical calculations with engine classes
@@ -336,3 +294,22 @@ function amc_equality(term1, term2) {
 
     return out;
 }
+
+exports.amc = amc;
+exports.DTR = DTR;
+exports.RTD = RTD;
+exports.clamp = clamp;
+
+const m = require('./matrix');
+const Mat = m.Mat;
+const Mat2 = m.Mat2;
+const Mat3 = m.Mat3;
+const Mat4 = m.Mat4;
+const v = require('./vector');
+const Vec = v.Vec;
+const Vec2 = v.Vec2;
+const Vec3 = v.Vec3;
+const Vec4 = v.Vec4;
+const Quaternion = require('./quaternion');
+const Euler = require('./euler');
+const Body = require('./body');

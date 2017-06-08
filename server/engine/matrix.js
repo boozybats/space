@@ -908,3 +908,8 @@ Mat4.translate = function(vec) {
 function isNum(a) {
     return typeof a === 'number';
 }
+
+exports.Mat = Mat;
+exports.Mat2 = Mat2;
+exports.Mat3 = Mat3;
+exports.Mat4 = Mat4;

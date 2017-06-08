@@ -499,7 +499,72 @@ Cube.mesh = function() {
 
 var cubeMesh = Cube.mesh();
 
-// TODO: сделать Quad и UI его наследником
+function Quad(options = {}) {
+    if (typeof options !== 'object') {
+        warn('Quad', 'options', options);
+        options = {};
+    }
+
+    var quad = quadMesh;
+    options.mesh = new Mesh({
+        attributes: {
+            a_Position: quad.vertices,
+            a_UV: quad.uvs,
+            a_Normal: quad.normals,
+            a_Tangent: quad.tangents,
+            a_Bitangent: quad.bitangents
+        },
+        vertexIndices: quad.indices
+    });
+
+    Item.call(this, options);
+}
+
+Quad.prototype = Object.create(Item.prototype);
+Quad.prototype.constructor = Quad;
+
+Quad.mesh = function() {
+    var vertices = [-1, -1, 0, -1, 1, 0,
+        1, 1, 0, 1, -1, 0
+    ];
+    vertices.size = 3;
+
+    var uvs = [
+        0, 0,
+        0, 1,
+        1, 1,
+        1, 0
+    ];
+    uvs.size = 2;
+
+    var indices = [0, 1, 2, 2, 3, 0];
+
+    var tbn = TBN({
+        indices: indices,
+        vertices: vertices,
+        uvs: uvs
+    });
+
+    var normals = tbn.normals;
+    normals.size = 3;
+
+    var tangents = tbn.tangents;
+    tangents.size = 3;
+
+    var bitangents = tbn.bitangents;
+    bitangents.size = 3;
+
+    return {
+        vertices: vertices,
+        indices: indices,
+        normals: normals,
+        uvs: uvs,
+        tangents: tangents,
+        bitangents: bitangents
+    };
+}
+
+var quadMesh = Quad.mesh();
 
 /**
  * Creates item with quad's mesh.
@@ -516,23 +581,14 @@ function UI(options = {}) {
         options = {};
     }
 
-    var ui = uiMesh;
-    options.mesh = new Mesh({
-        attributes: {
-            a_Position: ui.vertices,
-            a_UV: ui.uvs
-        },
-        vertexIndices: ui.indices
-    });
-
-    Item.call(this, options);
+    Quad.call(this, options);
 
     this.width = options.width || RESOLUTION_WIDTH;
     this.height = options.height || RESOLUTION_HEIGHT;
     this.position = new Vec3;
 }
 
-UI.prototype = Object.create(Item.prototype);
+UI.prototype = Object.create(Quad.prototype);
 UI.prototype.constructor = UI;
 
 Object.defineProperties(UI.prototype, {
@@ -583,29 +639,6 @@ Object.defineProperties(UI.prototype, {
     }
 });
 
-UI.mesh = function() {
-    var vertices = [-1, -1, 0, -1, 1, 0,
-        1, 1, 0, 1, -1, 0
-    ];
-    vertices.size = 3;
-
-    var uvs = [
-        0, 0,
-        0, 1,
-        1, 1,
-        1, 0
-    ];
-    uvs.size = 2;
-
-    var indices = [0, 1, 2, 2, 3, 0];
-
-    return {
-        vertices: vertices,
-        uvs: uvs,
-        indices: indices
-    };
-}
-
 UI.prototype.scale = function() {
     this.body.scale = new Vec3(
         1 * ((this.width || 0) / RESOLUTION_WIDTH),
@@ -613,8 +646,6 @@ UI.prototype.scale = function() {
         1
     );
 }
-
-var uiMesh = UI.mesh();
 
 /**
  * An empty item
@@ -633,7 +664,7 @@ function Empty(options = {}) {
 Empty.prototype = Object.create(Item.prototype);
 Empty.prototype.constructor = Empty;
 
-// TODO: придать нормальный вид этой формуле
+// TODO: придать нормальный вид этой функции
 /**
  * Generates tangents and bitangents and normals for mesh.
  * @param {Array} indices
@@ -806,10 +837,10 @@ function TBN(options = {}) {
             t1 * temp, -t0 * temp, -s1 * temp, s0 * temp
         ]);
 
-        var tbMatrix = amc('*', stMatrix, pqMatrix);
+        var tbMatrix = amc('*', stMatrix, pqMatrix).rowmajor();
 
-        var t = new Vec3(tbMatrix[0][0], tbMatrix[0][1], tbMatrix[0][2]).normalize(),
-            b = new Vec3(tbMatrix[1][0], tbMatrix[1][1], tbMatrix[1][2]).normalize();
+        var t = new Vec3(tbMatrix[0], tbMatrix[1], tbMatrix[2]).normalize(),
+            b = new Vec3(tbMatrix[3], tbMatrix[4], tbMatrix[5]).normalize();
 
         var out = {
             tangent: t,

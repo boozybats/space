@@ -1,7 +1,3 @@
-const FPS = 1000 / 60;
-const RESOLUTION_MAX = Math.max(RESOLUTION_WIDTH, RESOLUTION_HEIGHT);
-const RESOLUTION_MIN = Math.min(RESOLUTION_WIDTH, RESOLUTION_HEIGHT);
-
 // Creates project, webGlRenderer and gives many helpful options
 function Game(options = {}) {
     if (typeof options !== 'object') {
@@ -297,7 +293,6 @@ Game.prototype.initializeShaders = function() {
         transparentImage: dependencies.transparentImage
     };
 
-    shaders.add('diffuse', Material.diffuseShader());
     shaders.add('heaven', Heaven.shader(), options);
     shaders.add('facebox', Facebox.shader());
 }

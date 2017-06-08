@@ -747,26 +747,6 @@ Mesh.prototype.updateUniform = function(options = {}) {
 }
 
 /**
- * Contains default values for every available
- * uniform-types. Used to {@link Item.nullifyUniform}.
- * @type {Object}
- * @constant
- */
-const DEFAULT_VALUES = {
-    mat4: new Mat4,
-    mat3: new Mat3,
-    mat2: new Mat2,
-    vec4: new Vec4,
-    vec3: new Vec3,
-    vec2: new Vec2,
-    col: new Color(0, 0, 0, 0),
-    qua: new Quaternion,
-    eul: new Euler,
-    tex: 0,
-    num: 0
-};
-
-/**
  * Sends data about mesh's material in shader.
  * @this {Material}
  * @param {Object} options
@@ -913,20 +893,4 @@ Material.prototype.data = function() {
     }
 
     return out;
-}
-
-Material.diffuseShader = function() {
-    return [
-        `attribute vec3 a_Position;
-
-        uniform mat4 u_MVMatrix;
-        uniform mat4 u_MVPMatrix;
-
-        void main() {
-            gl_Position = u_MVPMatrix * u_MVMatrix * vec4(a_Position, 1.0);
-        }`,
-        `void main() {
-            gl_FragColor = vec4(1.0, 1.0, 1.0, 1.0);
-        }`
-    ];
 }

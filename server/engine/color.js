@@ -25,10 +25,10 @@ function Color() {
             case 1:
             case 2:
                 if (typeof element !== 'number') {
-                    warn('Color', 'element', element);
+                    logger.warn('Color', 'element', element);
                     element = 0;
                 } else if (element < 0 || element > 255) {
-                    warnfree('Warn: Color: "rgb" must be in range 0-255');
+                    logger.warnfree('Warn: Color: "rgb" must be in range 0-255');
                     element = 0;
                 }
 
@@ -36,10 +36,10 @@ function Color() {
 
             case 3:
                 if (typeof element !== 'number') {
-                    warn('Color', 'element', element);
+                    logger.warn('Color', 'element', element);
                     element = 0;
                 } else if (element < 0 || element > 1) {
-                    warnfree('Warn: Color: "alpha" must be in range 0-1');
+                    logger.warnfree('Warn: Color: "alpha" must be in range 0-1');
                     element = 0;
                 }
 
@@ -168,3 +168,9 @@ Color.prototype.vec = function() {
 
     return out;
 }
+
+module.exports = Color;
+
+var logger = require('./logger');
+var v = require('./vector');
+var Vec = v.Vec;

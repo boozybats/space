@@ -146,19 +146,6 @@ Heaven.prototype.applyInterstitialChanges = function(state1, state2, time) {
     }
 }
 
-/**
- * Binds camera to object, so it's follows object
- * @param  {Camera} camera
- */
-Heaven.prototype.bindCamera = function(camera) {
-    if (!(camera instanceof Camera)) {
-        console.warn(`Heaven: bindCamera: must be a Camera, type: ${typeof camera}, value: ${camera}, item id: ${this.id}`);
-        return;
-    }
-
-    this.camera = camera;
-}
-
 // Predicts further actions if server distribution isn't received
 Heaven.prototype.extrapolate = function() {}
 

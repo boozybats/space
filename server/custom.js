@@ -1,7 +1,7 @@
-const Storage = require('../classes/storage');
-const Client  = require('../classes/client');
-const Player  = require('../classes/player');
-const Item    = require('../classes/item');
+const Storage = require('./classes/storage');
+const Client = require('./classes/client');
+const Player = require('./classes/player');
+const Item = require('./classes/item');
 
 // Storage with all connected users
 var clients = new Storage;
@@ -19,10 +19,10 @@ npcs.filter = (data => data instanceof Item);
 
 // Gives access to storages in global variable
 global.storages = {
-	clients: clients,
-	players: players,
-	items: items,
-	npcs: npcs
+    clients: clients,
+    players: players,
+    items: items,
+    npcs: npcs
 };
 
 /**
@@ -32,24 +32,24 @@ global.storages = {
  * @return {Boolean}
  */
 global.verification = function(id, ip) {
-	var player = players.get(id);
-	if (!player || !player.client) {
-		return false;
-	}
+    var player = players.get(id);
+    if (!player || !player.client) {
+        return false;
+    }
 
-	var pip = player.client.ip;
+    var pip = player.client.ip;
 
-	return pip === ip;
+    return pip === ip;
 }
 
 // Scripts initialization
 
 // Updates items data
-require('./items');
+require('./executable/items');
 // Distribution sends data to client on update
-require('./distribution');
+require('./executable/distribution');
 // Creates asteroids
-require('./crop');
+require('./executable/crop');
 
 // Holders works on client's messages
 require('./holders/player');
@@ -60,8 +60,8 @@ const update = require('../logic/update');
 
 // Eraser of expired handlers
 update.push(function({
-	time,
-	client
+    time,
+    client
 }) {
-	client.removeExpiredHandlers(time);
+    client.removeExpiredHandlers(time);
 }, 'clients');
