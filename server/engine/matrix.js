@@ -805,7 +805,7 @@ Mat4.orthographic = function(near, far) {
  * @static
  */
 Mat4.perspective = function(aspect, near, far, fovy) {
-    fovy = Math.DTR(fovy);
+    fovy = math.DTR(fovy);
     var y = 1 / Math.tan(fovy / 2);
     var x = y / aspect;
     var d = 1;
@@ -913,3 +913,13 @@ exports.Mat = Mat;
 exports.Mat2 = Mat2;
 exports.Mat3 = Mat3;
 exports.Mat4 = Mat4;
+
+var v = require('./vector');
+var Vec = v.Vec;
+var Vec2 = v.Vec2;
+var Vec3 = v.Vec3;
+var Vec4 = v.Vec4;
+var Quaternion = require('./quaternion');
+var Euler = require('./euler');
+var math = require('./math');
+var amc = math.amc;

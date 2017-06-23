@@ -9,16 +9,16 @@ function Phys() {}
  */
 Phys.gravity = function(m0, m1, l) {
     if (typeof m0 !== 'number') {
-        warn('Phys#gravity', 'm0', m0);
+        logger.warn('Phys#gravity', 'm0', m0);
     }
     if (typeof m1 !== 'number') {
-        warn('Phys#gravity', 'm1', m1);
+        logger.warn('Phys#gravity', 'm1', m1);
     }
     if (typeof l !== 'number') {
-        warn('Phys#gravity', 'l', l);
+        logger.warn('Phys#gravity', 'l', l);
     }
 
-    return G * ((m0 + m1) / Math.pow(l, 2));
+    return consts.G * ((m0 + m1) / Math.pow(l, 2));
 }
 
 /**
@@ -31,10 +31,10 @@ Phys.gravity = function(m0, m1, l) {
  */
 Phys.layerHeight = function(V0, V1 = 0) {
     if (typeof V0 !== 'number') {
-        warn('Phys#layerHeight', 'V0', V0);
+        logger.warn('Phys#layerHeight', 'V0', V0);
     }
     if (typeof V1 !== 'number') {
-        warn('Phys#layerHeight', 'V1', V1);
+        logger.warn('Phys#layerHeight', 'V1', V1);
     }
 
     var V = V0 + V1;
@@ -47,10 +47,10 @@ Phys.layerHeight = function(V0, V1 = 0) {
 
 Phys.layerVolume = function(h, R = 0) {
     if (typeof h !== 'number') {
-        warn('Phys#layerHeight', 'h', h);
+        logger.warn('Phys#layerHeight', 'h', h);
     }
     if (typeof R !== 'number') {
-        warn('Phys#layerHeight', 'R', R);
+        logger.warn('Phys#layerHeight', 'R', R);
     }
 
     var l = R + h;
@@ -94,10 +94,10 @@ Phys.infLim = function(func, to = 9999999, precision = 100) {
 
 Phys.mass = function(p, V) {
     if (typeof p !== 'number') {
-        warn('Phys#mass', 'v', p);
+        logger.warn('Phys#mass', 'v', p);
     }
     if (typeof V !== 'number') {
-        warn('Phys#mass', 'V', V);
+        logger.warn('Phys#mass', 'V', V);
     }
 
     return p * V;
@@ -153,7 +153,7 @@ Object.defineProperties(Physic.prototype, {
         },
         set: function(val) {
             if (!(val instanceof Matter)) {
-                warn('Physic#matter', 'val', val);
+                logger.warn('Physic#matter', 'val', val);
                 val = new Matter;
             }
 
@@ -172,7 +172,7 @@ Object.defineProperties(Physic.prototype, {
         },
         set: function(val) {
             if (typeof val !== 'function') {
-                warn('Physic#onupdate', 'val', val);
+                logger.warn('Physic#onupdate', 'val', val);
                 val = function() {};
             }
 
@@ -188,7 +188,7 @@ Object.defineProperties(Physic.prototype, {
 
 Physic.prototype.Density = function(R) {
     if (typeof R !== 'number') {
-        warn('Physic#Density', 'R', R);
+        logger.warn('Physic#Density', 'R', R);
         R = 0;
     }
 
@@ -207,7 +207,7 @@ Physic.prototype.Density = function(R) {
 
 Physic.prototype.Mass = function(R) {
     if (typeof R !== 'number') {
-        warn('Physic#Mass', 'R', R);
+        logger.warn('Physic#Mass', 'R', R);
         R = 0;
     }
 
@@ -230,7 +230,7 @@ Physic.prototype.Mass = function(R) {
 
 Physic.prototype.MassTotal = function(R = Infinity) {
     if (typeof R !== 'number') {
-        warn('Physic#MassTotal', 'R', R);
+        logger.warn('Physic#MassTotal', 'R', R);
         R = Infinity;
     }
 
@@ -252,7 +252,7 @@ Physic.prototype.MassTotal = function(R = Infinity) {
 
 Physic.prototype.Pressure = function(R) {
     if (typeof R !== 'number') {
-        warn('Physic#Pressure', 'R', R);
+        logger.warn('Physic#Pressure', 'R', R);
         R = 0;
     }
 
@@ -261,7 +261,7 @@ Physic.prototype.Pressure = function(R) {
     var self = this;
     this.matter.each((layer, radius) => {
         if (radius >= R) {
-            out = G * (self.MassTotal(R) * self.Density(R) / Math.pow(R, 2));
+            out = consts.G * (self.MassTotal(R) * self.Density(R) / Math.pow(R, 2));
 
             return false;
         }
@@ -272,11 +272,11 @@ Physic.prototype.Pressure = function(R) {
 
 Physic.prototype.Temperature = function(R) {
     if (typeof R !== 'number') {
-        warn('Physic#Temperature', 'R', R);
+        logger.warn('Physic#Temperature', 'R', R);
         R = 0;
     }
 
-    return this.Pressure(R) * this.VolumeTotal(R) / PRESSURE_TEMPERATURE_CONST;
+    return this.Pressure(R) * this.VolumeTotal(R) / consts.PRESSURE_TEMPERATURE_CONST;
 }
 
 Physic.prototype.toJSON = function() {
@@ -289,7 +289,7 @@ Physic.prototype.toJSON = function() {
 
 Physic.prototype.VolumeTotal = function(R = Infinity) {
     if (typeof R !== 'number') {
-        warn('Physic#VolumeTotal', 'R', R);
+        logger.warn('Physic#VolumeTotal', 'R', R);
         R = Infinity;
     }
 
@@ -379,11 +379,11 @@ Object.defineProperties(Matter.prototype, {
  */
 Matter.prototype.addSubstance = function(name, volume) {
     if (typeof volume !== 'number') {
-        warn('Matter#addSubstance', 'volume', volume);
+        logger.warn('Matter#addSubstance', 'volume', volume);
         volume = 0;
     }
 
-    var periodic = PeriodicTable[name];
+    var periodic = consts.PeriodicTable[name];
     if (!periodic) {
         return false;
     }
@@ -408,7 +408,7 @@ Matter.prototype.addSubstance = function(name, volume) {
  */
 Matter.prototype.addSubstances = function(substances) {
     if (typeof substances !== 'object') {
-        warn('Matter#addSubstances', 'substances', substances);
+        logger.warn('Matter#addSubstances', 'substances', substances);
         substances = {};
     }
 
@@ -430,7 +430,7 @@ Matter.prototype.defineParameters = function() {
 
     if (last) {
         var substance = last.substances[last.substances.length - 1];
-        this.color_ = PeriodicTable[substance].color;
+        this.color_ = consts.PeriodicTable[substance].color;
     } else {
         this.color_ = undefined;
     }
@@ -447,7 +447,7 @@ Matter.prototype.defineParameters = function() {
  */
 Matter.prototype.each = function(callback) {
     if (typeof callback !== 'function') {
-        warn('Matter#each', 'callback', callback);
+        logger.warn('Matter#each', 'callback', callback);
         return;
     }
 
@@ -482,7 +482,7 @@ Matter.prototype.getSortedSubstances = function() {
     });
 
     out.sort(function(a, b) {
-        if (PeriodicTable[a.name].p < PeriodicTable[b.name].p) {
+        if (consts.PeriodicTable[a.name].p < consts.PeriodicTable[b.name].p) {
             return 1;
         } else {
             return -1;
@@ -499,7 +499,7 @@ Matter.prototype.getSortedSubstances = function() {
  */
 Matter.prototype.layerHeight = function() {
     var R = Phys.layerHeight(this.volume);
-    var out = R / LAYERS_COUNT;
+    var out = R / consts.LAYERS_COUNT;
 
     return out;
 }
@@ -511,7 +511,7 @@ Matter.prototype.layerHeight = function() {
  */
 Matter.prototype.nextSibling = function(layer) {
     if (!layer) {
-        warn('Matter#nextSibling', 'layer', layer);
+        logger.warn('Matter#nextSibling', 'layer', layer);
         return layer;
     }
 
@@ -557,7 +557,7 @@ Matter.prototype.updateLayers = function() {
 
         // Current substance volume and density
         var Vs = substance.volume;
-        var p = PeriodicTable[substance.name].p;
+        var p = consts.PeriodicTable[substance.name].p;
 
         // Last instantiated layer from all layers
         var last = layers[layers.length - 1];
@@ -583,7 +583,7 @@ Matter.prototype.updateLayers = function() {
             var avgP = 0;
             var subs = last.substances;
             for (var i = 0; i < subs.length; i++) {
-                avgP += PeriodicTable(subs[i]).p;
+                avgP += consts.PeriodicTable(subs[i]).p;
             }
             avgP /= subs.length;
             last.density = avgP;
@@ -647,3 +647,7 @@ Matter.prototype.updateLayers = function() {
     this.mass_ = all_mass;
     this.layers_ = layers;
 }
+
+var logger = require('./logger');
+var consts = require('./constants');
+var Storage = require('./storage');

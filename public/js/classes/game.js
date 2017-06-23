@@ -5,8 +5,11 @@ function Game(options = {}) {
         options = {};
     }
 
-    this.clientId_ = undefined;
-    this.player_ = {};
+    this.player_ = new Player;
+
+    var players = new Storage;
+    players.filter = (data => data instanceof Player);
+    this.players = players;
 
     this.dependencies = {};
     this.thrownDependecies = {};
@@ -32,11 +35,6 @@ Object.defineProperties(Game.prototype, {
     canvas: {
         get: function() {
             return this.canvas_;
-        }
-    },
-    clientId: {
-        get: function() {
-            return this.clientId_;
         }
     },
     connection: {
@@ -65,6 +63,32 @@ Object.defineProperties(Game.prototype, {
         }
     }
 });
+
+Game.prototype.addPlayer = function(id) {
+    if (!(this.isStarted)) {
+        warnfree('Game#addPlayer: game must be started');
+        return;
+    }
+    if (typeof id !== 'number' && typeof id !== 'string') {
+        warn('Game#addPlayer', 'id', id);
+        id = -2;
+    }
+
+    var player = new Player;
+    player.id = id;
+
+    var shaders = this.shaders;
+
+    var item = new Heaven({
+        shader: shaders.get('heaven')
+    });
+    item.instance(this.currentScene);
+    player.item = item;
+
+    this.players.push(player);
+
+    return player;
+}
 
 Game.prototype.attachEvent = function(handler, callback) {
     if (typeof callback !== 'function') {
@@ -108,12 +132,11 @@ Game.prototype.configureConnection = function() {
     var self = this;
 
     this.defineId(id => {
-        self.clientId_ = id;
+        self.player.id = id;
     });
 
     this.setConnectionListeners({
-        client: this.requestClient,
-        player: this.requestPlayer
+        client: this.responseClient.bind(this)
     });
 }
 
@@ -137,9 +160,9 @@ Game.prototype.defineId = function(callback) {
 
     var id = cookie.read('id');
 
-    if (typeof id === 'number') {
+    if (id) {
         continueSession(id, response => {
-            if (response.data) {
+            if (response.data === true) {
                 callback(id);
             } else {
                 cookie.remove('id');
@@ -157,14 +180,14 @@ Game.prototype.defineId = function(callback) {
     }
 
     function continueSession(id, callback) {
-        connection.send('player', {
+        connection.send('client', {
             method: 'continueSession',
             id: id
         }, callback);
     }
 
     function getId(callback) {
-        connection.send('player', {
+        connection.send('client', {
             method: 'getId'
         }, callback);
     }
@@ -297,28 +320,31 @@ Game.prototype.initializeShaders = function() {
     shaders.add('facebox', Facebox.shader());
 }
 
-Game.prototype.onDistribution = function(data) {
-    if (typeof data !== 'object') {
+Game.prototype.onDistribution = function(response) {
+    if (!this.isStarted) {
+        warnfree('Game#onDistribution: game must be started');
+        return;
+    }
+    if (typeof response !== 'object') {
+        warn('Game#onDistribution', 'response', response);
         return;
     }
 
-    if (typeof data.items === 'object') {
-        var items = data.items;
-        this.updateItems(items);
+    var data = response.data;
+    if (typeof data !== 'object') {
+        warn('Game#onDistribution', 'data', data);
+        return;
     }
 
-    if (typeof data.remove === 'object') {
-        var array = data.remove;
-        this.removeItems(array);
+    var stack = data.stack;
+    if (typeof stack !== 'object') {
+        warn('Game#onDistribution', 'stack', stack);
+        return;
     }
 
-    // Trigger and collect all actions
-    player.heaven.rigidbody.tug();
-    var wrap = {
-        actions: player.getActions()
-    }
-    player.clearActions();
-    callback(wrap);
+    var time = Date.now();
+
+    this.updateByPlayers(stack.players, time);
 }
 
 // Make flexible canvas by window
@@ -364,9 +390,9 @@ Game.prototype.optimizeCanvas = function() {
     window.onresize();
 }
 
-Game.prototype.requestClient = function(response) {
+Game.prototype.responseClient = function(response) {
     if (typeof response !== 'object') {
-        warn('Game#requestClient', 'response', response);
+        warn('Game#responseClient', 'response', response);
         return;
     }
 
@@ -384,26 +410,9 @@ Game.prototype.requestClient = function(response) {
             break;
 
         case 'distribution':
-            this.onDistribution(data, response.answer);
+            this.onDistribution(response);
             break;
     }
-}
-
-Game.prototype.requestPlayer = function(response) {
-    if (typeof response !== 'object') {
-        warn('Game#requestClient', 'response', response);
-        return;
-    }
-
-    var data = response.data;
-
-    if (typeof data !== 'object') {
-        return;
-    }
-
-    var method = data.method;
-
-    switch (method) {}
 }
 
 // Sets all dependencies in array
@@ -550,6 +559,8 @@ Game.prototype.start = function() {
 
         var project = self.project;
         var scene = project.createScene('main', true);
+        self.currentScene = scene;
+
         var camera = new Camera;
         scene.appendCamera(camera);
 
@@ -580,5 +591,32 @@ Game.prototype.start = function() {
         project.requestAnimationFrame();
 
         self.fireEvent('started', [scene, camera]);
+    }
+}
+
+Game.prototype.updateByPlayers = function(players, time) {
+    if (typeof players !== 'object') {
+        warn('Game#updateByPlayers', 'players', players);
+        return;
+    }
+
+    this.players.each(player => {
+        player.disable();
+    });
+
+    for (var i = 0; i < players.length; i++) {
+        var player = players[i];
+
+        if (player.id == this.player.id) {
+            this.player.updateAlive(player, time);
+        } else {
+            var id = player.id;
+            var matches = this.players.find(player => {
+                return player.id == id;
+            });
+
+            var match = matches[0] || this.addPlayer(id);
+            match.updateThird(player, time);
+        }
     }
 }

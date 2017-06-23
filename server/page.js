@@ -1,6 +1,6 @@
 const fs = require('fs');
 const url = require('url');
-const path = require('path');
+const path_ = require('path');
 
 const _mainpages = ['index.html'];
 const _public = '../public';
@@ -126,7 +126,7 @@ function error(num, response) {
 function create(path, request, response) {
     if (typeof path === 'string' && typeof response === 'object') {
         var headers = {};
-        var ext = path.extname(path);
+        var ext = path_.extname(path);
         switch (ext) {
             case '.html':
                 headers['Content-Type'] = 'text/html';

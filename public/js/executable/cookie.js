@@ -7,7 +7,7 @@ var cookie = {
 
         var result = document.cookie.match(new RegExp(`${name}=([^;]+)`));
         if (result) {
-            result = JSON.parse(result[1]);
+            result = result[1];
         }
 
         return result;

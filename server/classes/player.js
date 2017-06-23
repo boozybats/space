@@ -1,80 +1,69 @@
-class Player {
-	constructor({
-		id
-	} = {}) {
-		this.id = id;
+function Player(id) {
+    this.id = id;
 
-		this.items_ = new Storage;
-		this.onremove = function() {};
-	}
+    this.item = new Heaven;
+}
 
-	get id() {
-		this.id_;
-	}
-	set id(val) {
-		if (typeof val !== 'number') {
-			val = -1;
-		}
+Object.defineProperties(Player.prototype, {
+    id: {
+        get: function() {
+            return this.id_;
+        },
+        set: function(val) {
+            if (typeof val !== 'number') {
+                logger.warn('Player#id', 'val', val);
+                val = -1;
+            }
 
-		this.id_ = val;
-	}
+            this.id_ = val;
+        }
+    },
+    item: {
+        get: function() {
+            return this.item_;
+        },
+        set: function(val) {
+            if (!(val instanceof Heaven)) {
+                logger.warn('Player#item', 'val', val);
+                val = new Heaven;
+            }
 
-	get client() {
-		return this.client_;
-	}
-	set client(val) {
-		if (!val || val instanceof Client) {
-			this.client_ = val;
-		}
-	}
+            this.item_ = val;
+        }
+    },
+    nick: {
+        get: function() {
+            return this.nick_;
+        },
+        set: function(val) {
+            if (typeof val !== 'string') {
+                logger.warn('Player#nick', 'val', val);
+                val = 'goofy';
+            }
 
-	get heaven() {
-		return this.items.get('heaven');
-	}
-	set heaven(val) {
-		if (!(val instanceof Heaven)) {
-			val = new Heaven;
-		}
+            this.nick_ = val;
+        }
+    }
+});
 
-		this.items.set('heaven', val);
-	}
+Player.prototype.isReady = function() {
+    return !!(this.id && this.item);
+}
 
-	get items() {
-		return this.items_;
-	}
+Player.prototype.toJSON = function() {
+    var out = {};
 
-	get onremove() {
-		return this.onremove_;
-	}
-	set onremove(val) {
-		if (typeof val !== 'function') {
-			val = function() {};
-		}
+    out.id = this.id || -1;
+    out.nick = this.nick || '';
 
-		this.onremove_ = val;
-	}
+    if (this.item) {
+        out.item = this.item.toJSON();
+    }
 
-	remove() {
-		this.onremove();
-
-		var heaven = this.items.get('heaven');
-		if (heaven) {
-			heaven.remove();
-		}
-	}
-
-	// Calls client's send-function
-	send(options) {
-		if (!this.client) {
-			return;
-		}
-
-		this.client.send(options);
-	}
+    return out;
 }
 
 module.exports = Player;
 
-const Storage  = require('./storage');
-const Client   = require('./client');
-const Heaven   = require('./heaven');
+var logger = require('../engine/logger');
+var Heaven = require('./heaven');

@@ -72,7 +72,7 @@ Object.defineProperties(Vec.prototype, {
             return this.x_;
         },
         set: function() {
-            warnfree('"Vec" coordinates can not be changed, instance new "Vec"');
+            logger.warnfree('"Vec" coordinates can not be changed, instance new "Vec"');
         }
     },
     y: {
@@ -80,7 +80,7 @@ Object.defineProperties(Vec.prototype, {
             return this.y_;
         },
         set: function() {
-            warnfree('"Vec" coordinates can not be changed, instance new "Vec"');
+            logger.warnfree('"Vec" coordinates can not be changed, instance new "Vec"');
         }
     },
     z: {
@@ -88,7 +88,7 @@ Object.defineProperties(Vec.prototype, {
             return this.z_;
         },
         set: function() {
-            warnfree('"Vec" coordinates can not be changed, instance new "Vec"');
+            logger.warnfree('"Vec" coordinates can not be changed, instance new "Vec"');
         }
     },
     w: {
@@ -96,7 +96,7 @@ Object.defineProperties(Vec.prototype, {
             return this.w_;
         },
         set: function() {
-            warnfree('"Vec" coordinates can not be changed, instance new "Vec"');
+            logger.warnfree('"Vec" coordinates can not be changed, instance new "Vec"');
         }
     },
     xy: {
@@ -531,10 +531,10 @@ Object.defineProperties(Vec.prototype, {
  */
 Vec.angle = function(vec1, vec2) {
     if (!(vec1 instanceof Vec)) {
-        warn('Vec->angle', 'vec1', vec1);
+        logger.warn('Vec->angle', 'vec1', vec1);
         return 0;
     } else if (!(vec2 instanceof Vec)) {
-        warn('Vec->angle', 'vec2', vec2);
+        logger.warn('Vec->angle', 'vec2', vec2);
         return 0;
     }
 
@@ -587,7 +587,7 @@ Vec.avg = function() {
         var vec = args[i];
 
         if (!vec instanceof Vec) {
-            warn('Vec->avg', 'vec', vec);
+            logger.warn('Vec->avg', 'vec', vec);
             return new Vec2;
         }
 
@@ -603,7 +603,7 @@ Vec.avg = function() {
     out = amc('/', out, args.length);
 
     if (!(out instanceof Vec)) {
-        warn('Vec->avg', 'out', out);
+        logger.warn('Vec->avg', 'out', out);
         return new Vec2;
     }
 
@@ -655,10 +655,10 @@ Vec.compare = function(vec1, vec2) {
  */
 Vec.cos = function(vec1, vec2) {
     if (!(vec1 instanceof Vec)) {
-        warn('Vec->cos', 'vec1', vec1);
+        logger.warn('Vec->cos', 'vec1', vec1);
         return 0;
     } else if (!(vec2 instanceof Vec)) {
-        warn('Vec->cos', 'vec2', vec2);
+        logger.warn('Vec->cos', 'vec2', vec2);
         return 0;
     }
 
@@ -687,11 +687,11 @@ Vec.dif = function() {
         vec2 = args[1];
 
     if (!(vec1 instanceof Vec)) {
-        warn('Vec->dif', 'vec1', vec1);
+        logger.warn('Vec->dif', 'vec1', vec1);
         vec1 = new Vec2;
     }
     if (!(vec2 instanceof Vec)) {
-        warn('Vec->dif', 'vec2', vec2);
+        logger.warn('Vec->dif', 'vec2', vec2);
         vec2 = new Vec2;
     }
 
@@ -859,7 +859,7 @@ Vec.prototype.length = function() {
  */
 Vec.prototype.multi = function(num) {
     if (typeof num !== 'number') {
-        warn('Vec#multi', 'num', num);
+        logger.warn('Vec#multi', 'num', num);
         return this;
     }
 
@@ -893,11 +893,11 @@ Vec.multi = function() {
         vec2 = args[1];
 
     if (!(vec1 instanceof Vec)) {
-        warn('Vec->multi', 'vec1', vec1);
+        logger.warn('Vec->multi', 'vec1', vec1);
         vec1 = new Vec2;
     }
     if (!(vec2 instanceof Vec)) {
-        warn('Vec->multi', 'vec2', vec2);
+        logger.warn('Vec->multi', 'vec2', vec2);
         vec2 = new Vec2;
     }
 
@@ -945,7 +945,7 @@ Vec.prototype.normalize = function() {
  */
 Vec.prototype.sum = function(num) {
     if (typeof num !== 'number') {
-        warn('Vec#sum', 'num', num);
+        logger.warn('Vec#sum', 'num', num);
         return this;
     }
 
@@ -979,11 +979,11 @@ Vec.sum = function() {
         vec2 = args[1];
 
     if (!(vec1 instanceof Vec)) {
-        warn('Vec->sum', 'vec1', vec1);
+        logger.warn('Vec->sum', 'vec1', vec1);
         vec1 = new Vec2;
     }
     if (!(vec2 instanceof Vec)) {
-        warn('Vec->sum', 'vec2', vec2);
+        logger.warn('Vec->sum', 'vec2', vec2);
         vec2 = new Vec2;
     }
 
@@ -1020,11 +1020,11 @@ function Vec2(x = 0, y = 0) {
         x = x.x;
     } else {
         if (typeof x !== 'number') {
-            warn('Vec2', 'x', x);
+            logger.warn('Vec2', 'x', x);
             x = 0;
         }
         if (typeof y !== 'number') {
-            warn('Vec2', 'y', y);
+            logger.warn('Vec2', 'y', y);
             y = 0;
         }
     }
@@ -1053,7 +1053,7 @@ function Vec3(x = 0, y = 0, z = 0) {
         //
     } else if (!z && x && x.constructor === Vec2) {
         if (typeof y !== 'number') {
-            warn('Vec3', 'y', y);
+            logger.warn('Vec3', 'y', y);
             y = 0;
         }
 
@@ -1062,7 +1062,7 @@ function Vec3(x = 0, y = 0, z = 0) {
         x = x.x;
     } else if (!z && y && y.constructor === Vec2) {
         if (typeof x !== 'number') {
-            warn('Vec3', 'x', x);
+            logger.warn('Vec3', 'x', x);
             x = 0;
         }
 
@@ -1074,15 +1074,15 @@ function Vec3(x = 0, y = 0, z = 0) {
         x = x.x;
     } else {
         if (typeof x !== 'number') {
-            warn('Vec3', 'x', x);
+            logger.warn('Vec3', 'x', x);
             x = 0;
         }
         if (typeof y !== 'number') {
-            warn('Vec3', 'y', y);
+            logger.warn('Vec3', 'y', y);
             y = 0;
         }
         if (typeof z !== 'number') {
-            warn('Vec3', 'z', z);
+            logger.warn('Vec3', 'z', z);
             z = 0;
         }
     }
@@ -1106,11 +1106,11 @@ Vec3.prototype.constructor = Vec3;
  */
 Vec3.cross = function(vec1, vec2) {
     if (!(vec1 instanceof Vec3)) {
-        warn('Vec3->cross', 'vec1', vec1);
+        logger.warn('Vec3->cross', 'vec1', vec1);
         vec1 = new Vec3;
     }
     if (!(vec2 instanceof Vec3)) {
-        warn('Vec3->cross', 'vec2', vec2);
+        logger.warn('Vec3->cross', 'vec2', vec2);
         vec2 = new Vec3;
     }
 
@@ -1142,7 +1142,7 @@ function Vec4(x = 0, y = 0, z = 0, w = 0) {
         x = x.x;
     } else if (!w && x && x.constructor === Vec2) {
         if (typeof z !== 'number') {
-            warn('Vec4', 'z', z);
+            logger.warn('Vec4', 'z', z);
             z = 0
         }
         if (typeof y !== 'number') {
@@ -1156,11 +1156,11 @@ function Vec4(x = 0, y = 0, z = 0, w = 0) {
         x = x.x;
     } else if (!w && y && y.constructor === Vec2) {
         if (typeof z !== 'number') {
-            warn('Vec4', 'z', z);
+            logger.warn('Vec4', 'z', z);
             z = 0
         }
         if (typeof x !== 'number') {
-            warn('Vec4', 'x', x);
+            logger.warn('Vec4', 'x', x);
             x = 0;
         }
 
@@ -1169,11 +1169,11 @@ function Vec4(x = 0, y = 0, z = 0, w = 0) {
         y = y.x;
     } else if (!w && z && z.constructor == Vec2) {
         if (typeof y !== 'number') {
-            warn('Vec4', 'y', y);
+            logger.warn('Vec4', 'y', y);
             y = 0
         }
         if (typeof x !== 'number') {
-            warn('Vec4', 'x', x);
+            logger.warn('Vec4', 'x', x);
             x = 0;
         }
 
@@ -1181,7 +1181,7 @@ function Vec4(x = 0, y = 0, z = 0, w = 0) {
         z = z.x;
     } else if (!z && x && x.constructor == Vec3) {
         if (typeof y !== 'number') {
-            warn('Vec4', 'y', y);
+            logger.warn('Vec4', 'y', y);
             y = 0;
         }
 
@@ -1191,7 +1191,7 @@ function Vec4(x = 0, y = 0, z = 0, w = 0) {
         x = x.x;
     } else if (!z && y && y.constructor === Vec3) {
         if (typeof x !== 'number') {
-            warn('Vec4', 'x', x);
+            logger.warn('Vec4', 'x', x);
             x = 0;
         }
 
@@ -1200,19 +1200,19 @@ function Vec4(x = 0, y = 0, z = 0, w = 0) {
         y = y.x;
     } else {
         if (typeof x !== 'number') {
-            warn('Vec4', 'x', x);
+            logger.warn('Vec4', 'x', x);
             x = 0;
         }
         if (typeof y !== 'number') {
-            warn('Vec4', 'y', y);
+            logger.warn('Vec4', 'y', y);
             y = 0;
         }
         if (typeof z !== 'number') {
-            warn('Vec4', 'z', z);
+            logger.warn('Vec4', 'z', z);
             z = 0;
         }
         if (typeof w !== 'number') {
-            warn('Vec4', 'w', w);
+            logger.warn('Vec4', 'w', w);
             w = 0;
         }
     }
@@ -1262,3 +1262,12 @@ Object.defineProperties(Vec, {
         writable: false
     }
 });
+
+exports.Vec = Vec;
+exports.Vec2 = Vec2;
+exports.Vec3 = Vec3;
+exports.Vec4 = Vec4;
+
+var Euler = require('./euler');
+var math = require('./math');
+var amc = math.amc;

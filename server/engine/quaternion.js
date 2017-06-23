@@ -10,19 +10,19 @@
  */
 function Quaternion(x = 0, y = 0, z = 0, w = 1) {
     if (typeof x !== 'number') {
-        warn('Quaternion', 'x', x);
+        logger.warn('Quaternion', 'x', x);
         x = 0;
     }
     if (typeof y !== 'number') {
-        warn('Quaternion', 'y', y);
+        logger.warn('Quaternion', 'y', y);
         y = 0;
     }
     if (typeof z !== 'number') {
-        warn('Quaternion', 'z', z);
+        logger.warn('Quaternion', 'z', z);
         z = 0;
     }
     if (typeof w !== 'number') {
-        warn('Quaternion', 'w', w);
+        logger.warn('Quaternion', 'w', w);
         w = 1;
     }
 
@@ -97,7 +97,7 @@ Quaternion.avg = function() {
     out = amc('/', out, args.length);
 
     if (!(out instanceof Quaternion)) {
-        warn('Quaternion->avg', 'out', out);
+        logger.warn('Quaternion->avg', 'out', out);
         return new Quaternion;
     }
 
@@ -156,22 +156,22 @@ Quaternion.Euler = function() {
         yaw = args[2];
 
         if (typeof roll !== 'number') {
-        	warn('Quaternion->Euler', 'roll', roll);
+        	logger.warn('Quaternion->Euler', 'roll', roll);
         	roll = 0;
         }
         if (typeof pitch !== 'number') {
-        	warn('Quaternion->Euler', 'pitch', pitch);
+        	logger.warn('Quaternion->Euler', 'pitch', pitch);
         	pitch = 0;
         }
         if (typeof yaw !== 'number') {
-        	warn('Quaternion->Euler', 'yaw', yaw);
+        	logger.warn('Quaternion->Euler', 'yaw', yaw);
         	yaw = 0;
         }
     }
 
-    var nroll = Math.DTR(roll),
-        npitch = Math.DTR(pitch),
-        nyaw = Math.DTR(yaw);
+    var nroll = math.DTR(roll),
+        npitch = math.DTR(pitch),
+        nyaw = math.DTR(yaw);
 
     var sr, sp, sy, cr, cp, cy;
 
@@ -216,7 +216,7 @@ Quaternion.prototype.inverse = function() {
 
 Quaternion.prototype.multi = function(num) {
     if (typeof num !== 'number') {
-    	warn('Quaternion#multi', 'num', num);
+    	logger.warn('Quaternion#multi', 'num', num);
         return this;
     }
 
@@ -281,7 +281,7 @@ Quaternion.sum = function() {
 
 Quaternion.prototype.sum = function(num) {
     if (typeof num !== 'number') {
-        warn('Quaternion#sum', 'num', num);
+        logger.warn('Quaternion#sum', 'num', num);
         return this;
     }
 
@@ -306,3 +306,12 @@ Quaternion.prototype.sum = function(num) {
 Quaternion.prototype.vec = function() {
     return new Vec4(this.x, this.y, this.z, this.w);
 }
+
+module.exports = Quaternion;
+
+var logger = require('./logger');
+var Euler = require('./euler');
+var v = require('./vector');
+var Vec4 = v.Vec4;
+var math = require('./math');
+var amc = math.amc;

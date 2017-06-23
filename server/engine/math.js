@@ -63,7 +63,7 @@ function amc(operand) {
             break;
 
         default:
-            warnfree(`amc: arithmetic calculations error, wrong operand, value: ${operand}`);
+            logger.warnfree(`amc: arithmetic calculations error, wrong operand, value: ${operand}`);
     }
 
     if (args.length > 3) {
@@ -284,10 +284,6 @@ function amc_equality(term1, term2) {
         out = amc('=', term1.position, term2.position) &&
             amc('=', term1.rotation, term2.rotation) &&
             amc('=', term1.scale, term2.scale);
-    } else if (term1 instanceof Image && term2 instanceof Image) {
-        out = term1.src === term2.src;
-    } else if (term1 instanceof WebGLTexture && term2 instanceof WebGLTexture) {
-        out = false;
     } else {
         out = term1 === term2;
     }
@@ -300,16 +296,17 @@ exports.DTR = DTR;
 exports.RTD = RTD;
 exports.clamp = clamp;
 
-const m = require('./matrix');
-const Mat = m.Mat;
-const Mat2 = m.Mat2;
-const Mat3 = m.Mat3;
-const Mat4 = m.Mat4;
-const v = require('./vector');
-const Vec = v.Vec;
-const Vec2 = v.Vec2;
-const Vec3 = v.Vec3;
-const Vec4 = v.Vec4;
-const Quaternion = require('./quaternion');
-const Euler = require('./euler');
-const Body = require('./body');
+var logger = require('./logger');
+var m = require('./matrix');
+var Mat = m.Mat;
+var Mat2 = m.Mat2;
+var Mat3 = m.Mat3;
+var Mat4 = m.Mat4;
+var v = require('./vector');
+var Vec = v.Vec;
+var Vec2 = v.Vec2;
+var Vec3 = v.Vec3;
+var Vec4 = v.Vec4;
+var Quaternion = require('./quaternion');
+var Euler = require('./euler');
+var Body = require('./body');

@@ -1,3 +1,5 @@
+var Color = require('./color');
+
 // Gravitational constant
 const G = 6.6738480 * Math.pow(10, -11);
 // How much layers must have matter

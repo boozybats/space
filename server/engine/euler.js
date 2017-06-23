@@ -10,15 +10,15 @@
  */
 function Euler(x = 0, y = 0, z = 0) {
     if (typeof x !== 'number') {
-        warn('Euler', 'x', x);
+        logger.warn('Euler', 'x', x);
         x = 0;
     }
     if (typeof y !== 'number') {
-        warn('Euler', 'y', y);
+        logger.warn('Euler', 'y', y);
         y = 0;
     }
     if (typeof z !== 'number') {
-        warn('Euler', 'z', z);
+        logger.warn('Euler', 'z', z);
         z = 0;
     }
 
@@ -114,7 +114,7 @@ Euler.compare = function(eul0, eul1) {
  */
 Euler.prototype.multi = function(num) {
     if (typeof num !== 'number') {
-        warn('Euler#multi', 'num', num);
+        logger.warn('Euler#multi', 'num', num);
         return this;
     }
 
@@ -149,19 +149,19 @@ Euler.Quaternion = function(x, y, z, w) {
         w = x.w;
     } else {
         if (typeof x !== 'number') {
-            warn('Euler->Quaternion', 'x', x);
+            logger.warn('Euler->Quaternion', 'x', x);
             x = 0;
         }
         if (typeof y !== 'number') {
-            warn('Euler->Quaternion', 'y', y);
+            logger.warn('Euler->Quaternion', 'y', y);
             y = 0;
         }
         if (typeof z !== 'number') {
-            warn('Euler->Quaternion', 'z', z);
+            logger.warn('Euler->Quaternion', 'z', z);
             z = 0;
         }
         if (typeof w !== 'number') {
-            warn('Euler->Quaternion', 'w', w);
+            logger.warn('Euler->Quaternion', 'w', w);
             w = 1;
         }
     }
@@ -178,7 +178,7 @@ Euler.Quaternion = function(x, y, z, w) {
         L = xx + yy + zz + ww;
 
     if (L === 0) {
-        warnfree('Euler->Quaternion: quaternion can not be length 0');
+        logger.warnfree('Euler->Quaternion: quaternion can not be length 0');
     }
 
     m[0] = (ww + xx - yy - zz) / L;
@@ -229,7 +229,9 @@ Euler.prototype.vec = function() {
 
 module.exports = Euler;
 
+var logger = require('./logger');
 var v = require('./vector');
 var Vec3 = v.Vec3;
 var Quaternion = require('./quaternion');
 var math = require('./math');
+var amc = math.amc;

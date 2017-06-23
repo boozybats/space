@@ -1,6 +1,6 @@
 function Rigidbody(options = {}) {
     if (typeof options !== 'object') {
-        warn('Rigidbody', 'options', options);
+        logger.warn('Rigidbody', 'options', options);
         options = {};
     }
 
@@ -30,7 +30,7 @@ Object.defineProperties(Rigidbody.prototype, {
         },
         set: function(val) {
             if (val && !(val instanceof Body)) {
-                warn('Rigidbody#body', 'val', val);
+                logger.warn('Rigidbody#body', 'val', val);
                 val = undefined;
             }
 
@@ -43,7 +43,7 @@ Object.defineProperties(Rigidbody.prototype, {
         },
         set: function(val) {
             if (typeof val !== 'function') {
-                warn('Rigidbody#onupdate', 'val', val);
+                logger.warn('Rigidbody#onupdate', 'val', val);
                 val = function() {};
             }
 
@@ -56,7 +56,7 @@ Object.defineProperties(Rigidbody.prototype, {
         },
         set: function(val) {
             if (!(val instanceof Vec3)) {
-                warn('Rigidbody#velocity', 'val', val);
+                logger.warn('Rigidbody#velocity', 'val', val);
                 val = new Vec3;
             }
 
@@ -68,17 +68,20 @@ Object.defineProperties(Rigidbody.prototype, {
 // Updates properties and send them to callbacks onchange
 Rigidbody.prototype.initialize = function() {
     var self = this;
-    this.onupdate = function({
-        deltaTime
-    }) {
+    this.onupdate = function(options) {
+        if (typeof options !== 'object') {
+            logger.warn('Rigidbody#onupdate', 'options', options);
+            return;
+        }
+
         var tugged = [];
 
         var dataVelocity = self.data.velocity;
         var velocity = self.velocity,
-            shift = amc('*', velocity, deltaTime);
+            shift = amc('*', velocity, options.deltaTime);
 
         if (amc('=', dataVelocity.value, velocity)) {
-            dataVelocity.duration += deltaTime;
+            dataVelocity.duration += options.deltaTime;
         } else {
             tugged.push('velocity');
         }
@@ -99,7 +102,7 @@ Rigidbody.prototype.onсhange = function(handler, callback) {
 // Triggers selected changes, if list aren't selected when choose every property
 Rigidbody.prototype.tug = function(list) {
     if (list && !(list instanceof Array)) {
-        warn('Rigidbody#tug', 'list', list);
+        logger.warn('Rigidbody#tug', 'list', list);
         return;
     }
 
@@ -117,3 +120,10 @@ Rigidbody.prototype.tug = function(list) {
         dataVelocity.duration = 0;
     }
 }
+
+var logger = require('./logger');
+var v = require('./vector');
+var Vec3 = v.Vec3;
+var Storage = require('./storage');
+var math = require('./math');
+var amc = math.amc;

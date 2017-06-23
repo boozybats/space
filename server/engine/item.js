@@ -20,7 +20,7 @@ function Item(options = {}) {
     }
 
     this.enabled = options.enabled || true;
-    this.id = options.id || -2;
+    this.id = options.id || -1;
     this.name = options.name || 'anonymous';
     this.body = options.body || new Body;
     this.collider = options.collider;

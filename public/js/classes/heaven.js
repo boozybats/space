@@ -1,6 +1,3 @@
-const INTERPOLATION_DELAY = 100;
-const EXTRAPOLATION_DURATION = 250;
-
 /**
  * Main gameobject known as asteroid.
  * Doesn't pass a mesh because "Sphere" will generate itself.
@@ -28,9 +25,7 @@ function Heaven(options = {}) {
     // How much time needs to predict future after losing connection
     this.extrapolationDuration = options.extrapolationDuration || EXTRAPOLATION_DURATION;
 
-    var tmpData = new Storage;
-    tmpData.filter = (data => typeof data === 'object');
-    this.temporaryData = tmpData;
+    this.tmpData = [];
 }
 
 Heaven.prototype = Object.create(Sphere.prototype);
@@ -78,76 +73,12 @@ Object.defineProperties(Heaven.prototype, {
     }
 });
 
-// Sets changes for item
-Heaven.prototype.applyChanges = function(state) {
-    if (state.body) {
-        var pos = state.body.position,
-            rot = state.body.rotation,
-            sca = state.body.scale;
-
-        this.body.position = new Vec3(pos[0], pos[1], pos[2]);
-        // this.body.rotation = new Quaternion(rot[0], rot[1], rot[2], rot[3]);
-        // this.body.scale = new Vec3(sca[0], sca[1], sca[2]);
-    }
-
-    if (state.physic) {
-        var matter = state.physic.matter;
-        if (this.physic.matter.empty) {
-            this.physic.matter = new Matter(matter);
-        }
-    }
+Heaven.prototype.addTempData = function(data, time) {
+    this.tmpData.push({
+        time: time,
+        data: data
+    });
 }
-
-// Are called by interpolation, sets interstitial changes for item between 2 states
-Heaven.prototype.applyInterstitialChanges = function(state1, state2, time) {
-    var state = {};
-
-    var deltaTime = state2.receiveTime - state1.receiveTime;
-    var relTime = state2.receiveTime - time;
-    var precision = relTime / deltaTime;
-
-    if (state1.body && state2.body) {
-        var pos = vec3avg(state1.body.position, state2.body.position),
-            // rot = qua3avg(state1.body.rotation, state2.body.rotation),
-            sca = vec3avg(state1.body.scale, state2.body.scale);
-
-        state.body = {
-            position: pos,
-            rotation: state2.body.rotation,
-            scale: sca
-        };
-    }
-
-    if (state1.physic) {
-        state.physic = state1.physic;
-    }
-
-    this.applyChanges(state);
-
-    function vec3avg(arr1, arr2) {
-        var result = [
-            arr1[0] + (arr2[0] - arr1[0]) * precision,
-            arr1[1] + (arr2[1] - arr1[1]) * precision,
-            arr1[2] + (arr2[2] - arr1[2]) * precision
-        ];
-
-        return result;
-    }
-
-    function qua3avg(arr1, arr2) {
-        var qua1 = new Quaternion(arr1[0], arr1[1], arr1[2], arr1[3]),
-            qua2 = new Quaternion(arr2[0], arr2[1], arr2[2], arr2[3]);
-
-        var difference = amc('-', qua2, qua1);
-        var bud = amc('*', difference, precision);
-        var result = amc('+', qua1, bud);
-
-        return result;
-    }
-}
-
-// Predicts further actions if server distribution isn't received
-Heaven.prototype.extrapolate = function() {}
 
 // Sets onupdate function for heaven
 Heaven.prototype.initialize = function() {
@@ -157,7 +88,7 @@ Heaven.prototype.initialize = function() {
     this.onupdate = function({
         time
     }) {
-        // self.interpolate(time);
+        self.interpolate(time);
 
         var oldDiameter = _private.diameter,
             diameter = self.physic.diameter;
@@ -174,6 +105,25 @@ Heaven.prototype.initialize = function() {
 
             obsbody.position = new Vec3(body.position.xy, z);
         }
+    }
+}
+
+Heaven.prototype.interpolate = function(time) {
+    var interval;
+
+    var tmpData = this.tmpData;
+    for (var i = 0; i < tmpData.length; i++) {
+        var data = tmpData[i];
+
+        if (data.time >= time) {
+            interval = [tmpData[i - 1], tmpData[i]];
+            tmpData.splice(0, i - 1);
+            break;
+        }
+    }
+
+    if (!interval) {
+        return;
     }
 }
 
@@ -211,65 +161,6 @@ Heaven.prototype.initializeRigidbody = function() {
             duration: duration
         });
     });
-}
-
-// Smooths actions between server distributions
-Heaven.prototype.interpolate = function(time) {
-    var isNext = false,
-        startIndex;
-    var interstitial = this.temporaryData.find((data, index) => {
-        if (isNext) {
-            isNext = false;
-            return true;
-        } else if (data.receiveTime + this.interpolationDelay >= time) {
-            startIndex = index;
-            isNext = true;
-            return true;
-        }
-
-        return false;
-    });
-
-    if (interstitial.length < 2) {
-        this.extrapolate(time);
-        return;
-    }
-
-    this.temporaryData.splice(0, startIndex);
-
-    this.applyInterstitialChanges(interstitial[0], interstitial[1], time);
-}
-
-/* Receives data from server and stores into temporary storage to use
-by interpolation */
-Heaven.prototype.receiveData = function(data, time) {
-    if (typeof data !== 'object') {
-        return;
-    }
-
-    var lastReceive = this.temporaryData.getLast();
-    if (lastReceive && lastReceive.receiveTime >= time) {
-        return;
-    }
-
-    if (typeof data.body === 'object') {
-        var pos = data.body.position,
-            rot = data.body.rotation,
-            sca = data.body.scale;
-
-        if (typeof pos !== 'object' ||
-            typeof rot !== 'object' ||
-            typeof sca !== 'object') {
-            return;
-        }
-    }
-
-    if (this.player) {
-        this.applyChanges(data);
-    } else {
-        data.receiveTime = time;
-        this.temporaryData.push(data);
-    }
 }
 
 Heaven.shader = function() {

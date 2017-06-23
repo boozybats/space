@@ -109,11 +109,13 @@ Connection.prototype.modifyResponse = function(json) {
     };
 
     var answerkey = json.answer;
-    if (answerkey) {
+    if (typeof answerkey !== 'undefined') {
         var self = this;
         out.answer = function(data, answer) {
             self.send(answerkey, data, answer);
         }
+    } else {
+        out.answer = function() {};
     }
 
     return out;
@@ -139,17 +141,14 @@ Connection.prototype.receive = function(data) {
     // Check if it answer else check in handlers
     if (this.isAnswer(handler)) {
         this.execAnswer(handler, response);
-    } else if (this.handlers[handler]) {
-        this.handlers[handler](response);
+    } else if (this.handlers.get(handler)) {
+        handler = this.handlers.get(handler);
+        handler(response);
     }
 }
 
 Connection.prototype.removeAnswer = function(key) {
-    if (!this.answers(key)) {
-        return;
-    }
-
-    delete this.handlers[key];
+    this.answers.remove(key);
     this.freehandlers.push(key);
 }
 
@@ -172,10 +171,11 @@ Connection.prototype.send = function(handler, data, callback, options = {}) {
     }
 
     // Wait websockets loading
+    var args = arguments;
     if (!this.ready) {
         var self = this;
         setTimeout(function() {
-            self.send.apply(self, arguments);
+            self.send.apply(self, args);
         }, 100);
 
         return;
@@ -193,7 +193,8 @@ Connection.prototype.send = function(handler, data, callback, options = {}) {
     }
 
     try {
-        this.socket.send(JSON.stringify(request));
+        var json = JSON.stringify(request);
+        this.socket.send(json);
     } catch (err) {
         if (err) {
             warn(`Connection#send: ${err.text}`);
@@ -233,7 +234,7 @@ Object.defineProperties(Handler.prototype, {
         set: function(val) {
             if (typeof val !== 'number') {
                 warn('Handler#lifetime', 'val', val);
-                val = 0;
+                val = Infinity;
             }
 
             this.lifetime_ = val;
@@ -246,7 +247,7 @@ Object.defineProperties(Handler.prototype, {
         set: function(val) {
             if (typeof val !== 'number') {
                 warn('Handler#startLifetime', 'val', val);
-                val = 0;
+                val = Date.now();
             }
 
             this.startLifetime_ = val;
