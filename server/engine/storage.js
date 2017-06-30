@@ -221,21 +221,20 @@ Storage.prototype.splice = function(index, count = Infinity) {
     }
 
     var cuted = [];
-    this.each(function(data, ind) {
+    this.each((data, ind) => {
         if (ind >= index && ind < index + count) {
             cuted.push(data);
         }
     });
 
     var length = cuted.length;
+    this.numberkeyLength_ -= length;
     var self = this;
-    this.each(function(data, ind) {
+    this.each((data, ind) => {
         if (ind >= index + length) {
-            self.numberkeyLength_--;
             self.data[ind - length] = data;
             delete self.data[ind];
         } else if (ind >= index) {
-            self.numberkeyLength_--;
             delete self.data[ind];
         }
     });

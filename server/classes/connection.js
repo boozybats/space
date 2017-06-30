@@ -10,6 +10,7 @@ function Connection(options = {}) {
         close: [],
         connect: [],
         disablePlayer: [],
+        distributionAnswer: [],
         enablePlayer: [],
         instancePlayer: []
     };
@@ -71,6 +72,8 @@ Connection.prototype.attachEvent = function(handler, callback) {
 }
 
 Connection.prototype.addClient = function(websocket) {
+    var self = this;
+
     var client = new Client({
         websocket: websocket
     });
@@ -80,15 +83,17 @@ Connection.prototype.addClient = function(websocket) {
         client.listen(key, callback);
     });
 
-    var self = this;
-    client.attachEvent('instancePlayer', function() {
-        self.fireEvent('instancePlayer', arguments);
-    });
-    client.attachEvent('enablePlayer', function() {
-        self.fireEvent('enablePlayer', arguments);
-    });
+    reattach('instancePlayer');
+    reattach('enablePlayer');
+    reattach('distributionAnswer');
 
     return client;
+
+    function reattach(handler) {
+        client.attachEvent(handler, data => {
+            self.fireEvent(handler, [data, client]);
+        });
+    }
 }
 
 Connection.prototype.detachEvent = function(index) {

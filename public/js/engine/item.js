@@ -213,12 +213,14 @@ Object.defineProperties(Item.prototype, {
 Item.prototype.frameUpdate = function(options) {
     this.onupdate(options);
 
-    if (this.physic) {
-        this.physic.onupdate(options);
+    var physic = this.physic;
+    if (physic) {
+        physic.onupdate(options);
     }
 
-    if (this.rigidbody) {
-        this.rigidbody.onupdate(options);
+    var rigidbody = this.rigidbody;
+    if (rigidbody) {
+        rigidbody.onupdate(options);
     }
 }
 

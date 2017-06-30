@@ -8,17 +8,16 @@ function Heaven(options = {}) {
         options = {};
     }
 
-    options.physic = new Physic(new Matter({
-        Fe: 200
-    }));
+    options.physic = new Physic;
     options.rigidbody = new Rigidbody;
     options.precision = 3;
 
     Sphere.call(this, options);
 
+    this.player = options.player;
+
     this.initializeMesh(options.shader);
     this.initialize();
-    this.initializeRigidbody();
 
     // Latency of animation
     this.interpolationDelay = options.interpolationDelay || INTERPOLATION_DELAY;
@@ -58,6 +57,19 @@ Object.defineProperties(Heaven.prototype, {
             this.physic_ = val;
         }
     },
+    player: {
+        get: function() {
+            return this.player_;
+        },
+        set: function(val) {
+            if (val && !(val instanceof Player)) {
+                warn('Heaven#player', 'val', val);
+                val = undefined;
+            }
+
+            this.player_ = val;
+        }
+    },
     rigidbody: {
         get: function() {
             return this.rigidbody_;
@@ -75,8 +87,8 @@ Object.defineProperties(Heaven.prototype, {
 
 Heaven.prototype.addTempData = function(data, time) {
     this.tmpData.push({
-        time: time,
-        data: data
+        data: data,
+        time: time
     });
 }
 
@@ -108,25 +120,6 @@ Heaven.prototype.initialize = function() {
     }
 }
 
-Heaven.prototype.interpolate = function(time) {
-    var interval;
-
-    var tmpData = this.tmpData;
-    for (var i = 0; i < tmpData.length; i++) {
-        var data = tmpData[i];
-
-        if (data.time >= time) {
-            interval = [tmpData[i - 1], tmpData[i]];
-            tmpData.splice(0, i - 1);
-            break;
-        }
-    }
-
-    if (!interval) {
-        return;
-    }
-}
-
 // Sets maps to shader
 Heaven.prototype.initializeMesh = function(shader) {
     if (!(shader instanceof Shader)) {
@@ -149,18 +142,101 @@ Heaven.prototype.initializeMesh = function(shader) {
     });
 }
 
-// Sets onupdate function for heaven's rigidbody
-Heaven.prototype.initializeRigidbody = function() {
-    if (!this.player) {
+Heaven.prototype.interpolate = function(time) {
+    var interval;
+
+    var tmpData = this.tmpData;
+    if (tmpData.length < 2) {
         return;
     }
 
-    this.rigidbody.onсhange('velocity', (value, duration) => {
-        this.player.addAction('velocity', {
-            value: value.array(),
-            duration: duration
-        });
-    });
+    for (var i = 0; i < tmpData.length; i++) {
+        var data = tmpData[i];
+
+        if (data.time >= time - this.interpolationDelay) {
+            interval = [tmpData[i - 1], tmpData[i]];
+            tmpData.splice(0, i - 1);
+            break;
+        }
+    }
+
+    if (!interval) {
+        return;
+    }
+
+    this.setInterstitialChanges(interval[0], interval[1], time);
+}
+
+// Path where item get interstitial properties between two states in time
+Heaven.prototype.setInterstitialChanges = function(state0, state1, time) {
+    if (typeof state0 !== 'object') {
+        warn('Heaven#setInterstitialChanges', 'state0', state0);
+        return;
+    }
+    if (typeof state1 !== 'object') {
+        warn('Heaven#setInterstitialChanges', 'state1', state1);
+        return;
+    }
+
+    var time0 = state0.time,
+        time1 = state1.time;
+
+    if (typeof time0 !== 'number' || typeof time1 !== 'number') {
+        return;
+    }
+
+    var multiplier = (time - time0) / (time1 - time0);
+
+    var data0 = state0.data,
+        data1 = state1.data;
+
+    if (typeof data0 !== 'object' || typeof data1 !== 'object') {
+        return;
+    }
+
+    var body0 = data0.body,
+        body1 = data1.body;
+
+    if (typeof body0 === 'object' && typeof body1 === 'object') {
+        var pos0 = body0.position,
+            pos1 = body1.position;
+        var rot0 = body0.rotation,
+            rot1 = body1.rotation;
+
+        var pos = getInstlVec(pos0, pos1, multiplier),
+            rot = getInstlVec(rot0, rot1, multiplier);
+
+        this.body.position = new Vec3(pos[0], pos[1], pos[2]);
+        this.body.rotation = Quaternion.Euler(rot[0], rot[1], rot[2]);
+    }
+
+    var physic0 = data0.physic,
+        physic1 = data1.physic;
+
+    if (typeof physic0 === 'object' && typeof physic1 === 'object') {
+        var diameter0 = physic0.diameter,
+            diameter1 = physic1.diameter;
+        var maxspeed0 = physic0.maxspeed,
+            maxspeed1 = physic1.maxspeed;
+
+        this.physic.diameter = getInstFloat(diameter0, diameter1, multiplier);
+        this.physic.maxspeed = getInstFloat(maxspeed0, maxspeed1, multiplier);
+    }
+}
+
+function getInstFloat(val0, val1, multiplier) {
+    return val0 + (val1 - val0) * multiplier;
+}
+
+// Returns interstital value between two values by multiplier
+function getInstlVec(val0, val1, multiplier) {
+    var out = [
+        val0[0] + (val1[0] - val0[0]) * multiplier,
+        val0[1] + (val1[1] - val0[1]) * multiplier,
+        val0[2] + (val1[2] - val0[2]) * multiplier
+    ];
+
+    return out;
 }
 
 Heaven.shader = function() {
@@ -209,7 +285,7 @@ Heaven.shader = function() {
 
                 float dist = distance(position3, light.position);
 
-                v_LightDiffuse[i] = light.diffuse * light.intensity * cosTheta / pow(dist, 2.0);
+                v_LightDiffuse[i] = light.diffuse * cosTheta;
                 v_LightAmbient[i] = light.ambient;
             }
         }`,

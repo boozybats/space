@@ -131,12 +131,12 @@ Game.prototype.bindAxisToPlayer = function() {
 Game.prototype.configureConnection = function() {
     var self = this;
 
-    this.defineId(id => {
-        self.player.id = id;
-    });
-
     this.setConnectionListeners({
         client: this.responseClient.bind(this)
+    });
+
+    this.defineId(id => {
+        self.player.id = id;
     });
 }
 
@@ -329,6 +329,9 @@ Game.prototype.onDistribution = function(response) {
         warn('Game#onDistribution', 'response', response);
         return;
     }
+
+    var distrdata = this.player.getDistributionData();
+    response.answer(distrdata);
 
     var data = response.data;
     if (typeof data !== 'object') {
@@ -566,10 +569,14 @@ Game.prototype.start = function() {
 
         var shaders = self.shaders;
 
-        // Create player item
+        // Create player's item, minimalize interpolation delay and disable extrapolation
         var item = new Heaven({
+            interpolationDelay: 0,
+            extrapolationDuration: 0,
+            player: self.player,
             shader: shaders.get('heaven')
         });
+
         item.instance(scene);
         self.player.item = item;
 

@@ -7,9 +7,11 @@ function Rigidbody(options = {}) {
     this.actions = [];
     this.body = options.body;
 
-    this.lastUpdate = Date.now();
     // Stores last values of properties
     this.velocity = new Vec3;
+    this.lastValues = {
+        velocity: this.velocity
+    };
 
     this.initialize();
 }
@@ -54,8 +56,17 @@ Rigidbody.prototype.clearActions = function() {
     this.actions = [];
 }
 
-Rigidbody.prototype.getActions = function() {
-    return this.actions;
+Rigidbody.prototype.getActions = function(json) {
+    if (json) {
+        return this.actions.map(action => {
+            return {
+                type: action.type,
+                value: action.value.array()
+            };
+        });
+    } else {
+        return this.actions;
+    }
 }
 
 // Updates properties and send them to callbacks onchange
@@ -67,22 +78,22 @@ Rigidbody.prototype.initialize = function() {
             return;
         }
 
-        self.makeVelocity(options.deltaTime);
+        self.makeVelocity();
     }
 }
 
 Rigidbody.prototype.makeVelocity = function(deltaTime) {
     var velocity = this.velocity;
-    if (velocity.length() === 0) {
-        return;
+
+    if (!amc('=', this.lastValues.velocity, velocity)) {
+        this.addAction('velocity', velocity);
+        this.lastValues.velocity = velocity;
     }
-
-    var shift = amc('*', velocity, deltaTime);
-
-    this.addAction('velocity', deltaTime);
 
     var body = this.body;
     if (body) {
+        var shift = amc('*', velocity, deltaTime);
+
         body.position = amc('+', body.position, shift);
     }
 }

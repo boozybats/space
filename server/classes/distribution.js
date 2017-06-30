@@ -25,10 +25,11 @@ Object.defineProperties(Distribution.prototype, {
         set: function(val) {
             if (typeof val !== 'number') {
                 logger.warn('Distribution#maxrate', 'val', val);
-                val = 1;
+                val = 20;
             }
 
             this.maxrate_ = val;
+            this.maxrateTime = 1000 / val;
         }
     },
     minrate: {
@@ -38,10 +39,11 @@ Object.defineProperties(Distribution.prototype, {
         set: function(val) {
             if (typeof val !== 'number') {
                 logger.warn('Distribution#minrate', 'val', val);
-                val = 20;
+                val = 1;
             }
 
             this.minrate_ = val;
+            this.minrateTime = 1000 / val;
         }
     },
     memory: {
@@ -128,8 +130,7 @@ Distribution.prototype.send = function(options) {
 
     var isDistribute = client.checkOnDistribution(deltaTime);
     if (isDistribute) {
-        var lifetime = 1000 / this.minrate;
-        client.distribute(options.stack, options.time, lifetime);
+        client.distribute(options.stack, options.time, this.minrateTime, this.maxrateTime);
     }
 }
 

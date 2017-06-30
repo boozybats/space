@@ -176,9 +176,8 @@ Body.prototype.toJSON = function() {
     var out = {};
 
     out.position = this.position.array();
-    out.rotation = this.rotation.array();
+    out.rotation = this.rotation.euler.array();
     out.scale = this.scale.array();
-    out.mvmatrix = this.mvmatrix().rowmajor();
 
     return out;
 }

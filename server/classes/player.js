@@ -1,34 +1,36 @@
-function Player(id) {
-    this.id = id;
+function Player(generator) {
+    if (!(generator instanceof Generator)) {
+        logger.warn('Player', 'generator', generator);
+        generator = new Generator;
+    }
 
-    this.item = new Heaven;
+    this.generator = generator;
+
+    this.initialize();
 }
 
 Object.defineProperties(Player.prototype, {
+    generator: {
+        get: function() {
+            return this.generator_;
+        },
+        set: function(val) {
+            if (!(val instanceof Generator)) {
+                logger.warn('Player#generator', 'val', val);
+                val = new Generator;
+            }
+
+            this.generator_ = val;
+        }
+    },
     id: {
         get: function() {
             return this.id_;
-        },
-        set: function(val) {
-            if (typeof val !== 'number') {
-                logger.warn('Player#id', 'val', val);
-                val = -1;
-            }
-
-            this.id_ = val;
         }
     },
     item: {
         get: function() {
             return this.item_;
-        },
-        set: function(val) {
-            if (!(val instanceof Heaven)) {
-                logger.warn('Player#item', 'val', val);
-                val = new Heaven;
-            }
-
-            this.item_ = val;
         }
     },
     nick: {
@@ -45,6 +47,13 @@ Object.defineProperties(Player.prototype, {
         }
     }
 });
+
+Player.prototype.initialize = function() {
+    var generator = this.generator;
+
+    this.id_ = generator.generateID();
+    this.item_ = Heaven.generate(generator, 0);
+}
 
 Player.prototype.isReady = function() {
     return !!(this.id && this.item);
@@ -67,3 +76,4 @@ module.exports = Player;
 
 var logger = require('../engine/logger');
 var Heaven = require('./heaven');
+var Generator = require('./generator');

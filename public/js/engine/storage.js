@@ -112,19 +112,20 @@ Storage.prototype.find = function(callback) {
         return;
     }
 
+    var self = this;
     var out = [];
 
     var data = this.data;
     for (var key in data) {
         if (data.hasOwnProperty(key)) {
-            bust(data[key]);
+            bust(data[key], key);
         }
     }
 
     return out;
 
-    function bust(item) {
-        var result = callback(item);
+    function bust(item, key) {
+        var result = callback(item, key, self);
 
         if (result) {
             out.push(item);
@@ -138,6 +139,19 @@ Storage.prototype.get = function(key) {
 
 Storage.prototype.getLast = function() {
     return this.data[this.numberkeyLength - 1];
+}
+
+Storage.prototype.indexOf = function(el) {
+    var index = -1;
+
+    this.each((value, key) => {
+        if (el === value) {
+            index = key;
+            return false;
+        }
+    });
+
+    return index;
 }
 
 /**
@@ -160,6 +174,7 @@ Storage.prototype.push = function() {
 
         if (result) {
             this.numberkeyLength_++;
+
             this.data[index] = value;
             this.onadd(value, index, this);
 
@@ -206,21 +221,20 @@ Storage.prototype.splice = function(index, count = Infinity) {
     }
 
     var cuted = [];
-    this.each(function(data, ind) {
+    this.each((data, ind) => {
         if (ind >= index && ind < index + count) {
             cuted.push(data);
         }
     });
 
     var length = cuted.length;
+    this.numberkeyLength_ -= length;
     var self = this;
-    this.each(function(data, ind) {
+    this.each((data, ind) => {
         if (ind >= index + length) {
-            self.numberkeyLength_--;
             self.data[ind - length] = data;
             delete self.data[ind];
         } else if (ind >= index) {
-            self.numberkeyLength_--;
             delete self.data[ind];
         }
     });

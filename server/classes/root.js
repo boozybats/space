@@ -69,6 +69,27 @@ Root.prototype.initializeStorages = function() {
     this.storages = storages;
 }
 
+Root.prototype.onDistributionAnswer = function(response, client) {
+    if (typeof response !== 'object') {
+        logger.warn('Root#onDistributionAnswer', 'response', response);
+        return;
+    }
+
+    var data = response.data;
+    if (typeof data !== 'object') {
+        logger.warn('Root#responseClient', 'data', data);
+        return;
+    }
+
+    if (!client.player) {
+        return;
+    }
+
+    if (data.item) {
+        client.player.item.setChanges(data.item);
+    }
+}
+
 Root.prototype.responseClient = function(response, client) {
     if (typeof response !== 'object') {
         logger.warn('Root#responseClient', 'response', response);
@@ -85,10 +106,9 @@ Root.prototype.responseClient = function(response, client) {
 
     switch (method) {
         case 'getId':
-            var id = this.generator.generateID();
+            var player = client.instancePlayer(this.generator);
 
-            client.instancePlayer(id);
-            response.answer(id);
+            response.answer(player.id);
 
             break;
 
@@ -102,8 +122,7 @@ Root.prototype.responseClient = function(response, client) {
                 if (client.player && client.player.id == id) {
                     index = ind;
                     return true;
-                }
-                else {
+                } else {
                     return false;
                 }
             });
@@ -113,8 +132,7 @@ Root.prototype.responseClient = function(response, client) {
                 connection.deadclients.splice(index, 1);
 
                 response.answer(true);
-            }
-            else {
+            } else {
                 response.answer(false);
             }
 
@@ -167,6 +185,10 @@ Root.prototype.setupDistribution = function(options = {}) {
         });
 
         distribution.setInMemory('players', data);
+    });
+
+    this.connection.attachEvent('distributionAnswer', (response, client) => {
+        self.onDistributionAnswer(response, client);
     });
 
     distribution.start();

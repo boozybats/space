@@ -54,13 +54,31 @@ Player.prototype.enable = function() {
     }
 }
 
+Player.prototype.getDistributionData = function() {
+    var request = {};
+
+    if (!this.item) {
+        errorfree('Player#getDistributionData: player must have an item');
+        return;
+    }
+
+    var itrigid = this.item.rigidbody;
+    request.item = itrigid.getActions(true);
+    itrigid.clearActions();
+
+    return request;
+}
+
 Player.prototype.updateAlive = function(data, time) {
     if (typeof data !== 'object') {
         warn('Player#updateAlive', 'data', data);
         return;
     }
 
+
     this.enable();
+
+    this.updateThird(data, time);
 }
 
 Player.prototype.updateThird = function(data, time) {
@@ -71,7 +89,9 @@ Player.prototype.updateThird = function(data, time) {
 
     this.enable();
 
-    if (this.item) {
-        this.item.addTempData(data.item, time);
+    var item = data.item;
+
+    if (item && this.item) {
+        this.item.addTempData(item, time);
     }
 }

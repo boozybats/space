@@ -6,6 +6,7 @@ function Client(options) {
     // websocket._socket.remoteAddress || websocket.upgradeReq.connection.remoteAddress;
 
     this.events = {
+        distributionAnswer: [],
         enablePlayer: [],
         instancePlayer: []
     };
@@ -134,10 +135,13 @@ Client.prototype.checkOnDistribution = function(deltaTime) {
 }
 
 Client.prototype.createAnswer = function(callback, lifetime, startLifetime) {
-    var handler = new Handler(callback, lifetime, startLifetime);
+    var time = Date.now();
+    var handler = new Handler(callback, lifetime, startLifetime || time);
+
+    this.removeExpiredAnsweres(time);
 
     var index = this.freehandlers[0];
-    if (typeof index === 'number') {
+    if (typeof index !== 'undefined') {
         this.answers.set(index, handler);
         this.freehandlers.splice(0, 1);
     } else {
@@ -163,14 +167,10 @@ Client.prototype.detachEvent = function(index) {
     this.events[handler].splice(id, 1);
 }
 
-Client.prototype.distribute = function(data, time, lifetime) {
+Client.prototype.distribute = function(data, time, minrate, maxrate) {
     if (typeof time !== 'number') {
         logger.warn('Client#distribute', 'time', time);
         time = 0;
-    }
-    if (typeof lifetime !== 'number') {
-        logger.warn('Client#distribute', 'lifetime', lifetime);
-        lifetime = 1000;
     }
 
     this.lastDistributionTime = time;
@@ -180,27 +180,25 @@ Client.prototype.distribute = function(data, time, lifetime) {
         method: 'distribution',
         stack: data
     }, function(response) {
-        if (time === self.lastDistributionTime) {
-            self.distributionTime = 0;
-        }
-
         // If last answer was latter instantiated than current then break
         if (time < self.lastAnswerTime) {
             return;
         }
         self.lastAnswerTime = time;
 
+        var answertime = Date.now();
+
         /* Not really latency, this is how much time passed before
         start distribution time and answer */
-        var latency = Date.now() - time;
+        var latency = answertime - time;
 
-        self.receiveDistributionAnswer(response);
+        self.fireEvent('distributionAnswer', [response]);
     }, {
-        lifetime: lifetime
+        lifetime: minrate
     });
 
     // How much time left to next distribution (choose minimal)
-    this.distributionTime = Math.min(size / this.throughput, lifetime);
+    this.distributionTime = Math.max(maxrate, Math.min(size / this.throughput, minrate));
 }
 
 // Executes answer and deletes it
@@ -243,13 +241,13 @@ Client.prototype.inherit = function(clone) {
     this.fireEvent('enablePlayer', [this.player]);
 }
 
-Client.prototype.instancePlayer = function(id = -1) {
-    if (typeof id !== 'number') {
-        logger.warn('Client#instancePlayer', 'id', id);
-        id = -1;
+Client.prototype.instancePlayer = function(generator) {
+    if (!(generator instanceof Generator)) {
+        logger.warn('Client#instancePlayer', 'generator', generator);
+        generator = new Generator;
     }
 
-    var player = new Player(id);
+    var player = new Player(generator);
     this.player = player;
 
     this.fireEvent('instancePlayer', [player]);
@@ -318,6 +316,15 @@ Client.prototype.remove = function() {}
 Client.prototype.removeAnswer = function(key) {
     this.answers.remove(key);
     this.freehandlers.push(key);
+}
+
+Client.prototype.removeExpiredAnsweres = function(time) {
+    var self = this;
+    this.answers.each((handler, index) => {
+        if (handler.checkIsExpired(time)) {
+            self.removeAnswer(index);
+        }
+    });
 }
 
 /* Completes "send"-function from websocket-script, but automaticly
@@ -519,3 +526,4 @@ module.exports = Client;
 var logger = require('../engine/logger');
 var Storage = require('../engine/storage');
 var Player = require('./player');
+var Generator = require('./generator');
