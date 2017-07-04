@@ -173,6 +173,7 @@ Client.prototype.distribute = function(data, time, minrate, maxrate) {
         time = 0;
     }
 
+    var lastDistributionTime = this.lastDistributionTime;
     this.lastDistributionTime = time;
 
     var self = this;
@@ -190,9 +191,9 @@ Client.prototype.distribute = function(data, time, minrate, maxrate) {
 
         /* Not really latency, this is how much time passed before
         start distribution time and answer */
-        var latency = answertime - time;
+        var latency = answertime - lastDistributionTime;
 
-        self.fireEvent('distributionAnswer', [response]);
+        self.fireEvent('distributionAnswer', [response, latency]);
     }, {
         lifetime: minrate
     });
@@ -241,13 +242,13 @@ Client.prototype.inherit = function(clone) {
     this.fireEvent('enablePlayer', [this.player]);
 }
 
-Client.prototype.instancePlayer = function(generator) {
-    if (!(generator instanceof Generator)) {
-        logger.warn('Client#instancePlayer', 'generator', generator);
-        generator = new Generator;
+Client.prototype.instancePlayer = function(options) {
+    if (typeof options !== 'object') {
+        logger.warn('Client#instancePlayer', 'options', options);
+        options = {};
     }
 
-    var player = new Player(generator);
+    var player = new Player(options);
     this.player = player;
 
     this.fireEvent('instancePlayer', [player]);

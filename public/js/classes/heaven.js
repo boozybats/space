@@ -20,9 +20,11 @@ function Heaven(options = {}) {
     this.initialize();
 
     // Latency of animation
-    this.interpolationDelay = options.interpolationDelay || INTERPOLATION_DELAY;
+    var inp = options.interpolationDelay;
+    this.interpolationDelay = typeof inp === 'number' ? inp : INTERPOLATION_DELAY;
     // How much time needs to predict future after losing connection
-    this.extrapolationDuration = options.extrapolationDuration || EXTRAPOLATION_DURATION;
+    var exp = options.extrapolationDuration;
+    this.extrapolationDuration = typeof exp === 'number' ? exp : EXTRAPOLATION_DURATION;
 
     this.tmpData = [];
 }
@@ -31,6 +33,32 @@ Heaven.prototype = Object.create(Sphere.prototype);
 Heaven.prototype.constructor = Heaven;
 
 Object.defineProperties(Heaven.prototype, {
+    extrapolationDuration: {
+        get: function() {
+            return this.extrapolationDuration_;
+        },
+        set: function(val) {
+            if (typeof val !== 'number') {
+                warn('Heaven#extrapolationDuration', 'val', val);
+                val = EXTRAPOLATION_DURATION;
+            }
+
+            this.extrapolationDuration_ = val;
+        }
+    },
+    interpolationDelay: {
+        get: function() {
+            return this.interpolationDelay_;
+        },
+        set: function(val) {
+            if (typeof val !== 'number') {
+                warn('Heaven#interpolationDelay', 'val', val);
+                val = INTERPOLATION_DELAY;
+            }
+
+            this.interpolationDelay_ = val;
+        }
+    },
     observer: {
         get: function() {
             return this.observer_;
@@ -92,14 +120,22 @@ Heaven.prototype.addTempData = function(data, time) {
     });
 }
 
+Heaven.prototype.extrapolate = function(time) {
+    var tmpData = this.tmpData;
+
+    var data = tmpData[tmpData.length - 1];
+
+    this.setChanges(data.data);
+}
+
 // Sets onupdate function for heaven
 Heaven.prototype.initialize = function() {
     var _private = this.private;
     var self = this;
 
-    this.onupdate = function({
-        time
-    }) {
+    this.onupdate = function(options = {}) {
+        var time = options.time;
+
         self.interpolate(time);
 
         var oldDiameter = _private.diameter,
@@ -150,7 +186,7 @@ Heaven.prototype.interpolate = function(time) {
         return;
     }
 
-    for (var i = 0; i < tmpData.length; i++) {
+    for (var i = 1; i < tmpData.length; i++) {
         var data = tmpData[i];
 
         if (data.time >= time - this.interpolationDelay) {
@@ -161,10 +197,33 @@ Heaven.prototype.interpolate = function(time) {
     }
 
     if (!interval) {
+        this.tmpData = tmpData.slice(-1);
+
+        this.extrapolate(time);
         return;
     }
 
     this.setInterstitialChanges(interval[0], interval[1], time);
+}
+
+Heaven.prototype.setChanges = function(options) {
+    if (typeof options !== 'object') {
+        warn('Heaven#setChanges', 'options', options);
+        return;
+    }
+
+    if (options.body) {
+        var pos = options.body.position;
+        this.body.position = new Vec3(pos[0], pos[1], pos[2]);
+
+        var rot = options.body.rotation;
+        this.body.rotation = Quaternion.Euler(rot[0], rot[1], rot[2]);
+    }
+
+    if (options.physic) {
+        this.physic.diameter = options.physic.diameter;
+        this.physic.maxspeed = options.physic.maxspeed;
+    }
 }
 
 // Path where item get interstitial properties between two states in time
@@ -187,6 +246,8 @@ Heaven.prototype.setInterstitialChanges = function(state0, state1, time) {
 
     var multiplier = (time - time0) / (time1 - time0);
 
+    var changes = {};
+
     var data0 = state0.data,
         data1 = state1.data;
 
@@ -206,8 +267,10 @@ Heaven.prototype.setInterstitialChanges = function(state0, state1, time) {
         var pos = getInstlVec(pos0, pos1, multiplier),
             rot = getInstlVec(rot0, rot1, multiplier);
 
-        this.body.position = new Vec3(pos[0], pos[1], pos[2]);
-        this.body.rotation = Quaternion.Euler(rot[0], rot[1], rot[2]);
+        changes.body = {
+            position: pos,
+            rotation: rot
+        };
     }
 
     var physic0 = data0.physic,
@@ -219,9 +282,13 @@ Heaven.prototype.setInterstitialChanges = function(state0, state1, time) {
         var maxspeed0 = physic0.maxspeed,
             maxspeed1 = physic1.maxspeed;
 
-        this.physic.diameter = getInstFloat(diameter0, diameter1, multiplier);
-        this.physic.maxspeed = getInstFloat(maxspeed0, maxspeed1, multiplier);
+        changes.physic = {
+            diameter: getInstFloat(diameter0, diameter1, multiplier),
+            maxspeed: getInstFloat(maxspeed0, maxspeed1, multiplier)
+        }
     }
+
+    this.setChanges(changes);
 }
 
 function getInstFloat(val0, val1, multiplier) {

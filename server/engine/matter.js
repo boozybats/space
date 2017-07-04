@@ -125,7 +125,7 @@ Matter.prototype.defineParameters = function() {
         var substance = last.substances[last.substances.length - 1];
         this.color_ = consts.PeriodicTable[substance].color;
     } else {
-        this.color_ = undefined;
+        this.color_ = new Color(0, 0, 0, 0);
     }
 
     this.radius_ = Math.pow(3 * this.volume / (4 * Math.PI), 1 / 3);
@@ -451,3 +451,4 @@ module.exports = Matter;
 var logger = require('./logger');
 var consts = require('./constants');
 var Storage = require('./storage');
+var Color = require('./color');

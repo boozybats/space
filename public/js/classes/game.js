@@ -11,6 +11,10 @@ function Game(options = {}) {
     players.filter = (data => data instanceof Player);
     this.players = players;
 
+    var npcs = new Storage;
+    npcs.filter = (data => data instanceof NPC);
+    this.npcs = npcs;
+
     this.dependencies = {};
     this.thrownDependecies = {};
     this.dependenciesLoadCount = 0;
@@ -64,6 +68,32 @@ Object.defineProperties(Game.prototype, {
     }
 });
 
+Game.prototype.addNPC = function(id) {
+    if (!(this.isStarted)) {
+        warnfree('Game#addNPC: game must be started');
+        return;
+    }
+    if (typeof id !== 'number' && typeof id !== 'string') {
+        warn('Game#addNPC', 'id', id);
+        id = -2;
+    }
+
+    var npc = new NPC;
+    npc.id = id;
+
+    var shaders = this.shaders;
+
+    var item = new Heaven({
+        shader: shaders.get('heaven')
+    });
+    item.instance(this.currentScene);
+    npc.item = item;
+
+    this.npcs.push(npc);
+
+    return npc;
+}
+
 Game.prototype.addPlayer = function(id) {
     if (!(this.isStarted)) {
         warnfree('Game#addPlayer: game must be started');
@@ -85,7 +115,7 @@ Game.prototype.addPlayer = function(id) {
     item.instance(this.currentScene);
     player.item = item;
 
-    this.players.push(player);
+    var a = this.players.push(player);
 
     return player;
 }
@@ -142,16 +172,27 @@ Game.prototype.configureConnection = function() {
 
 Game.prototype.connectToServer = function(options = {}) {
     var socket = options.socket;
-
-    var connection = new Connection(socket);
     var self = this;
-    connection.onready = function() {
-        self.fireEvent('connected');
-    }
 
-    this.connection_ = connection;
+    ;
+    (function flow(tried) {
+        // If socket is array then try every option
+        var socketUrl = (socket instanceof Array && socket.length >= tried) ? socket[tried] : socket;
 
-    this.configureConnection();
+        var connection = new Connection(socketUrl);
+
+        connection.onready = function() {
+            self.configureConnection();
+
+            self.fireEvent('connected');
+        }
+
+        connection.onerror = function() {
+            flow(++tried);
+        }
+
+        self.connection_ = connection;
+    })(0);
 }
 
 Game.prototype.defineId = function(callback) {
@@ -348,6 +389,7 @@ Game.prototype.onDistribution = function(response) {
     var time = Date.now();
 
     this.updateByPlayers(stack.players, time);
+    this.updateByNpcs(stack.npcs, time);
 }
 
 // Make flexible canvas by window
@@ -601,6 +643,29 @@ Game.prototype.start = function() {
     }
 }
 
+Game.prototype.updateByNpcs = function(npcs, time) {
+    if (typeof npcs !== 'object') {
+        warn('Game#updateByNpcs', 'npcs', npcs);
+        return;
+    }
+
+    this.npcs.each(npc => {
+        npc.disable();
+    });
+
+    for (var i = 0; i < npcs.length; i++) {
+        var npc = npcs[i];
+
+        var id = npc.id;
+        var matches = this.npcs.find(npc => {
+            return npc.id == id;
+        });
+
+        var match = matches[0] || this.addNPC(id);
+        match.update(npc, time);
+    }
+}
+
 Game.prototype.updateByPlayers = function(players, time) {
     if (typeof players !== 'object') {
         warn('Game#updateByPlayers', 'players', players);
@@ -623,7 +688,7 @@ Game.prototype.updateByPlayers = function(players, time) {
             });
 
             var match = matches[0] || this.addPlayer(id);
-            match.updateThird(player, time);
+            match.update(player, time);
         }
     }
 }

@@ -1,38 +1,20 @@
-function Player(generator) {
-    if (!(generator instanceof Generator)) {
-        logger.warn('Player', 'generator', generator);
-        generator = new Generator;
+var Cluster = require('./cluster');
+
+function Player(options) {
+    if (typeof options !== 'object') {
+        warn('Player', 'options', options);
+        options = {};
     }
 
-    this.generator = generator;
+    Cluster.call(this, options);
 
     this.initialize();
 }
 
-Object.defineProperties(Player.prototype, {
-    generator: {
-        get: function() {
-            return this.generator_;
-        },
-        set: function(val) {
-            if (!(val instanceof Generator)) {
-                logger.warn('Player#generator', 'val', val);
-                val = new Generator;
-            }
+Player.prototype = Object.create(Cluster.prototype);
+Player.prototype.constructor = Player;
 
-            this.generator_ = val;
-        }
-    },
-    id: {
-        get: function() {
-            return this.id_;
-        }
-    },
-    item: {
-        get: function() {
-            return this.item_;
-        }
-    },
+Object.defineProperties(Player.prototype, {
     nick: {
         get: function() {
             return this.nick_;
@@ -55,25 +37,7 @@ Player.prototype.initialize = function() {
     this.item_ = Heaven.generate(generator, 0);
 }
 
-Player.prototype.isReady = function() {
-    return !!(this.id && this.item);
-}
-
-Player.prototype.toJSON = function() {
-    var out = {};
-
-    out.id = this.id || -1;
-    out.nick = this.nick || '';
-
-    if (this.item) {
-        out.item = this.item.toJSON();
-    }
-
-    return out;
-}
-
 module.exports = Player;
 
 var logger = require('../engine/logger');
 var Heaven = require('./heaven');
-var Generator = require('./generator');

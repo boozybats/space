@@ -68,6 +68,23 @@ Updater.prototype.push = function(callback, area = 'start') {
     } else {
         this.callbacks[area].push(callback);
     }
+
+    return [area, callback];
+}
+
+Updater.prototype.remove = function(handler) {
+    if (!(handler instanceof Array)) {
+        logger.warn('Updater#remove', 'handler', handler);
+        return;
+    }
+
+    var area = handler[0],
+        callback = handler[1];
+
+    var callbacks = this.callbacks[area];
+    var index = callbacks.indexOf(callback);
+
+    callbacks.splice(index, 1);
 }
 
 Updater.prototype.start = function() {

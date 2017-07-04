@@ -93,7 +93,7 @@ Storage.prototype.each = function(callback) {
     for (var key in data) {
         if (data.hasOwnProperty(key)) {
             var item = data[key];
-            var result = callback(item, key, data);
+            var result = callback(item, key, this);
 
             if (result === false) {
                 break;

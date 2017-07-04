@@ -90,8 +90,9 @@ Connection.prototype.addClient = function(websocket) {
     return client;
 
     function reattach(handler) {
-        client.attachEvent(handler, data => {
-            self.fireEvent(handler, [data, client]);
+        client.attachEvent(handler, function() {
+            Array.prototype.push.call(arguments, client);
+            self.fireEvent(handler, arguments);
         });
     }
 }

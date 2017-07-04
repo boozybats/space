@@ -1,6 +1,4 @@
 function Root() {
-    this.generator_ = new Generator;
-
     this.initialize();
     this.initializeStorages();
 
@@ -23,6 +21,11 @@ Object.defineProperties(Root.prototype, {
             return this.generator_;
         }
     },
+    spawner: {
+        get: function() {
+            return this.spawner_;
+        }
+    },
     updater: {
         get: function() {
             return this.updater_;
@@ -37,12 +40,15 @@ Root.prototype.configureConnection = function() {
 }
 
 Root.prototype.initialize = function() {
+    this.generator_ = new Generator;
+
     var connection = new Connection;
     this.connection_ = connection;
 
-    this.updater_ = new Updater({
+    var updater = new Updater({
         clients: connection.clients
     });
+    this.updater_ = updater;
 }
 
 Root.prototype.initializeStorages = function() {
@@ -69,7 +75,7 @@ Root.prototype.initializeStorages = function() {
     this.storages = storages;
 }
 
-Root.prototype.onDistributionAnswer = function(response, client) {
+Root.prototype.onDistributionAnswer = function(response, time, client) {
     if (typeof response !== 'object') {
         logger.warn('Root#onDistributionAnswer', 'response', response);
         return;
@@ -85,8 +91,8 @@ Root.prototype.onDistributionAnswer = function(response, client) {
         return;
     }
 
-    if (data.item) {
-        client.player.item.setChanges(data.item);
+    if (typeof data.item === 'object') {
+        client.player.item.setChanges(data.item, time);
     }
 }
 
@@ -106,7 +112,9 @@ Root.prototype.responseClient = function(response, client) {
 
     switch (method) {
         case 'getId':
-            var player = client.instancePlayer(this.generator);
+            var player = client.instancePlayer({
+                generator: this.generator
+            });
 
             response.answer(player.id);
 
@@ -175,23 +183,41 @@ Root.prototype.setupDistribution = function(options = {}) {
 
     var self = this;
     distribution.attachEvent('beforeSend', function() {
-        var players = self.storages.players;
-
-        var data = [];
-        players.each(player => {
+        var players = [];
+        self.storages.players.each(player => {
             if (player.isReady()) {
-                data.push(player.toJSON());
+                players.push(player.toJSON());
             }
         });
 
-        distribution.setInMemory('players', data);
+        var npcs = [];
+        if (self.storages.npcs) {
+            self.storages.npcs.each(npc => {
+                npcs.push(npc.toJSON());
+            });
+        }
+
+        distribution.setInMemory('players', players);
+        distribution.setInMemory('npcs', npcs);
     });
 
-    this.connection.attachEvent('distributionAnswer', (response, client) => {
-        self.onDistributionAnswer(response, client);
+    this.connection.attachEvent('distributionAnswer', (response, time, client) => {
+        self.onDistributionAnswer(response, time, client);
     });
 
     distribution.start();
+}
+
+Root.prototype.setupSpawner = function(options = {}) {
+    options.generator = this.generator;
+    options.updater = this.updater;
+
+    var spawner = new Spawner(options);
+    this.spawner_ = spawner;
+
+    this.storages.npcs = spawner.npcs;
+
+    spawner.start();
 }
 
 module.exports = Root;
@@ -201,6 +227,7 @@ var Storage = require('../engine/storage');
 var Client = require('./client');
 var Item = require('../engine/item');
 var Connection = require('./connection');
+var Spawner = require('./spawner');
 var Updater = require('./updater');
 var Distribution = require('./distribution');
 var Generator = require('./generator');

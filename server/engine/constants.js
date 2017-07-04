@@ -6,7 +6,7 @@ var wrap = {
     PRESSURE_TEMPERATURE_CONST: 6669090909090,
     CORE_MIN_RADIUS: 25,
     NORMAL_PRESSURE: 101325,
-    ROTATION_SPEED: 180,  // angles per second
+    ROTATION_SPEED: Infinity,  // angles per second
     PeriodicTable: {
         Fe: {
             M: 55.845,

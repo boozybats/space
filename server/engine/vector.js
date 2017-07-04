@@ -538,7 +538,7 @@ Vec.angle = function(vec1, vec2) {
         return 0;
     }
 
-    var out = Math.acos(Vec.cos(vec1, vec2));
+    var out = Math.acos(Vec.cos(vec1, vec2)) || 0;
 
     return out;
 }
@@ -1268,6 +1268,7 @@ exports.Vec2 = Vec2;
 exports.Vec3 = Vec3;
 exports.Vec4 = Vec4;
 
+var logger = require('./logger');
 var Euler = require('./euler');
 var math = require('./math');
 var amc = math.amc;

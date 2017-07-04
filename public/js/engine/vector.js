@@ -538,7 +538,7 @@ Vec.angle = function(vec1, vec2) {
         return 0;
     }
 
-    var out = Math.acos(Vec.cos(vec1, vec2));
+    var out = Math.acos(Vec.cos(vec1, vec2)) || 0;
 
     return out;
 }

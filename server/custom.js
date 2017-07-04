@@ -7,4 +7,10 @@ var Root = require('./classes/root');
     root.setupDistribution({
         maxrate: 20
     });
+
+    root.setupSpawner({
+        count: 3,
+        interval: 3000,
+        lifetime: 10000
+    })
 })();

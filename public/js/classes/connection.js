@@ -84,6 +84,12 @@ Connection.prototype.initialize = function() {
 
         self.receive(response.data);
     }
+
+    socket.onerror = function(event) {
+        if (typeof self.onerror === 'function') {
+            self.onerror(event);
+        }
+    }
 }
 
 // Does answer exist

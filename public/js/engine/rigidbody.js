@@ -4,7 +4,7 @@ function Rigidbody(options = {}) {
         options = {};
     }
 
-    this.actions = [];
+    this.actions = {};
     this.body = options.body;
 
     // Stores last values of properties
@@ -46,24 +46,23 @@ Object.defineProperties(Rigidbody.prototype, {
 });
 
 Rigidbody.prototype.addAction = function(type, value) {
-    this.actions.push({
-        type: type,
-        value: value
-    });
+    this.actions[type] = value;
 }
 
 Rigidbody.prototype.clearActions = function() {
-    this.actions = [];
+    this.actions = {};
 }
 
 Rigidbody.prototype.getActions = function(json) {
     if (json) {
-        return this.actions.map(action => {
-            return {
-                type: action.type,
-                value: action.value.array()
-            };
-        });
+        var wrap = {};
+
+        for (var i in this.actions) {
+            var action = this.actions[i];
+            wrap[i] = action.array();
+        }
+
+        return wrap;
     } else {
         return this.actions;
     }

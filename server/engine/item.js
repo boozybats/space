@@ -163,6 +163,10 @@ Item.prototype.frameUpdate = function(options) {
     }
 }
 
+Item.prototype.remove = function() {
+    
+}
+
 Item.prototype.toJSON = function() {
     var out = {};
 

@@ -138,6 +138,10 @@ Distribution.prototype.setInMemory = function(key, data) {
     this.memory.set(key, data);
 }
 
+Distribution.prototype.getFromMemory = function(key) {
+    return this.memory.get(key);
+}
+
 Distribution.prototype.start = function() {
     var self = this;
     var stack;

@@ -23,7 +23,7 @@
 
     // Make connection to sockets and setup functions
     game.connectToServer({
-        socket: 'ws://localhost:5611'
+        socket: ['ws://localhost:5611', 'ws://192.168.1.182:5611']
     });
 
     game.attachEvent('started', function(scene, camera) {
