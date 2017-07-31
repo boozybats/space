@@ -37,9 +37,13 @@ function Item(options = {}) {
     // A variable environment that can be obtained only in this object
     this.private_ = {};
 
-    this.oninstance = function() {};
-    this.onremove = function() {};
-    this.onupdate = function() {};
+    this.attributes = {};
+
+    this.events = {
+        attribute: [],
+        destroy: [],
+        update: []
+    };
 }
 
 Object.defineProperties(Item.prototype, {
@@ -121,42 +125,6 @@ Object.defineProperties(Item.prototype, {
             this.name_ = val;
         }
     },
-    oninstance: {
-        get: function() {
-            return this.oninstance_;
-        },
-        set: function(val) {
-            if (typeof val !== 'function') {
-                val = function() {};
-            }
-
-            this.oninstance_ = val;
-        }
-    },
-    onremove: {
-        get: function() {
-            return this.onremove_;
-        },
-        set: function(val) {
-            if (typeof val !== 'function') {
-                val = function() {};
-            }
-
-            this.onremove_ = val;
-        }
-    },
-    onupdate: {
-        get: function() {
-            return this.onupdate_;
-        },
-        set: function(val) {
-            if (typeof val !== 'function') {
-                val = function() {};
-            }
-
-            this.onupdate_ = val;
-        }
-    },
     physic: {
         get: function() {
             return this.physic_;
@@ -210,17 +178,58 @@ Object.defineProperties(Item.prototype, {
     }
 });
 
-Item.prototype.frameUpdate = function(options) {
-    this.onupdate(options);
-
-    var physic = this.physic;
-    if (physic) {
-        physic.onupdate(options);
+Item.prototype.attachEvent = function(handlername, callback) {
+    if (typeof callback !== 'function') {
+        warn('Item#attachEvent', 'callback', callback);
+        return;
+    }
+    if (!this.events[handlername]) {
+        warnfree(`Item#attachEvent: unexpected handlername, handlername: ${handlername}`);
+        return;
     }
 
-    var rigidbody = this.rigidbody;
-    if (rigidbody) {
-        rigidbody.onupdate(options);
+    this.events[handlername].push(callback);
+
+    return [handlername, callback];
+}
+
+/**
+ * Removes item from {@link Scene}'s objects. After
+ * remove item can not be instantiated again, it needs
+ * to create new item.
+ * @method
+ */
+Item.prototype.destroy = function(method) {
+    this.fireEvent('destroy', [method]);
+
+    if (this.scene) {
+        this.scene.removeItem(this);
+    }
+}
+
+Item.prototype.detachEvent = function(handler) {
+    if (!(handler instanceof Array)) {
+        return;
+    }
+
+    var handlername = handler[0],
+        callback = handler[1];
+
+    var event = this.events[handlername];
+    if (!event) {
+        return;
+    }
+
+    event.splice(event.indexOf(callback), 1);
+}
+
+Item.prototype.fireEvent = function(handlername, args) {
+    var events = this.events[handlername];
+
+    if (events) {
+        for (var i = 0; i < events.length; i++) {
+            events[i].apply(events[i], args);
+        }
     }
 }
 
@@ -259,23 +268,27 @@ Item.prototype.instance = function(scene, isSystem = false) {
     this.scene_ = scene;
     this.project_ = scene.project;
     this.webGL_ = this.project.webGLRenderer.webGL;
-
-    this.oninstance();
 }
 
-/**
- * Removes item from {@link Scene}'s objects. After
- * remove item can not be instantiated again, it needs
- * to create new item.
- * @method
- */
-Item.prototype.remove = function() {
-    if (this.onremove) {
-        this.onremove();
+Item.prototype.setAttribute = function(name, value) {
+    if (this.attributes[name] === value) {
+        return;
     }
 
-    if (this.scene) {
-        this.scene.removeItem(this);
+    this.attributes[name] = value;
+
+    this.fireEvent('attribute', [name, value]);
+}
+
+Item.prototype.streamUpdate = function(options) {
+    this.fireEvent('update', [options]);
+
+    if (this.rigidbody) {
+        this.rigidbody.fireEvent('update', [options]);
+    }
+
+    if (this.physic) {
+        this.physic.fireEvent('update', [options]);
     }
 }
 

@@ -20,10 +20,17 @@
  * @this {Physic}
  * @param {Matter} matter
  */
-function Physic(matter = new Matter) {
-    this.matter = matter;
+function Physic(options = {}) {
+    if (typeof options !== 'object') {
+        logger.warn('Physic', 'options', options);
+        options = {};
+    }
 
-    this.onupdate = function() {};
+    this.matter = options.matter;
+
+    this.events = {
+        update: []
+    };
 }
 
 Object.defineProperties(Physic.prototype, {
@@ -61,19 +68,6 @@ Object.defineProperties(Physic.prototype, {
             return this.matter.maxspeed;
         }
     },
-    onupdate: {
-        get: function() {
-            return this.onupdate_;
-        },
-        set: function(val) {
-            if (typeof val !== 'function') {
-                logger.warn('Physic#onupdate', 'val', val);
-                val = function() {};
-            }
-
-            this.onupdate_ = val;
-        }
-    },
     rotationSpeed: {
         get: function() {
             return consts.ROTATION_SPEED;
@@ -85,6 +79,21 @@ Object.defineProperties(Physic.prototype, {
         }
     }
 });
+
+Physic.prototype.attachEvent = function(handlername, callback) {
+    if (typeof callback !== 'function') {
+        logger.warn('Physic#attachEvent', 'callback', callback);
+        return;
+    }
+    if (!this.events[handlername]) {
+        logger.warnfree(`Physic#attachEvent: unexpected handlername, handlername: ${handlername}`);
+        return;
+    }
+
+    this.events[handlername].push(callback);
+
+    return [handlername, callback];
+}
 
 Physic.prototype.Density = function(R) {
     if (typeof R !== 'number') {
@@ -103,6 +112,32 @@ Physic.prototype.Density = function(R) {
     });
 
     return out;
+}
+
+Physic.prototype.detachEvent = function(handler) {
+    if (!(handler instanceof Array)) {
+        return;
+    }
+
+    var handlername = handler[0],
+        callback = handler[1];
+
+    var event = this.events[handlername];
+    if (!event) {
+        return;
+    }
+
+    event.splice(event.indexOf(callback), 1);
+}
+
+Physic.prototype.fireEvent = function(handlername, args) {
+    var events = this.events[handlername];
+
+    if (events) {
+        for (var i = 0; i < events.length; i++) {
+            events[i].apply(events[i], args);
+        }
+    }
 }
 
 Physic.prototype.Mass = function(R) {
@@ -215,3 +250,4 @@ module.exports = Physic;
 var logger = require('./logger');
 var consts = require('./constants');
 var Matter = require('./matter');
+var Body = require('./body');

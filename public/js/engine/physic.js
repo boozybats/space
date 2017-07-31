@@ -10,7 +10,9 @@ function Physic(options = {}) {
     this.maxspeed = options.maxspeed || 0;
     this.volume = options.volume || 0;
 
-    this.onupdate = function() {};
+    this.events = {
+        update: []
+    };
 }
 
 Object.defineProperties(Physic.prototype, {
@@ -66,18 +68,6 @@ Object.defineProperties(Physic.prototype, {
             this.maxspeed_ = val;
         }
     },
-    onupdate: {
-        get: function() {
-            return this.onupdate_;
-        },
-        set: function(val) {
-            if (typeof val !== 'function') {
-                val = function() {};
-            }
-
-            this.onupdate_ = val;
-        }
-    },
     volume: {
         get: function() {
             return this.volume_;
@@ -92,3 +82,44 @@ Object.defineProperties(Physic.prototype, {
         }
     }
 });
+
+Physic.prototype.attachEvent = function(handlername, callback) {
+    if (typeof callback !== 'function') {
+        logger.warn('Physic#attachEvent', 'callback', callback);
+        return;
+    }
+    if (!this.events[handlername]) {
+        logger.warnfree(`Physic#attachEvent: unexpected handlername, handlername: ${handlername}`);
+        return;
+    }
+
+    this.events[handlername].push(callback);
+
+    return [handlername, callback];
+}
+
+Physic.prototype.detachEvent = function(handler) {
+    if (!(handler instanceof Array)) {
+        return;
+    }
+
+    var handlername = handler[0],
+        callback = handler[1];
+
+    var event = this.events[handlername];
+    if (!event) {
+        return;
+    }
+
+    event.splice(event.indexOf(callback), 1);
+}
+
+Physic.prototype.fireEvent = function(handlername, args) {
+    var events = this.events[handlername];
+
+    if (events) {
+        for (var i = 0; i < events.length; i++) {
+            events[i].apply(events[i], args);
+        }
+    }
+}

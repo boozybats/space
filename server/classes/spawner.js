@@ -7,11 +7,11 @@ function Spawner(options = {}) {
     this.generator = options.generator;
     this.updater = options.updater;
     // How much npcs henerate by time
-    this.count = options.count || consts.SPAWN_COUNT;
-    this.interval = options.interval || consts.SPAWN_INTERVAL;
-    this.lifetime = options.lifetime || consts.SPAWN_LIFETIME;
+    this.count = typeof options.count === 'number' ? options.count : consts.SPAWN_COUNT;
+    this.interval = typeof options.interval === 'number' ? options.interval : consts.SPAWN_INTERVAL;
+    this.lifetime = typeof options.lifetime === 'number' ? options.lifetime : consts.SPAWN_LIFETIME;
 
-    this.handlers = {
+    this.events = {
         remove: []
     };
 
@@ -93,17 +93,19 @@ Object.defineProperties(Spawner.prototype, {
     }
 });
 
-Spawner.prototype.attachEvent = function(handler, callback) {
+Spawner.prototype.attachEvent = function(handlername, callback) {
     if (typeof callback !== 'function') {
         logger.warn('Spawner#attachEvent', 'callback', callback);
         return;
     }
-    if (!this.handlers[handler]) {
-        logger.warnfree(`Spawner#attachEvent: unexpected handler, handler: ${handler}`);
+    if (!this.events[handlername]) {
+        logger.warnfree(`Spawner#attachEvent: unexpected handlername, handlername: ${handlername}`);
         return;
     }
 
-    return [handler, callback];
+    this.events[handlername].push(callback);
+
+    return [handlername, callback];
 }
 
 Spawner.prototype.checkExpiration = function(time) {
@@ -120,25 +122,26 @@ Spawner.prototype.checkExpiration = function(time) {
 
 Spawner.prototype.detachEvent = function(handler) {
     if (!(handler instanceof Array)) {
-        logger.warn('Spawner#detachEvent', 'handler', handler);
         return;
     }
 
-    var name = handler[0],
+    var handlername = handler[0],
         callback = handler[1];
 
-    var callbacks = this.handlers[name];
-    var index = callbacks.indexOf(callback);
+    var event = this.events[handlername];
+    if (event) {
+        return;
+    }
 
-    callbacks.splice(index, 1);
+    event.splice(event.indexOf(callback), 1);
 }
 
-Spawner.prototype.fireEvent = function(handler, args) {
-    var handlers = this.handlers[handler];
+Spawner.prototype.fireEvent = function(handlername, args) {
+    var events = this.events[handlername];
 
-    if (handlers) {
-        for (var i = 0; i < handlers.length; i++) {
-            handlers[i].apply(handlers[i], args);
+    if (events) {
+        for (var i = 0; i < events.length; i++) {
+            events[i].apply(events[i], args);
         }
     }
 }

@@ -1,3 +1,4 @@
+// Contains all items for player wrap
 function Cluster(options = {}) {
     if (typeof options !== 'object') {
         logger.warn('Cluster', 'options', options);
@@ -5,6 +6,8 @@ function Cluster(options = {}) {
     }
 
     this.generator = options.generator;
+    this.status = 'alive';
+    this.handlers = {};
 
     this.initialize();
 }
@@ -26,21 +29,85 @@ Object.defineProperties(Cluster.prototype, {
     id: {
         get: function() {
             return this.id_;
+        },
+        set: function(val) {
+            if (typeof val !== 'number' && typeof val !== 'string') {
+                logger.warn('Cluster#id', 'val', val);
+                val = -1;
+            }
+
+            this.id_ = val;
         }
     },
     item: {
         get: function() {
             return this.item_;
+        },
+        set: function(val) {
+            // Main item in cluster, if it destoyed then destroy all items in cluster
+            if (val && !(val instanceof Heaven)) {
+                logger.warn('Cluster#item', 'val', val);
+                return;
+            }
+
+            if (this.item) {
+                this.item.detachEvent(this.handlers.itemDestroy);
+            }
+
+            if (val) {
+                var self = this;
+                this.handlers.itemDestroy = val.attachEvent('destroy', (method) => {
+                    self.status = method;
+                });
+            }
+
+            this.item_ = val;
         }
     }
 });
+
+// Removes items in cluster
+Cluster.prototype.clear = function(method) {
+    if (this.item) {
+        this.item = undefined;
+    }
+}
+
+// Sorts all items by property in cluster and sends to callback
+Cluster.prototype.each = function(callback) {
+    if (typeof callback !== 'function') {
+        logger.warn('Cluster#each', 'callback', callback);
+        return;
+    }
+
+    if (this.item) {
+        callback(this.item);
+    }
+}
 
 Cluster.prototype.isReady = function() {
     return !!(typeof this.id === 'number' && this.item);
 }
 
-Cluster.prototype.remove = function() {
+Cluster.prototype.remove = function() {}
 
+// Sets changes to items by distribution answer
+Cluster.prototype.setChanges = function(properties, time) {
+    if (this.item && properties.item) {
+        this.item.setChanges(properties.item, time);
+    }
+}
+
+// Updates stream for all items in cluster
+Cluster.prototype.streamUpdate = function(options) {
+    if (typeof options !== 'object') {
+        logger.warn('Cluster#streamUpdate', 'options', options);
+        options = {};
+    }
+
+    if (this.item) {
+        this.item.streamUpdate(options);
+    }
 }
 
 Cluster.prototype.toJSON = function() {
@@ -48,6 +115,7 @@ Cluster.prototype.toJSON = function() {
 
     out.id = this.id || -1;
     out.nick = this.nick || '';
+    out.status = this.status;
 
     if (this.item) {
         out.item = this.item.toJSON();

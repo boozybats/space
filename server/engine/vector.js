@@ -1038,6 +1038,17 @@ function Vec2(x = 0, y = 0) {
 Vec2.prototype = Object.create(Vec.prototype);
 Vec2.prototype.constructor = Vec2;
 
+Object.defineProperties(Vec2, {
+    homogeneousDir: {
+        value: new Vec2(0, 0),
+        writable: false
+    },
+    homogeneousPos: {
+        value: new Vec2(0, 1),
+        writable: false
+    }
+});
+
 /**
  * Vector with 3 coordinates x, y and z.
  * @this {Vec3}
@@ -1096,6 +1107,17 @@ function Vec3(x = 0, y = 0, z = 0) {
 
 Vec3.prototype = Object.create(Vec.prototype);
 Vec3.prototype.constructor = Vec3;
+
+Object.defineProperties(Vec3, {
+    homogeneousDir: {
+        value: new Vec3(0, 0, 0),
+        writable: false
+    },
+    homogeneousPos: {
+        value: new Vec3(0, 0, 1),
+        writable: false
+    }
+});
 
 /**
  * Retruns cross product of 2 vectors.
@@ -1228,7 +1250,7 @@ function Vec4(x = 0, y = 0, z = 0, w = 0) {
 Vec4.prototype = Object.create(Vec.prototype);
 Vec4.prototype.constructor = Vec4;
 
-Object.defineProperties(Vec, {
+Object.defineProperties(Vec4, {
     homogeneousDir: {
         value: new Vec4(0, 0, 0, 0),
         writable: false
@@ -1236,7 +1258,10 @@ Object.defineProperties(Vec, {
     homogeneousPos: {
         value: new Vec4(0, 0, 0, 1),
         writable: false
-    },
+    }
+});
+
+Object.defineProperties(Vec, {
     right: {
         value: new Vec3(1, 0, 0),
         writable: false

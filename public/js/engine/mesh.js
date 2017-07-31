@@ -261,21 +261,22 @@ Mesh.prototype.addTexture = function(texture) {
  * item.changeAttributes({a_Position: vertices});
  */
 Mesh.prototype.changeAttributes = function(options = {}) {
-    if (!this.checkInit('changeAttributes')) {
-        return;
-    }
     if (typeof options !== 'object') {
         warn('Mesh#changeAttributes', 'options', options);
         return;
     }
 
+    var isInit = this.checkInit('changeAttributes');
     var data = this.shaderdata;
 
     for (var i in options) {
         if (options.hasOwnProperty(i)) {
             var val = options[i];
-
-            this.initializeAttribute(i, val, data.attributes);
+            if (isInit) {
+                this.initializeAttribute(i, val, data.attributes);
+            } else {
+                this.attributes[i] = val;
+            }
         }
     }
 }
@@ -293,21 +294,22 @@ Mesh.prototype.changeAttributes = function(options = {}) {
  * })
  */
 Mesh.prototype.changeUniforms = function(options = {}) {
-    if (!this.checkInit('changeUniforms')) {
-        return;
-    }
     if (typeof options !== 'object') {
         warn('Mesh#changeUniforms', 'options', options);
         return;
     }
 
+    var isInit = this.checkInit('changeUniforms');
     var data = this.shaderdata;
 
     for (var i in options) {
         if (options.hasOwnProperty(i)) {
             var val = options[i];
-
-            this.initializeUniform(i, val, data.uniforms);
+            if (isInit) {
+                this.initializeUniform(i, val, data.uniforms);
+            } else {
+                this.uniforms[i] = val;
+            }
         }
     }
 }
@@ -317,7 +319,7 @@ Mesh.prototype.checkInit = function(name) {
     if (this.shader) {
         return true;
     } else {
-        warnfree(`Mesh#${name}: shader doesnt intialized for mesh, mesh: ${this}`);
+        // warnfree(`Mesh#${name}: shader doesnt intialized for mesh, mesh: ${this}`);
         return false;
     }
 }
@@ -336,7 +338,7 @@ Mesh.prototype.checkInit = function(name) {
  * var vertices = [-1,-1, -1,1, 1,1, 1,-1];
  * vertices.size = 2;
  *
- * item.initializeUniform('a_Position', vertices, attributes);
+ * item.initializeAttribute('a_Position', vertices, attributes);
  * attributes;  // Object {a_Position: {buffer, size, location}}
  */
 Mesh.prototype.initializeAttribute = function(key, val, out) {
@@ -493,11 +495,12 @@ Mesh.prototype.initializeUniform = function(key, val, out) {
     }
 
     out[key] = {
-        method,
-        location,
-        type,
-        counter,
-        value
+        key: key,
+        method: method,
+        location: location,
+        type: type,
+        counter: counter,
+        value: value
     };
 
     function getlocation() {
@@ -695,7 +698,6 @@ Mesh.prototype.updateAttribute = function(options = {}) {
 /**
  * Sends all valid uniform-values to shader.
  * @param {Object} options
- * @param  {Boolean} options.isActive
  * @param  {String} options.type
  * @param  {String} options.method
  * @param  {WebGLLocation} options.location

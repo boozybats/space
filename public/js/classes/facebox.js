@@ -52,7 +52,7 @@ Object.defineProperties(Facebox.prototype, {
  */
 Facebox.prototype.initialize = function() {
     var self = this;
-    this.onupdate = function() {
+    this.attachEvent('update', options => {
         var controller = self.controller;
         if (controller && controller.rigidbody && controller.physic) {
             var maxspeed = controller.physic.maxspeed,
@@ -60,10 +60,11 @@ Facebox.prototype.initialize = function() {
             var normalized = amc('/', velocity, maxspeed);
 
             self.mesh.changeUniforms({
-                u_Mouse: new Vec2(normalized)
+                u_Mouse: new Vec2(normalized),
+                u_Time: (options.time - self.mesh.shader.startTime) / 1000
             });
         }
-    }
+    });
 }
 
 Facebox.shader = function() {
@@ -88,6 +89,7 @@ Facebox.shader = function() {
 
         uniform vec2 u_Mouse;
         uniform vec2 u_Resolution;
+        uniform float u_Time;
 
         varying vec3 v_Position;
 
@@ -111,10 +113,7 @@ Facebox.shader = function() {
             vec2 normal = normalize(position);
             float an = angle(dir, normal);
 
-            float sqan = angle(dir, vec2(1.0, 0.0));
-            if (dir.y < 0.0) {
-                sqan = -sqan;
-            }
+            float sqan = abs(angle(dir, vec2(1.0, 0.0)));
             float sqcos = cos(sqan);
             float sqsin = sin(sqan);
             mat2 Mrot = mat2(sqcos, -sqsin, sqsin, sqcos);

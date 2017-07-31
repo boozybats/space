@@ -19,6 +19,8 @@ function Shader(webGL, vertexShader, fragmentShader, options = {}) {
     this.fragmentShader = fragmentShader;
     this.options = options;
 
+    this.startTime_ = Date.now();
+
     this.attributes = {};
     this.uniforms = {};
 
@@ -56,6 +58,11 @@ Object.defineProperties(Shader.prototype, {
     	get: function() {
     		return this.program_;
     	}
+    },
+    startTime: {
+        get: function() {
+            return this.startTime_;
+        }
     },
     vertexShader: {
         get: function() {

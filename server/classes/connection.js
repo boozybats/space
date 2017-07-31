@@ -56,19 +56,19 @@ Object.defineProperties(Connection.prototype, {
     }
 });
 
-Connection.prototype.attachEvent = function(handler, callback) {
+Connection.prototype.attachEvent = function(handlername, callback) {
     if (typeof callback !== 'function') {
         warn('Connection#attachEvent', 'callback', callback);
         return;
     }
-    if (!this.events[handler]) {
-        warnfree(`Connection#attachEvent: unexpected handler, handler: ${handler}`);
+    if (!this.events[handlername]) {
+        warnfree(`Connection#attachEvent: unexpected handlername, handlername: ${handlername}`);
         return;
     }
 
-    var index = `${handler}_${this.events[handler].push(callback) - 1}`;
+    this.events[handlername].push(callback);
 
-    return index;
+    return [handlername, callback];
 }
 
 Connection.prototype.addClient = function(websocket) {
@@ -97,28 +97,28 @@ Connection.prototype.addClient = function(websocket) {
     }
 }
 
-Connection.prototype.detachEvent = function(index) {
-    if (typeof index !== 'string') {
+Connection.prototype.detachEvent = function(handler) {
+    if (!(handler instanceof Array)) {
         return;
     }
 
-    var parsed = index.split('_');
-    var handler = parsed[0],
-        id = parsed[1];
+    var handlername = handler[0],
+        callback = handler[1];
 
-    if (!this.events[handler]) {
+    var event = this.events[handlername];
+    if (!event) {
         return;
     }
 
-    this.events[handler].splice(id, 1);
+    event.splice(event.indexOf(callback), 1);
 }
 
-Connection.prototype.fireEvent = function(handler, args) {
-    var handlers = this.events[handler];
+Connection.prototype.fireEvent = function(handlername, args) {
+    var events = this.events[handlername];
 
-    if (handlers) {
-        for (var i = 0; i < handlers.length; i++) {
-            handlers[i].apply(handlers[i], args);
+    if (events) {
+        for (var i = 0; i < events.length; i++) {
+            events[i].apply(events[i], args);
         }
     }
 }
@@ -168,12 +168,14 @@ Connection.prototype.initialize = function() {
             client.receive(response);
         });
 
-        websocket.on('close', function() {
+        websocket.on('close', remove);
+        client.attachEvent('remove', remove);
+
+        function remove() {
             self.removeClient(client);
-            client.remove();
 
             self.fireEvent('close', [client]);
-        });
+        }
     });
 }
 
@@ -181,6 +183,7 @@ Connection.prototype.listen = function(handler, callback) {
     this.handlers.set(handler, callback);
 }
 
+// Removes client from "clients"-storage and adds to "dead"-clients
 Connection.prototype.removeClient = function(client) {
     var index = this.clients.indexOf(client);
     if (index != -1) {

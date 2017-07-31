@@ -10,7 +10,7 @@ var Root = require('./classes/root');
 
     root.setupSpawner({
         count: 3,
-        interval: 3000,
+        interval: 10000,
         lifetime: 10000
     })
 })();

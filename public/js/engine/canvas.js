@@ -17,8 +17,8 @@ function Canvas(width, height) {
         axis: []
     };
 
-    this.width = width;
-    this.height = height;
+    this.width = width || RESOLUTION_WIDTH;
+    this.height = height || RESOLUTION_HEIGHT;
 
     this.initialize();
 }

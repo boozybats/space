@@ -16,16 +16,16 @@
 function Mat(a = 0, b = 0, arr) {
     if (this.constructor === Mat) {
         if (typeof a !== 'number') {
-            warn('Mat', 'a', a);
+            logger.warn('Mat', 'a', a);
             a = 0;
         }
         if (typeof b !== 'number') {
-            warn('Mat', 'b', b);
+            logger.warn('Mat', 'b', b);
             b = 0;
         }
 
         if (arr && (!(arr instanceof Array) || arr.length !== a * b)) {
-            warn('Mat', 'arr', arr);
+            logger.warn('Mat', 'arr', arr);
             arr = undefined;
         }
 
@@ -169,7 +169,7 @@ Mat.prototype.det = function() {
         value = this.value;
 
     if (a !== b) {
-        warnfree('Mat#det: matrix must be squad');
+        logger.warnfree('Mat#det: matrix must be squad');
         return 0;
     }
 
@@ -214,11 +214,11 @@ Mat.dif = function() {
         mat2 = args[1];
 
     if (!(mat1 instanceof Mat)) {
-        warn('Mat->dif', 'mat1', mat1);
+        logger.warn('Mat->dif', 'mat1', mat1);
         return new Mat2;
     }
     if (!(mat2 instanceof Mat)) {
-        warn('Mat->dif', 'mat2', mat2);
+        logger.warn('Mat->dif', 'mat2', mat2);
         return mat1;
     }
 
@@ -228,7 +228,7 @@ Mat.dif = function() {
         b1 = mat2.b;
 
     if (a != a1 || b != b1) {
-        warn('Mat->dif: matrices must have same size');
+        logger.warn('Mat->dif: matrices must have same size');
         return mat1;
     }
 
@@ -259,7 +259,7 @@ Mat.prototype.inverse = function() {
         b = this.b;
 
     if (a !== b) {
-        warnfree('Mat#inverse: matrix must be squad');
+        logger.warnfree('Mat#inverse: matrix must be squad');
         return out;
     }
 
@@ -292,7 +292,7 @@ Mat.prototype.inverse = function() {
  */
 Mat.prototype.multi = function(num) {
     if (typeof num !== 'number') {
-        warn('Mat#multi', 'num', num);
+        logger.warn('Mat#multi', 'num', num);
         num = 1;
     }
 
@@ -328,11 +328,11 @@ Mat.multi = function() {
         mat2 = args[1];
 
     if (!(mat1 instanceof Mat)) {
-        warn('Mat->multi', 'mat1', mat1);
+        logger.warn('Mat->multi', 'mat1', mat1);
         return new Mat2;
     }
     if ((!mat2 instanceof Mat)) {
-        warn('Mat->multi', 'mat2', mat2);
+        logger.warn('Mat->multi', 'mat2', mat2);
         return mat1;
     }
 
@@ -342,7 +342,7 @@ Mat.multi = function() {
         b1 = mat2.b;
 
     if (b !== c) {
-        warnfree(`Mat->multi: 1-st matrix columns count must be equal to 2-nd matrix rows, b: ${b}, c: ${c}`);
+        logger.warnfree(`Mat->multi: 1-st matrix columns count must be equal to 2-nd matrix rows, b: ${b}, c: ${c}`);
         return mat1;
     }
 
@@ -429,7 +429,7 @@ Mat.prototype.slice = function(x, y) {
  */
 Mat.prototype.slicec = function(x) {
     if (typeof x !== 'number') {
-        warn('Mat#slicec', 'x', x);
+        logger.warn('Mat#slicec', 'x', x);
         x = this.b;
     }
 
@@ -462,7 +462,7 @@ Mat.prototype.slicec = function(x) {
  */
 Mat.prototype.slicer = function(y) {
     if (typeof y !== 'number') {
-        warn('Mat#slicer', 'y', y);
+        logger.warn('Mat#slicer', 'y', y);
         y = this.a;
     }
 
@@ -496,11 +496,11 @@ Mat.prototype.slicer = function(y) {
  */
 Mat.prototype.sub = function(x, y) {
     if (typeof x !== 'number') {
-        warn('Mat#sub', 'x', x);
+        logger.warn('Mat#sub', 'x', x);
         x = 0;
     }
     if (typeof y !== 'number') {
-        warn('Mat#sub', 'y', y);
+        logger.warn('Mat#sub', 'y', y);
         y = 0;
     }
 
@@ -509,7 +509,7 @@ Mat.prototype.sub = function(x, y) {
         b = this.b;
 
     if (a !== b) {
-        log('Warn: Mat#sub: matrix must be squad');
+        log('logger.Warn: Mat#sub: matrix must be squad');
         return 0;
     }
 
@@ -531,7 +531,7 @@ Mat.prototype.sub = function(x, y) {
  */
 Mat.prototype.sum = function(num) {
     if (typeof num !== 'number') {
-        warn('Math#sum', 'num', num);
+        logger.warn('Math#sum', 'num', num);
         num = 0;
     }
 
@@ -567,11 +567,11 @@ Mat.sum = function() {
         mat2 = args[1];
 
     if (!(mat1 instanceof Mat)) {
-        warn('Mat->sum', 'mat1', mat1);
+        logger.warn('Mat->sum', 'mat1', mat1);
         return new Mat2;
     }
     if (!(mat2 instanceof Mat)) {
-        warn('Mat->sum', 'mat2', mat2);
+        logger.warn('Mat->sum', 'mat2', mat2);
         return mat1;
     }
 
@@ -581,7 +581,7 @@ Mat.sum = function() {
         b1 = mat2.b;
 
     if (a !== a1 || b !== b1) {
-        log('Warn: Mat#sum: matrices must be same size');
+        log('logger.Warn: Mat#sum: matrices must be same size');
         return mat1;
     }
 
@@ -635,7 +635,7 @@ Mat.prototype.transpose = function() {
  */
 function Mat2(arr = []) {
     if (arr && !(arr instanceof Array) && typeof arr !== 'number') {
-        warn('Mat2', 'arr', arr);
+        logger.warn('Mat2', 'arr', arr);
         arr = [];
     }
 
@@ -676,7 +676,7 @@ Mat2.prototype.constructor = Mat2;
  */
 function Mat3(arr = []) {
     if (arr && !(arr instanceof Array) && typeof arr !== 'number') {
-        warn('Mat3', 'arr', arr);
+        logger.warn('Mat3', 'arr', arr);
         arr = [];
     }
 
@@ -745,7 +745,7 @@ Mat3.translate = function(vec) {
  */
 function Mat4(arr = []) {
     if (arr && !(arr instanceof Array) && typeof arr !== 'number') {
-        warn('Mat4', 'arr', arr);
+        logger.warn('Mat4', 'arr', arr);
         arr = [];
     }
 
@@ -914,6 +914,7 @@ exports.Mat2 = Mat2;
 exports.Mat3 = Mat3;
 exports.Mat4 = Mat4;
 
+var logger = require('./logger');
 var v = require('./vector');
 var Vec = v.Vec;
 var Vec2 = v.Vec2;

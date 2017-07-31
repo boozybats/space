@@ -8,7 +8,8 @@ function Client(options) {
     this.events = {
         distributionAnswer: [],
         enablePlayer: [],
-        instancePlayer: []
+        instancePlayer: [],
+        remove: []
     };
 
     // Handlers contains permanent binded user's listeners
@@ -112,21 +113,22 @@ Object.defineProperties(Client.prototype, {
     }
 });
 
-Client.prototype.attachEvent = function(handler, callback) {
+Client.prototype.attachEvent = function(handlername, callback) {
     if (typeof callback !== 'function') {
         warn('Client#attachEvent', 'callback', callback);
         return;
     }
-    if (!this.events[handler]) {
-        warnfree(`Client#attachEvent: unexpected handler, handler: ${handler}`);
+    if (!this.events[handlername]) {
+        warnfree(`Client#attachEvent: unexpected handlername, handlername: ${handlername}`);
         return;
     }
 
-    var index = `${handler}_${this.events[handler].push(callback) - 1}`;
+    this.events[handlername].push(callback);
 
-    return index;
+    return [handlername, callback];
 }
 
+// Decrease distribution time by delta time and returns: is it time for distribution
 Client.prototype.checkOnDistribution = function(deltaTime) {
     this.distributionTime -= deltaTime;
 
@@ -134,6 +136,7 @@ Client.prototype.checkOnDistribution = function(deltaTime) {
     return (this.throughput >= 0 && this.distributionTime <= 0);
 }
 
+// Creates auto-callback on sended data to client (creates automatically)
 Client.prototype.createAnswer = function(callback, lifetime, startLifetime) {
     var time = Date.now();
     var handler = new Handler(callback, lifetime, startLifetime || time);
@@ -151,22 +154,24 @@ Client.prototype.createAnswer = function(callback, lifetime, startLifetime) {
     return index;
 }
 
-Client.prototype.detachEvent = function(index) {
-    if (typeof index !== 'string') {
+Client.prototype.detachEvent = function(handler) {
+    if (!(handler instanceof Array)) {
         return;
     }
 
-    var parsed = index.split('_');
-    var handler = parsed[0],
-        id = parsed[1];
+    var handlername = handler[0],
+        callback = handler[1];
 
-    if (!this.events[handler]) {
+    var event = this.events[handlername];
+    if (!event) {
         return;
     }
 
-    this.events[handler].splice(id, 1);
+    event.splice(event.indexOf(callback), 1);
 }
 
+/* Makes distribution to client, sets how much time need to next distribution
+and checks answer from client then send to "distributionAnswer"-callback */
 Client.prototype.distribute = function(data, time, minrate, maxrate) {
     if (typeof time !== 'number') {
         logger.warn('Client#distribute', 'time', time);
@@ -198,7 +203,7 @@ Client.prototype.distribute = function(data, time, minrate, maxrate) {
         lifetime: minrate
     });
 
-    // How much time left to next distribution (choose minimal)
+    // How much time left to next distribution
     this.distributionTime = Math.max(maxrate, Math.min(size / this.throughput, minrate));
 }
 
@@ -221,12 +226,12 @@ Client.prototype.execAnswer = function(key, request) {
     return true;
 }
 
-Client.prototype.fireEvent = function(handler, args) {
-    var handlers = this.events[handler];
+Client.prototype.fireEvent = function(handlername, args) {
+    var events = this.events[handlername];
 
-    if (handlers) {
-        for (var i = 0; i < handlers.length; i++) {
-            handlers[i].apply(handlers[i], args);
+    if (events) {
+        for (var i = 0; i < events.length; i++) {
+            events[i].apply(events[i], args);
         }
     }
 }
@@ -236,12 +241,14 @@ Client.prototype.isAnswer = function(key) {
     return (this.answers.get(key) instanceof Handler);
 }
 
+// Copy player itself
 Client.prototype.inherit = function(clone) {
     this.player = clone.player;
 
     this.fireEvent('enablePlayer', [this.player]);
 }
 
+// Creates new player for client and returns it
 Client.prototype.instancePlayer = function(options) {
     if (typeof options !== 'object') {
         logger.warn('Client#instancePlayer', 'options', options);
@@ -312,13 +319,17 @@ Client.prototype.receive = function(data) {
 
 Client.prototype.receiveDistributionAnswer = function(response) {}
 
-Client.prototype.remove = function() {}
+// Client remove function
+Client.prototype.remove = function() {
+    this.fireEvent('remove');
+}
 
 Client.prototype.removeAnswer = function(key) {
     this.answers.remove(key);
     this.freehandlers.push(key);
 }
 
+// Checks all answers on expiration
 Client.prototype.removeExpiredAnsweres = function(time) {
     var self = this;
     this.answers.each((handler, index) => {
@@ -328,8 +339,7 @@ Client.prototype.removeExpiredAnsweres = function(time) {
     });
 }
 
-/* Completes "send"-function from websocket-script, but automaticly
-sends "ip" */
+// Completes "send"-function from websocket-script
 Client.prototype.send = function(handler, data, callback, options = {}) {
     if (typeof handler !== 'string' && typeof handler !== 'number') {
         logger.warn('Client#send', 'handler', handler);

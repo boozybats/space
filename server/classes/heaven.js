@@ -6,13 +6,9 @@ function Heaven(options = {}) {
         options = {};
     }
 
-    options.physic = new Physic;
-
     Item.call(this, options);
 
-    this.rigidbody = new Rigidbody({
-        body: this.body
-    });
+    this.initialize(options);
 }
 
 Heaven.prototype = Object.create(Item.prototype);
@@ -44,19 +40,24 @@ Heaven.generate = function(generator, level = 0) {
         level = 0;
     }
 
-    var heaven = new Heaven;
-
     var volume = generator.getVolume({
         level: level
-    });
-    heaven.physic.matter = new Matter({
-        Fe: volume
     });
 
     var vec = generator.getPosition({
         level: level
     });
-    heaven.body.position = vec;
+
+    var heaven = new Heaven({
+        body: new Body({
+            position: vec
+        }),
+        physic: new Physic({
+            matter: new Matter({
+                Fe: volume
+            })
+        })
+    });
 
     return heaven;
 }
@@ -71,23 +72,69 @@ Heaven.generateNPC = function(generator, level = 0) {
         level = 0;
     }
 
-    var heaven = new Heaven;
-
     var volume = generator.getVolume({
         level: level,
         npc: true
-    });
-    heaven.physic.matter = new Matter({
-        Fe: volume
     });
 
     var vec = generator.getPosition({
         level: level,
         npc: true
     });
-    heaven.body.position = vec;
+
+    var heaven = new Heaven({
+        body: new Body({
+            position: vec
+        }),
+        physic: new Physic({
+            matter: new Matter({
+                Fe: volume
+            })
+        })
+    });
 
     return heaven;
+}
+
+Heaven.prototype.initialize = function(options = {}) {
+    // Install sphere collider for heaven
+    this.collider.sphere();
+
+    var self = this;
+    this.attachEvent('update', options => {
+        var time = options.time;
+    });
+
+    this.initializePhysic(options.physic);
+    this.initializeRigidbody(options.rigidbody);
+}
+
+Heaven.prototype.initializePhysic = function(physic) {
+    if (physic instanceof Physic) {
+        this.physic = physic;
+    } else {
+        this.physic = new Physic({
+            matter: new Matter({
+                Fe: 0
+            })
+        });
+    }
+
+    this.physic.attachEvent('update', options => {
+
+    });
+}
+
+Heaven.prototype.initializeRigidbody = function(rigidbody) {
+    if (rigidbody instanceof Rigidbody) {
+        this.rigidbody = rigidbody;
+    } else {
+        this.rigidbody = new Rigidbody;
+    }
+
+    this.rigidbody.attachEvent('update', options => {
+
+    });
 }
 
 Heaven.prototype.setChanges = function(properties, time) {
@@ -123,7 +170,7 @@ function rotationChange(item, value, time) {
     var newvel = new Vec3(value[0], value[1], value[2]);
 
     var angle = Vec.angle(oldvel, newvel);
-    
+
     if (angle > maxAngle) {
         return;
     }
@@ -137,7 +184,9 @@ var logger = require('../engine/logger');
 var v = require('../engine/vector');
 var Vec = v.Vec;
 var Vec3 = v.Vec3;
+var Body = require('../engine/body');
 var Physic = require('../engine/physic');
 var Matter = require('../engine/matter');
 var Rigidbody = require('../engine/rigidbody');
+var Collider = require('../engine/collider');
 var Generator = require('./generator');

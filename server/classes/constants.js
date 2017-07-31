@@ -3,9 +3,9 @@
 
 var wrap = {
 	LEVELS: 1,
-	AREA_SIZES: [[20, 20]],
+	AREA_SIZES: [[10, 10]],
 	PLAYER_SIZES: [[6, 8]], //[[4e+5, 5e+5]],
-	NPC_SIZES: [[1, 2]],
+	NPC_SIZES: [[0.2, 0.4]],
     SPAWN_LIFETIME: 60000,
     SPAWN_INTERVAL: 5000,
     SPAWN_COUNT: 5

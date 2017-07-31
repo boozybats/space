@@ -26,8 +26,6 @@ function Icosahedron(options = {}) {
     });
 
     Item.call(this, options);
-
-    console.log(this);
 }
 
 Icosahedron.prototype = Object.create(Item.prototype);
@@ -46,7 +44,8 @@ Icosahedron.mesh = function() {
     // 20 sides, 30 edges, 12 vertices (in the original figure)
 
     // size in engine units for x and y coordinates
-    var size = 2;
+    var size = 1;
+    var radius = size / 2;
     // distance between central and additional levels
     var smadis = 1 / 4 * size;
     // distance between first and second levels
@@ -83,8 +82,8 @@ Icosahedron.mesh = function() {
     uvs.size = 2;
 
     // top and bottom central vertices
-    var top = [0, -1, 0],
-        bot = [0, 1, 0];
+    var top = [0, -radius, 0],
+        bot = [0, radius, 0];
 
     // Make all the vertices and connect them with centers
     for (var i = 0; i < 2; i++) {
@@ -129,7 +128,7 @@ Icosahedron.mesh = function() {
         normals.push(central[0], central[1], central[2]);
 
         // for first level add offset as half of vertice length, for second full length
-        var offsetx = (lvl + 1) * 0.5 * texdis;
+        var offsetx = (lvl + 1) / 2 * texdis;
         uvs.push(offsetx + index * texdis, lvl);
     }
 
@@ -143,27 +142,27 @@ Icosahedron.mesh = function() {
      * @private
      */
     function generateVertex(index, lvl, uvoffset = 0) {
-        // vertices values must be between -1 and 1
+        // vertices values must be between -y and y
         /* edges start y-position is small distance from center and
-        big position if level is second, subtract 1 to make interval
-        [-1, 1] from [0, 2] */
-        var y = smadis + lvl * bigdis - 1;
+        big position if level is second, subtract y to make interval
+        [-y, y] from [0, 2] */
+        var y = smadis + lvl * bigdis - radius;
 
         /* begin point - where starts first vertex, index order * angle distance -
         current vertex position on edge, level * offset - offset for second level */
         var angle = begpoi + index * angdis + lvl * offset;
 
         // x value is cos, z is sin
-        var x = Math.cos(angle),
-            z = Math.sin(angle);
+        var x = radius * Math.cos(angle),
+            z = radius * Math.sin(angle);
 
         var vec = new Vec3(x, y, z);
         var normal = vec.normalize();
 
-        /* align point to sphere coordinates system (with radius = 1):
+        /* align point to sphere coordinates system (with radius = radius):
         subtract vector length from sphere radius and add error to current
         vector */
-        var dis = 1 - vec.length();
+        var dis = radius - vec.length();
         vec = amc('+', vec, amc('*', normal, dis));
 
         vertices.push(vec.x, vec.y, vec.z);
@@ -176,8 +175,6 @@ Icosahedron.mesh = function() {
         uvs.push(uv[0], uv[1]);
     }
 }
-
-var icosahedronMesh = Icosahedron.mesh();
 
 /**
  * Creates item with mesh of sphere by icosahedron mesh. This
@@ -251,6 +248,9 @@ Sphere.mesh = function(options = {}) {
         return options;
     }
 
+    var size = 1;
+    var radius = size / 2;
+
     // transforms older sphere to more detailed sphere
     var nvertices = vertices.slice(),
         nnormals = normals.slice(),
@@ -304,17 +304,17 @@ Sphere.mesh = function(options = {}) {
             b = Vec.avg(v1, v2),
             c = Vec.avg(v2, v0);
 
-        // how much distance need to full radius (R = 1)
-        var ad = 1 - a.length(),
-            bd = 1 - b.length(),
-            cd = 1 - c.length();
+        // how much distance need to full radius (R = radius)
+        var ad = radius - a.length(),
+            bd = radius - b.length(),
+            cd = radius - c.length();
 
         // normalization to recovery radius
         var an = a.normalize(),
             bn = b.normalize(),
             cn = c.normalize();
 
-        // make right point for radius "R = 1"
+        // make right point
         a = amc('+', a, amc('*', an, ad));
         b = amc('+', b, amc('*', bn, bd));
         c = amc('+', c, amc('*', cn, cd));
@@ -325,21 +325,21 @@ Sphere.mesh = function(options = {}) {
 
             switch (j) {
                 case 0:
-                    x = a.x,
-                        y = a.y,
-                        z = a.z;
+                    x = an.x;
+                    y = an.y;
+                    z = an.z;
                     break;
 
                 case 1:
-                    x = b.x,
-                        y = b.y,
-                        z = b.z;
+                    x = bn.x;
+                    y = bn.y;
+                    z = bn.z;
                     break;
 
                 case 2:
-                    x = c.x,
-                        y = c.y,
-                        z = c.z;
+                    x = cn.x;
+                    y = cn.y;
+                    z = cn.z;
                     break;
             }
 
@@ -401,9 +401,12 @@ Sphere.mesh = function(options = {}) {
  * every position is precision of sphere
  */
 var sphereMesh;
+var icosahedronMesh;
 
 ;
 (function() {
+    icosahedronMesh = Icosahedron.mesh();
+
     sphereMesh = [];
     sphereMesh[0] = icosahedronMesh;
     for (var i = 1; i < 5; i++) {
@@ -452,13 +455,13 @@ Cube.mesh = function() {
         20, 21, 23, 23, 21, 22
     ];
 
-    var vertices = [-1, -1, 1, -1, 1, 1,
-        1, 1, 1, 1, -1, 1, -1, -1, -1, -1, 1, -1,
-        1, 1, -1, 1, -1, -1, -1, -1, 1, -1, 1, 1, -1, 1, -1, -1, -1, -1,
-        1, -1, 1, 1, 1, 1,
-        1, 1, -1, 1, -1, -1, -1, -1, 1, -1, -1, -1,
-        1, -1, -1, 1, -1, 1, -1, 1, 1, -1, 1, -1,
-        1, 1, -1, 1, 1, 1
+    var vertices = [-.5, -.5, .5, -.5, .5, .5,
+        .5, .5, .5, .5, -.5, .5, -.5, -.5, -.5, -.5, .5, -.5,
+        .5, .5, -.5, .5, -.5, -.5, -.5, -.5, .5, -.5, .5, .5, -.5, .5, -.5, -.5, -.5, -.5,
+        .5, -.5, .5, .5, .5, .5,
+        .5, .5, -.5, .5, -.5, -.5, -.5, -.5, .5, -.5, -.5, -.5,
+        .5, -.5, -.5, .5, -.5, .5, -.5, .5, .5, -.5, .5, -.5,
+        .5, .5, -.5, .5, .5, .5
     ];
     vertices.size = 3;
 
@@ -524,8 +527,8 @@ Quad.prototype = Object.create(Item.prototype);
 Quad.prototype.constructor = Quad;
 
 Quad.mesh = function() {
-    var vertices = [-1, -1, 0, -1, 1, 0,
-        1, 1, 0, 1, -1, 0
+    var vertices = [-.5, -.5, 0, -.5, .5, 0,
+        .5, .5, 0, .5, -.5, 0
     ];
     vertices.size = 3;
 
@@ -566,6 +569,94 @@ Quad.mesh = function() {
 
 var quadMesh = Quad.mesh();
 
+function Circle(options = {}) {
+    if (typeof options !== 'object') {
+        warn('Circle', 'options', options);
+        options = {};
+    }
+
+    var circle = circleMesh[options.precision];
+    if (!circle) {
+        circle = circleMesh[0];
+    }
+
+    options.mesh = new Mesh({
+        attributes: {
+            a_Position: circle.vertices,
+            a_UV: circle.uvs,
+            a_Normal: circle.normals,
+            a_Tangent: circle.tangents,
+            a_Bitangent: circle.bitangents
+        },
+        vertexIndices: circle.indices
+    });
+
+    Item.call(this, options);
+}
+
+Circle.prototype = Object.create(Item.prototype);
+Circle.prototype.constructor = Circle;
+
+Circle.mesh = function(precision) {
+    var vertices = [0, 0, 0];
+    vertices.size = 3;
+
+    var uvs = [0, 0];
+    uvs.size = 2;
+
+    var indices = [precision];
+
+    var scale = 2 / precision * Math.PI;
+
+    for (var i = 0; i < precision; i++) {
+        var a = scale * i;
+        var x = Math.cos(a);
+        var y = Math.sin(a);
+
+        vertices.push(x * 0.5, y * 0.5, 0);
+        uvs.push(x, y);
+
+        if (i > 0) {
+            indices.push(i);
+        }
+        indices.push(0, i + 1);
+    }
+
+    var tbn = TBN({
+        indices: indices,
+        vertices: vertices,
+        uvs: uvs
+    });
+
+    var normals = tbn.normals;
+    normals.size = 3;
+
+    var tangents = tbn.tangents;
+    tangents.size = 3;
+
+    var bitangents = tbn.bitangents;
+    bitangents.size = 3;
+
+    return {
+        vertices: vertices,
+        indices: indices,
+        normals: normals,
+        uvs: uvs,
+        tangents: tangents,
+        bitangents: bitangents
+    };
+}
+
+var circleMesh;
+
+;
+(function() {
+    circleMesh = [];
+    for (var i = 0; i < 4; i++) {
+        circleMesh[i] = Circle.mesh((i + 1) * 36);
+    }
+})();
+
 /**
  * Creates item with quad's mesh.
  * @this {UI}
@@ -582,6 +673,7 @@ function UI(options = {}) {
     }
 
     Quad.call(this, options);
+    this.mesh.attributes.a_Position = UI.vertices();
 
     this.width = options.width || RESOLUTION_WIDTH;
     this.height = options.height || RESOLUTION_HEIGHT;
@@ -645,6 +737,19 @@ UI.prototype.scale = function() {
         1 * ((this.height || 0) / RESOLUTION_HEIGHT),
         1
     );
+
+    this.mesh.changeUniforms({
+        u_Resolution: new Vec2(this.width, this.height)
+    });
+}
+
+UI.vertices = function() {
+    var vertices = [-1, -1, 0, -1, 1, 0,
+        1, 1, 0, 1, -1, 0
+    ];
+    vertices.size = 3;
+
+    return vertices;
 }
 
 /**

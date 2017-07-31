@@ -354,7 +354,8 @@ Game.prototype.initializeShaders = function() {
     this.shaders_ = shaders;
 
     var options = {
-        transparentImage: dependencies.transparentImage
+        transparentImage: dependencies.transparentImage,
+        resolution: new Vec2(this.canvas.width, this.canvas.height)
     };
 
     shaders.add('heaven', Heaven.shader(), options);
@@ -616,7 +617,7 @@ Game.prototype.start = function() {
             interpolationDelay: 0,
             extrapolationDuration: 0,
             player: self.player,
-            shader: shaders.get('heaven')
+            shader: shaders.get('heaven') 
         });
 
         item.instance(scene);

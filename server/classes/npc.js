@@ -49,8 +49,8 @@ Object.defineProperties(NPC.prototype, {
 NPC.prototype.initialize = function() {
     var generator = this.generator;
 
-    this.id_ = generator.generateID();
-    this.item_ = Heaven.generateNPC(this.generator, this.level);
+    this.id = generator.generateID();
+    this.item = Heaven.generateNPC(this.generator, this.level);
 }
 
 module.exports = NPC;

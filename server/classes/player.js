@@ -33,8 +33,8 @@ Object.defineProperties(Player.prototype, {
 Player.prototype.initialize = function() {
     var generator = this.generator;
 
-    this.id_ = generator.generateID();
-    this.item_ = Heaven.generate(generator, 0);
+    this.id = generator.generateID();
+    this.item = Heaven.generate(generator, 0);
 }
 
 module.exports = Player;

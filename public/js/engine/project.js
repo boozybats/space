@@ -196,6 +196,11 @@ Project.prototype.initialize = function() {
     this.addLayer(options => {
         var webGLRenderer = self.webGLRenderer,
             scene = self.currentScene;
+
+        if (!scene || !webGLRenderer) {
+            return;
+        }
+
         var cameras = scene.cameras,
             items = scene.items.concat(scene.systemitems);
 
@@ -232,7 +237,7 @@ Project.prototype.initialize = function() {
 
     function update(item, options) {
         // update by custrom scripts
-        item.frameUpdate(options);
+        item.streamUpdate(options);
     }
 
     function draw(item, mvpmatrix) {

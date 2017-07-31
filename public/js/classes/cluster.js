@@ -19,7 +19,7 @@ Object.defineProperties(Cluster.prototype, {
             return this.item_;
         },
         set: function(val) {
-            if (!(val instanceof Item)) {
+            if (val && !(val instanceof Item)) {
                 warn('Cluster#item', 'val', val);
                 val = new Heaven;
             }
@@ -47,13 +47,23 @@ Cluster.prototype.update = function(data, time) {
         return;
     }
 
-    this.enable();
+    var status = data.status;
 
     var item = data.item;
 
-    if (item && this.item) {
+    if (item) {
+        if (!this.item) {
+            this.item = new Heaven;
+        }
+
         this.item.addTempData(item, time);
+        this.item.setAttribute('status', status);
     }
+    else {
+        this.item = undefined;
+    }
+
+    this.enable();
 }
 
 function Player(options = {}) {
@@ -87,14 +97,11 @@ Object.defineProperties(Player.prototype, {
 Player.prototype.getDistributionData = function() {
     var request = {};
 
-    if (!this.item) {
-        errorfree('Player#getDistributionData: player must have an item');
-        return;
+    if (this.item) {
+        var itrigid = this.item.rigidbody;
+        request.item = itrigid.getActions(true);
+        itrigid.clearActions();
     }
-
-    var itrigid = this.item.rigidbody;
-    request.item = itrigid.getActions(true);
-    itrigid.clearActions();
 
     return request;
 }
@@ -104,9 +111,6 @@ Player.prototype.updateAlive = function(data, time) {
         warn('Player#updateAlive', 'data', data);
         return;
     }
-
-
-    this.enable();
 
     this.update(data, time);
 }

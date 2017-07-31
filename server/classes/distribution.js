@@ -12,7 +12,7 @@ function Distribution(updater, options = {}) {
     this.maxrate = options.maxrate || 20;
 
     this.memory_ = new Storage;
-    this.handlers = {
+    this.events = {
         beforeSend: []
     };
 }
@@ -66,43 +66,43 @@ Object.defineProperties(Distribution.prototype, {
     }
 });
 
-Distribution.prototype.attachEvent = function(handler, callback) {
+Distribution.prototype.attachEvent = function(handlername, callback) {
     if (typeof callback !== 'function') {
         logger.warn('Distribution#attachEvent', 'callback', callback);
         return;
     }
-    if (!this.handlers[handler]) {
+    if (!this.events[handlername]) {
         logger.warnfree(`Distribution#attachEvent: unexpected handler, handler: ${handler}`);
         return;
     }
 
-    var index = `${handler}_${this.handlers[handler].push(callback) - 1}`;
+    this.events[handlername].push(callback);
 
-    return index;
+    return [handlername, callback];
 }
 
-Distribution.prototype.detachEvent = function(index) {
-    if (typeof index !== 'string') {
+Distribution.prototype.detachEvent = function(handler) {
+    if (!(handler instanceof Array)) {
         return;
     }
 
-    var parsed = index.split('_');
-    var handler = parsed[0],
-        id = parsed[1];
+    var handlername = handler[0],
+        callback = handler[1];
 
-    if (!this.handlers[handler]) {
+    var event = this.events[handlername];
+    if (!event) {
         return;
     }
 
-    this.handlers[handler].splice(id, 1);
+    event.splice(event.indexOf(callback), 1);
 }
 
-Distribution.prototype.fireEvent = function(handler, args) {
-    var handlers = this.handlers[handler];
+Distribution.prototype.fireEvent = function(handlername, args) {
+    var events = this.events[handlername];
 
-    if (handlers) {
-        for (var i = 0; i < handlers.length; i++) {
-            handlers[i].apply(handlers[i], args);
+    if (events) {
+        for (var i = 0; i < events.length; i++) {
+            events[i].apply(events[i], args);
         }
     }
 }

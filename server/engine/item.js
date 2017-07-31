@@ -15,7 +15,7 @@
  */
 function Item(options = {}) {
     if (typeof options !== 'object') {
-        warn('Item', 'options', options);
+        logger.warn('Item', 'options', options);
         options = {};
     }
 
@@ -23,16 +23,19 @@ function Item(options = {}) {
     this.id = options.id || -1;
     this.name = options.name || 'anonymous';
     this.body = options.body || new Body;
-    this.collider = options.collider;
+    this.collider = options.collider || new Collider;
     this.physic = options.physic;
     this.rigidbody = options.rigidbody;
+
+    this.events = {
+        destroy: [],
+        update: []
+    };
 
     // A variable environment that can be obtained by external methods
     this.public_ = {};
     // A variable environment that can be obtained only in this object
     this.private_ = {};
-
-    this.onupdate = function() {};
 }
 
 Object.defineProperties(Item.prototype, {
@@ -42,7 +45,7 @@ Object.defineProperties(Item.prototype, {
         },
         set: function(val) {
             if (!(val instanceof Body)) {
-                warn('Item#body', 'val', val);
+                logger.warn('Item#body', 'val', val);
                 val = new Body;
             }
 
@@ -55,7 +58,7 @@ Object.defineProperties(Item.prototype, {
         },
         set: function(val) {
             if (val && !(val instanceof Collider)) {
-                warn('Item#collider', 'val', val);
+                logger.warn('Item#collider', 'val', val);
                 val = undefined;
             }
 
@@ -68,7 +71,7 @@ Object.defineProperties(Item.prototype, {
         },
         set: function(val) {
             if (typeof val !== 'boolean') {
-                warn('Item#enabled', 'val', val);
+                logger.warn('Item#enabled', 'val', val);
                 val = true;
             }
 
@@ -81,7 +84,7 @@ Object.defineProperties(Item.prototype, {
         },
         set: function(val) {
             if (typeof val !== 'number') {
-                warn('Item#id', 'val', val);
+                logger.warn('Item#id', 'val', val);
                 val = -2;
             }
 
@@ -94,23 +97,11 @@ Object.defineProperties(Item.prototype, {
         },
         set: function(val) {
             if (typeof val !== 'string') {
-                warn('Item#name', 'val', val);
+                logger.warn('Item#name', 'val', val);
                 val = 'anonymous';
             }
 
             this.name_ = val;
-        }
-    },
-    onupdate: {
-        get: function() {
-            return this.onupdate_;
-        },
-        set: function(val) {
-            if (typeof val !== 'function') {
-                val = function() {};
-            }
-
-            this.onupdate_ = val;
         }
     },
     physic: {
@@ -119,7 +110,7 @@ Object.defineProperties(Item.prototype, {
         },
         set: function(val) {
             if (val && !(val instanceof Physic)) {
-                warn('Item#physic', 'val', val);
+                logger.warn('Item#physic', 'val', val);
                 val = undefined;
             }
 
@@ -142,7 +133,7 @@ Object.defineProperties(Item.prototype, {
         },
         set: function(val) {
             if (val && !(val instanceof Rigidbody)) {
-                warn('Item#rigidbody', 'val', val);
+                logger.warn('Item#rigidbody', 'val', val);
                 val = undefined;
             }
 
@@ -151,20 +142,63 @@ Object.defineProperties(Item.prototype, {
     }
 });
 
-Item.prototype.frameUpdate = function(options) {
-    this.onupdate(options);
-
-    if (this.physic) {
-        this.physic.onupdate(options);
+Item.prototype.attachEvent = function(handlername, callback) {
+    if (typeof callback !== 'function') {
+        logger.warn('Item#attachEvent', 'callback', callback);
+        return;
+    }
+    if (!this.events[handlername]) {
+        logger.warnfree(`Item#attachEvent: unexpected handlername, handlername: ${handlername}`);
+        return;
     }
 
-    if (this.rigidbody) {
-        this.rigidbody.onupdate(options);
+    this.events[handlername].push(callback);
+
+    return [handlername, callback];
+}
+
+Item.prototype.destroy = function(method) {
+    this.enabled = false;
+
+    this.fireEvent('destroy', [method]);
+}
+
+Item.prototype.detachEvent = function(handler) {
+    if (!(handler instanceof Array)) {
+        return;
+    }
+
+    var handlername = handler[0],
+        callback = handler[1];
+
+    var event = this.events[handlername];
+    if (!event) {
+        return;
+    }
+
+    event.splice(event.indexOf(callback), 1);
+}
+
+Item.prototype.fireEvent = function(handlername, args) {
+    var events = this.events[handlername];
+
+    if (events) {
+        for (var i = 0; i < events.length; i++) {
+            events[i].apply(events[i], args);
+        }
     }
 }
 
-Item.prototype.remove = function() {
-    
+Item.prototype.streamUpdate = function(options) {
+    this.fireEvent('update', [options]);
+
+    if (this.rigidbody) {
+        this.rigidbody.fireEvent('update', [options]);
+    }
+
+    if (this.physic) {
+        this.physic.fireEvent('update', [options]);
+    }
 }
 
 Item.prototype.toJSON = function() {
