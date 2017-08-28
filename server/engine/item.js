@@ -19,8 +19,7 @@ function Item(options = {}) {
         options = {};
     }
 
-    this.enabled = options.enabled || true;
-    this.id = options.id || -1;
+    this.enabled = typeof options.enabled === 'boolean' ? options.enabled : true;
     this.name = options.name || 'anonymous';
     this.body = options.body || new Body;
     this.collider = options.collider || new Collider;
@@ -65,6 +64,19 @@ Object.defineProperties(Item.prototype, {
             this.collider_ = val;
         }
     },
+    destroyTime: {
+        get: function() {
+            return this.destroyTime_;
+        },
+        set: function(val) {
+            if (typeof val !== 'number') {
+                logger.warn('Cluster#destroyTime', 'val', val);
+                val = 0;
+            }
+
+            this.destroyTime_ = val;
+        }
+    },
     enabled: {
         get: function() {
             return this.enabled_;
@@ -85,10 +97,23 @@ Object.defineProperties(Item.prototype, {
         set: function(val) {
             if (typeof val !== 'number') {
                 logger.warn('Item#id', 'val', val);
-                val = -2;
+                val = -1;
             }
 
             this.id_ = val;
+        }
+    },
+    instanceTime: {
+        get: function() {
+            return this.instanceTime_;
+        },
+        set: function(val) {
+            if (typeof val !== 'number') {
+                logger.warn('Item#instanceTime', 'val', val);
+                val = 0;
+            }
+
+            this.instanceTime_ = val;
         }
     },
     name: {
@@ -157,8 +182,9 @@ Item.prototype.attachEvent = function(handlername, callback) {
     return [handlername, callback];
 }
 
-Item.prototype.destroy = function(method) {
+Item.prototype.destroy = function(method, time) {
     this.enabled = false;
+    this.destroyTime = time || 0;
 
     this.fireEvent('destroy', [method]);
 }
@@ -204,7 +230,7 @@ Item.prototype.streamUpdate = function(options) {
 Item.prototype.toJSON = function() {
     var out = {};
 
-    out.id = this.id;
+    out.enabled = this.enabled;
 
     if (this.body) {
         out.body = this.body.toJSON();
@@ -212,6 +238,10 @@ Item.prototype.toJSON = function() {
 
     if (this.physic) {
         out.physic = this.physic.toJSON();
+    }
+
+    if (this.rigidbody) {
+        out.rigidbody = this.rigidbody.toJSON();
     }
 
     return out;

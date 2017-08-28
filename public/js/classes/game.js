@@ -115,7 +115,7 @@ Game.prototype.addPlayer = function(id) {
     item.instance(this.currentScene);
     player.item = item;
 
-    var a = this.players.push(player);
+    this.players.push(player);
 
     return player;
 }
@@ -145,13 +145,12 @@ Game.prototype.bindAxisToPlayer = function() {
     var item = this.player.item;
 
     canvas.attachEvent('axis', function(arr) {
-        var maxspeed = item.physic.maxspeed;
-        var vec = new Vec3(arr[0] * maxspeed, arr[1] * maxspeed, 0);
+        var vec = new Vec3(arr[0], arr[1], 0);
         var dir = amc('+', item.rigidbody.velocity, vec);
 
         var length = dir.length();
-        if (length > maxspeed) {
-            dir = amc('*', dir.normalize(), maxspeed);
+        if (length > 1) {
+            dir = dir.normalize();
         }
 
         item.rigidbody.velocity = dir;
@@ -617,7 +616,11 @@ Game.prototype.start = function() {
             interpolationDelay: 0,
             extrapolationDuration: 0,
             player: self.player,
-            shader: shaders.get('heaven') 
+            shader: shaders.get('heaven')
+        });
+        item.rigidbody = new Rigidbody({
+            body: item.body,
+            physic: item.physic
         });
 
         item.instance(scene);
@@ -663,6 +666,7 @@ Game.prototype.updateByNpcs = function(npcs, time) {
         });
 
         var match = matches[0] || this.addNPC(id);
+
         match.update(npc, time);
     }
 }
@@ -689,6 +693,7 @@ Game.prototype.updateByPlayers = function(players, time) {
             });
 
             var match = matches[0] || this.addPlayer(id);
+
             match.update(player, time);
         }
     }

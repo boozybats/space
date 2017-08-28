@@ -317,8 +317,6 @@ Client.prototype.receive = function(data) {
     }
 }
 
-Client.prototype.receiveDistributionAnswer = function(response) {}
-
 // Client remove function
 Client.prototype.remove = function() {
     this.fireEvent('remove');

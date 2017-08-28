@@ -1,2 +1,5 @@
 const INTERPOLATION_DELAY = 100;
 const EXTRAPOLATION_DURATION = 250;
+const ANIMATE_DURATION = {
+    diameter: 100
+};

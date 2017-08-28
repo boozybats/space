@@ -14,21 +14,13 @@ function Heaven(options = {}) {
 Heaven.prototype = Object.create(Item.prototype);
 Heaven.prototype.constructor = Heaven;
 
-Object.defineProperties(Heaven.prototype, {
-    instanceTime: {
-        get: function() {
-            return this.instanceTime_;
-        },
-        set: function(val) {
-            if (typeof val !== 'number') {
-                logger.warn('Heaven#instanceTime', 'val', val);
-                val = 0;
-            }
+Object.defineProperties(Heaven.prototype, {});
 
-            this.instanceTime_ = val;
-        }
-    }
-});
+Heaven.prototype.feed = function(item) {
+    var substances = item.physic.matter.substances.toObject();
+
+    this.physic.matter.addSubstances(substances);
+}
 
 Heaven.generate = function(generator, level = 0) {
     if (!(generator instanceof Generator)) {
@@ -77,19 +69,25 @@ Heaven.generateNPC = function(generator, level = 0) {
         npc: true
     });
 
-    var vec = generator.getPosition({
+    var pos = generator.getPosition({
         level: level,
         npc: true
     });
 
+    var speed = amc('*', generator.getVector(), Math.random() * volume);
+
     var heaven = new Heaven({
         body: new Body({
-            position: vec
+            position: pos
         }),
         physic: new Physic({
             matter: new Matter({
                 Fe: volume
             })
+        }),
+        rigidbody: new Rigidbody({
+            protozoa: true,
+            speed: speed
         })
     });
 
@@ -119,22 +117,29 @@ Heaven.prototype.initializePhysic = function(physic) {
             })
         });
     }
-
-    this.physic.attachEvent('update', options => {
-
-    });
 }
 
 Heaven.prototype.initializeRigidbody = function(rigidbody) {
     if (rigidbody instanceof Rigidbody) {
         this.rigidbody = rigidbody;
     } else {
-        this.rigidbody = new Rigidbody;
+        rigidbody = new Rigidbody;
+        this.rigidbody = rigidbody;
     }
 
-    this.rigidbody.attachEvent('update', options => {
+    this.rigidbody.body = this.body;
+    this.rigidbody.physic = this.physic;
+}
 
-    });
+Heaven.prototype.setChange = function(type, value, time) {
+    switch (type) {
+        case 'velocity':
+            if (value instanceof Array && value.length == 3) {
+                rotationChange(this, value, time);
+            }
+
+            break;
+    }
 }
 
 Heaven.prototype.setChanges = function(properties, time) {
@@ -152,22 +157,15 @@ Heaven.prototype.setChanges = function(properties, time) {
     }
 }
 
-Heaven.prototype.setChange = function(type, value, time) {
-    switch (type) {
-        case 'velocity':
-            if (value instanceof Array && value.length == 3) {
-                rotationChange(this, value, time);
-            }
-
-            break;
-    }
-}
-
 function rotationChange(item, value, time) {
+    var newvel = new Vec3(value[0], value[1], value[2]);
+    if (newvel.length() > 1) {
+        return;
+    }
+
     var maxAngle = time / 1000 * item.physic.rotationSpeed;
 
     var oldvel = item.rigidbody.velocity;
-    var newvel = new Vec3(value[0], value[1], value[2]);
 
     var angle = Vec.angle(oldvel, newvel);
 
@@ -190,3 +188,5 @@ var Matter = require('../engine/matter');
 var Rigidbody = require('../engine/rigidbody');
 var Collider = require('../engine/collider');
 var Generator = require('./generator');
+var math = require('../engine/math');
+var amc = math.amc;

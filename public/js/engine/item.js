@@ -19,8 +19,7 @@ function Item(options = {}) {
         options = {};
     }
 
-    this.enabled = options.enabled || true;
-    this.id = options.id || -2;
+    this.enabled = typeof options.enabled === 'boolean' ? options.enabled : true;
     this.name = options.name || 'anonymous';
     this.body = options.body || new Body;
     this.mesh = options.mesh;
@@ -36,6 +35,7 @@ function Item(options = {}) {
     this.public_ = {};
     // A variable environment that can be obtained only in this object
     this.private_ = {};
+    this.temporary_ = {};
 
     this.attributes = {};
 
@@ -169,6 +169,11 @@ Object.defineProperties(Item.prototype, {
     scene: {
         get: function() {
             return this.scene_;
+        }
+    },
+    temporary: {
+        get: function() {
+            return this.temporary_;
         }
     },
     webGL: {

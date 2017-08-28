@@ -11,7 +11,7 @@ function Matter(substances = {}) {
 
     var subs = new Storage;
     subs.filter = (data => typeof data === 'number');
-    this.substances = subs;
+    this.substances_ = subs;
 
     this.addSubstances(substances);
 }
@@ -47,14 +47,14 @@ Object.defineProperties(Matter.prototype, {
             return this.mass_;
         }
     },
-    maxspeed: {
-        get: function() {
-            return this.maxspeed_;
-        }
-    },
     radius: {
         get: function() {
             return this.radius_;
+        }
+    },
+    substances: {
+        get: function() {
+            return this.substances_;
         }
     },
     volume: {
@@ -130,7 +130,7 @@ Matter.prototype.defineParameters = function() {
 
     this.radius_ = Math.pow(3 * this.volume / (4 * Math.PI), 1 / 3);
     this.diameter_ = this.radius * 2;
-    this.maxspeed_ = this.diameter * 0.1;
+    this.maxspeed_ = this.diameter * 1;
 }
 
 /**
@@ -283,7 +283,7 @@ Matter.prototype.updateLayers = function() {
 
             // Add volume and mass to last layer
             last.volume += V;
-            var mass = Phys.mass(p, Vs);
+            var mass = Phys.mass(p, V);
             last.mass += mass;
             all_mass += mass;
         }
@@ -300,7 +300,7 @@ Matter.prototype.updateLayers = function() {
             var V = residue >= 0 ? maxV : maxV + residue;
 
             // Define mass and substances matter for layer
-            var mass = Phys.mass(p, Vs);
+            var mass = Phys.mass(p, V);
             all_mass += mass;
             var subs = [substance.name];
 

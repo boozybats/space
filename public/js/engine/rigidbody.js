@@ -6,15 +6,18 @@ function Rigidbody(options = {}) {
 
     this.actions = {};
     this.body = options.body;
+    this.physic = options.physic;
 
     this.events = {
         update: []
     };
 
-    // Stores last values of properties
     this.velocity = new Vec3;
+    this.speed = new Vec3;
+
+    // Stores last values of properties
     this.lastValues = {
-        velocity: this.velocity
+        velocity: undefined
     };
 
     this.initialize();
@@ -32,6 +35,32 @@ Object.defineProperties(Rigidbody.prototype, {
             }
 
             this.body_ = val;
+        }
+    },
+    physic: {
+        get: function() {
+            return this.physic_;
+        },
+        set: function(val) {
+            if (val && !(val instanceof Physic)) {
+                warn('Rigidbody#physic', 'val', val);
+                val = undefined;
+            }
+
+            this.physic_ = val;
+        }
+    },
+    speed: {
+        get: function() {
+            return this.speed_;
+        },
+        set: function(val) {
+            if (!(val instanceof Vec3)) {
+                warn('Rigidbody#speed', 'val', val);
+                val = new Vec3;
+            }
+
+            this.speed_ = val;
         }
     },
     velocity: {
@@ -100,10 +129,15 @@ Rigidbody.prototype.fireEvent = function(handlername, args) {
 
 Rigidbody.prototype.getActions = function(json) {
     if (json) {
+        var actions = this.actions;
         var wrap = {};
 
-        for (var i in this.actions) {
-            var action = this.actions[i];
+        for (var i in actions) {
+            if (!actions.hasOwnProperty(i)) {
+                continue;
+            }
+
+            var action = actions[i];
             wrap[i] = action.array();
         }
 
@@ -116,14 +150,14 @@ Rigidbody.prototype.getActions = function(json) {
 // Updates properties and send them to callbacks onchange
 Rigidbody.prototype.initialize = function() {
     var self = this;
-    this.onupdate = function(options) {
+    this.attachEvent('update', options => {
         if (typeof options !== 'object') {
             warn('Rigidbody#onupdate', 'options', options);
             return;
         }
 
-        self.makeVelocity();
-    }
+        self.makeVelocity(options.deltaTime);
+    });
 }
 
 Rigidbody.prototype.makeVelocity = function(deltaTime) {
@@ -134,10 +168,25 @@ Rigidbody.prototype.makeVelocity = function(deltaTime) {
         this.lastValues.velocity = velocity;
     }
 
-    var body = this.body;
-    if (body) {
-        var shift = amc('*', velocity, deltaTime);
+    var body = this.body,
+        physic = this.physic;
+    if (body && physic) {
+        var velocity = amc('*', this.velocity, physic.maxspeed);
 
+        // direction of speed
+        var dif = amc('-', velocity, this.speed);
+
+        if (dif.length() <= physic.acceleration) {
+            this.speed = velocity;
+        } else {
+            // acceleration from start position to end position by vector
+            var shift = amc('*', dif.normalize(), physic.acceleration);
+
+            // add shift to current speed
+            this.speed = amc('+', this.speed, shift);
+        }
+
+        var shift = amc('*', this.speed, deltaTime / 1000);
         body.position = amc('+', body.position, shift);
     }
 }

@@ -4,6 +4,7 @@ function Physic(options = {}) {
         options = {};
     }
 
+    this.acceleration = options.acceleration || 0;
     this.color = options.color || new Color(0, 0, 0, 0);
     this.diameter = options.diameter || 0;
     this.mass = options.mass || 0;
@@ -16,6 +17,19 @@ function Physic(options = {}) {
 }
 
 Object.defineProperties(Physic.prototype, {
+    acceleration: {
+        get: function() {
+            return this.acceleration_;
+        },
+        set: function(val) {
+            if (typeof val !== 'number') {
+                warn('Physic#acceleration', 'val', val);
+                val = 0;
+            }
+
+            this.acceleration_ = val;
+        }
+    },
     color: {
         get: function() {
             return this.color_;

@@ -228,6 +228,7 @@ Project.prototype.initialize = function() {
                 if (!item.enabled) {
                     continue;
                 }
+
                 draw(item, mvpmatrix);
             }
         }

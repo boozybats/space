@@ -13,6 +13,8 @@ function Distribution(updater, options = {}) {
 
     this.memory_ = new Storage;
     this.events = {
+        afterSend: [],
+        beforeClientSend: [],
         beforeSend: []
     };
 }
@@ -126,11 +128,16 @@ Distribution.prototype.send = function(options) {
         return;
     }
 
-    var deltaTime = options.deltaTime || 0;
+    var deltaTime = options.deltaTime || 0,
+        time = options.time;
 
     var isDistribute = client.checkOnDistribution(deltaTime);
     if (isDistribute) {
-        client.distribute(options.stack, options.time, this.minrateTime, this.maxrateTime);
+        var out = {};
+
+        this.fireEvent('beforeClientSend', [client, options.stack, out]);
+
+        client.distribute(out, time, this.minrateTime, this.maxrateTime);
     }
 }
 
@@ -147,8 +154,8 @@ Distribution.prototype.start = function() {
     var stack;
 
     this.updater.push(() => {
-        self.fireEvent('beforeSend');
         stack = self.pullMemory();
+        self.fireEvent('beforeSend');
     }, 'start');
 
     this.updater.push(options => {
@@ -156,7 +163,9 @@ Distribution.prototype.start = function() {
         self.send(options);
     }, 'clients');
 
-    this.updater.push(() => {}, 'end');
+    this.updater.push(() => {
+        self.fireEvent('afterSend');
+    }, 'end');
 }
 
 module.exports = Distribution;

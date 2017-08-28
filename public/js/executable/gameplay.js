@@ -7,7 +7,7 @@
             dom: document.body
         },
         graphic: {
-            antialias: 'FXAAx2'
+            antialias: 'NOAA'
         }
     });
 

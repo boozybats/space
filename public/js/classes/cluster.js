@@ -30,18 +30,22 @@ Object.defineProperties(Cluster.prototype, {
 });
 
 Cluster.prototype.disable = function() {
-    if (this.item) {
+    if (this.item && this.item.enabled) {
+        this.item.temporary.isDisabledForUpdate = true;
         this.item.enabled = false;
     }
 }
 
 Cluster.prototype.enable = function() {
-    if (this.item) {
+    if (this.item.temporary.isDisabledForUpdate) {
+        this.item.temporary.isDisabledForUpdate = false;
         this.item.enabled = true;
     }
 }
 
 Cluster.prototype.update = function(data, time) {
+    this.enable();
+
     if (typeof data !== 'object') {
         warn('Cluster#update', 'data', data);
         return;
@@ -58,12 +62,9 @@ Cluster.prototype.update = function(data, time) {
 
         this.item.addTempData(item, time);
         this.item.setAttribute('status', status);
-    }
-    else {
+    } else {
         this.item = undefined;
     }
-
-    this.enable();
 }
 
 function Player(options = {}) {

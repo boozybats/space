@@ -21,6 +21,11 @@ Object.defineProperties(Root.prototype, {
             return this.generator_;
         }
     },
+    map: {
+        get: function() {
+            return this.map_;
+        }
+    },
     mechanics: {
         get: function() {
             return this.mechanics_;
@@ -45,6 +50,8 @@ Root.prototype.configureConnection = function() {
 }
 
 Root.prototype.initialize = function() {
+    var map = new Map(consts.MAP);
+    this.map_ = map;
 
     // Connection binding and configuration setup
     var connection = new Connection;
@@ -56,7 +63,8 @@ Root.prototype.initialize = function() {
     this.storages.players = players;
 
     connection.attachEvent('instancePlayer', player => {
-        players.push(player);
+        var sector = map.findSpawn(player);
+        sector.addCluster(player);
     });
     connection.attachEvent('enablePlayer', player => {
         // If player was replaced for another client and enabled
@@ -192,21 +200,28 @@ Root.prototype.setupDistribution = function(options = {}) {
     this.distribution_ = distribution;
 
     var self = this;
-    // Collect all items before new distribution and set in memory
-    distribution.attachEvent('beforeSend', function() {
-        var players = [];
-        self.storages.players.each(player => {
-            if (player.isReady()) {
-                players.push(player.toJSON());
-            }
-        });
+    // change visible items for each client
+    distribution.attachEvent('beforeClientSend', (client, stack, out) => {
+        var sector = client.sector;
 
-        var npcs = [];
-        if (self.storages.npcs) {
-            self.storages.npcs.each(npc => {
+        out.players = sector.filterClusters(client.player, stack.players);
+        out.npcs = sector.filterClusters(client.player, stack.npcs);
+    });
+
+    // collect all items before new distribution and set in memory
+    distribution.attachEvent('beforeSend', function() {
+        var players = [],
+            npcs = [];
+
+        self.map.sectors.each(sector => {
+            sector.players.each(player => {
+                players.push(player.toJSON());
+            });
+
+            sector.npcs.each(npc => {
                 npcs.push(npc.toJSON());
             });
-        }
+        });
 
         distribution.setInMemory('players', players);
         distribution.setInMemory('npcs', npcs);
@@ -218,6 +233,39 @@ Root.prototype.setupDistribution = function(options = {}) {
     });
 
     distribution.start();
+}
+
+// check can player see the item
+function filterSafeRange(cluster, clusters) {
+    var out = [];
+
+    if (!cluster || !cluster.isReady()) {
+        return out;
+    }
+
+    var item0 = cluster.item;
+
+    var range = item0.physic.diameter * consts.VISION_RANGE;
+
+    for (var i = 0; i < clusters.length; i++) {
+        var cluster = clusters[i];
+
+        if (!cluster.item) {
+            continue;
+        }
+
+        var item1 = cluster.item;
+
+        var pos = item1.body.position;
+        pos = new Vec3(pos[0], pos[1], pos[2]);
+
+        var length = amc('-', item0.body.position, pos).length() - item1.physic.diameter / 2;
+        if (length <= range) {
+            out.push(cluster);
+        }
+    }
+
+    return out;
 }
 
 // Creates npcs in interval by updater and generator
@@ -251,3 +299,9 @@ var Updater = require('./updater');
 var Distribution = require('./distribution');
 var Generator = require('./generator');
 var Mechanics = require('./mechanics');
+var consts = require('./constants');
+var math = require('../engine/math');
+var Map = require('./map');
+var amc = math.amc;
+var v = require('../engine/vector');
+var Vec3 = v.Vec3;

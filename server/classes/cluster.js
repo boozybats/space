@@ -13,6 +13,19 @@ function Cluster(options = {}) {
 }
 
 Object.defineProperties(Cluster.prototype, {
+    destroyTime: {
+        get: function() {
+            return this.destroyTime_;
+        },
+        set: function(val) {
+            if (typeof val !== 'number') {
+                logger.warn('Cluster#destroyTime', 'val', val);
+                val = 0;
+            }
+
+            this.destroyTime_ = val;
+        }
+    },
     generator: {
         get: function() {
             return this.generator_;
@@ -56,12 +69,26 @@ Object.defineProperties(Cluster.prototype, {
 
             if (val) {
                 var self = this;
-                this.handlers.itemDestroy = val.attachEvent('destroy', (method) => {
+                this.handlers.itemDestroy = val.attachEvent('destroy', method => {
+                    self.destroyTime = val.destroyTime;
                     self.status = method;
                 });
             }
 
             this.item_ = val;
+        }
+    },
+    sector: {
+        get: function() {
+            return this.sector_;
+        },
+        set: function(val) {
+            if (val && !(Sector instanceof val)) {
+                logger.warn('Cluster#sector', 'val', val);
+                val = undefined;
+            }
+
+            this.sector_ = val;
         }
     }
 });
@@ -70,6 +97,12 @@ Object.defineProperties(Cluster.prototype, {
 Cluster.prototype.clear = function(method) {
     if (this.item) {
         this.item = undefined;
+    }
+}
+
+Cluster.prototype.destroy = function(method) {
+    if (this.item) {
+        this.item.destroy(method);
     }
 }
 
@@ -88,8 +121,6 @@ Cluster.prototype.each = function(callback) {
 Cluster.prototype.isReady = function() {
     return !!(typeof this.id === 'number' && this.item);
 }
-
-Cluster.prototype.remove = function() {}
 
 // Sets changes to items by distribution answer
 Cluster.prototype.setChanges = function(properties, time) {
@@ -129,3 +160,4 @@ module.exports = Cluster;
 var logger = require('../engine/logger');
 var Heaven = require('./heaven');
 var Generator = require('./generator');
+var Sector = require('./sector');

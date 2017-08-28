@@ -31,7 +31,6 @@ Collider.prototype.defineProperties = function(options = {}) {
 
     this.center = options.center;
     this.diameter = options.diameter;
-
     if (typeof options.diameter !== 'undefined') {
         this.radius = options.diameter / 2;
     }
@@ -47,9 +46,7 @@ Collider.prototype.checkCollision = function(collider) {
         return false;
     }
 
-    var type = collider.type;
-
-    if (this.type == 'sphere' && type == 'sphere') {
+    if (this.type == 'sphere' && collider.type == 'sphere') {
         var distance = amc('-', this.center, collider.center).length();
         var radius = this.radius + collider.radius;
 

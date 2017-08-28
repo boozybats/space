@@ -50,6 +50,12 @@ Generator.prototype.getVolume = function(options = {}) {
     return size;
 }
 
+Generator.prototype.getVector = function() {
+    var vec = new Vec3(Math.random(), Math.random(), 0);
+
+    return vec.normalize();
+}
+
 module.exports = Generator;
 
 var logger = require('../engine/logger');

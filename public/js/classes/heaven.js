@@ -27,6 +27,7 @@ function Heaven(options = {}) {
     this.extrapolationDuration = typeof exp === 'number' ? exp : EXTRAPOLATION_DURATION;
 
     this.tmpData = [];
+    this.animation = {};
 }
 
 Heaven.prototype = Object.create(Circle.prototype);
@@ -120,10 +121,36 @@ Heaven.prototype.addTempData = function(data, time) {
     });
 }
 
+Heaven.prototype.animate = function(type, time) {
+    var animation = this.animation[type];
+
+    if (!animation || !time) {
+        return;
+    }
+
+    switch (type) {
+        case 'diameter':
+            var startValue = animation.startValue,
+                endValue = animation.endValue;
+            var startTime = animation.startTime,
+                endTime = animation.endTime;
+
+            var pre = Math.min((time - startTime) / (endTime - startTime), 1);
+            var value = startValue + (endValue - startValue) * pre;
+
+            this.body.scale = new Vec3(value, value, value);
+
+            break;
+    }
+}
+
 Heaven.prototype.extrapolate = function(time) {
     var tmpData = this.tmpData;
 
     var data = tmpData[tmpData.length - 1];
+    if (!data) {
+        return;
+    }
 
     this.setChanges(data.data);
 }
@@ -132,6 +159,8 @@ Heaven.prototype.extrapolate = function(time) {
 Heaven.prototype.initialize = function() {
     var _private = this.private;
     var self = this;
+
+    this.body.scale = new Vec3;
 
     this.attachEvent('update', options => {
         var time = options.time;
@@ -142,24 +171,60 @@ Heaven.prototype.initialize = function() {
 
         self.interpolate(time);
 
-        var oldDiameter = _private.diameter,
-            diameter = self.physic.diameter;
-        if (oldDiameter !== diameter) {
+        var diameter = self.physic.diameter,
+            cdiameter = _private.diameter || 0;
+
+        if (cdiameter !== diameter) {
             _private.diameter = diameter;
-            self.body.scale = new Vec3(diameter, diameter, diameter);
+
+            this.animation.diameter = {
+                startValue: cdiameter,
+                endValue: diameter,
+                startTime: time,
+                endTime: time + ANIMATE_DURATION.diameter
+            };
         }
+        this.animate('diameter', time);
 
         if (self.observer) {
-            var obsbody = self.observer.body;
-            var body = self.body;
+            var z = diameter * -2.5;
 
-            var z = body.scale.z * -2.5;
-
-            obsbody.position = new Vec3(body.position.xy, z);
+            self.observer.body.position = new Vec3(self.body.position.xy, z);
         }
     });
 
-    this.attachEvent('attribute', (name, value) => {});
+    this.attachEvent('attribute', (name, value) => {
+        switch (name) {
+            case 'status':
+                switch (value) {
+                    case 'collapsion':
+                        self.mesh.changeUniforms({
+                            u_Options: {
+                                collapsion: 1,
+                                explosion: 0
+                            }
+                        });
+
+                        self.enabled = false;
+
+                        break;
+
+                    case 'explosion':
+                        self.mesh.changeUniforms({
+                            u_Options: {
+                                collapsion: 0,
+                                explosion: 1
+                            }
+                        });
+
+                        self.enabled = false;
+
+                        break;
+                }
+
+                break;
+        }
+    });
 }
 
 // Sets maps to shader
@@ -230,8 +295,14 @@ Heaven.prototype.setChanges = function(options) {
     }
 
     if (options.physic) {
+        this.physic.acceleration = options.physic.acceleration;
         this.physic.diameter = options.physic.diameter;
         this.physic.maxspeed = options.physic.maxspeed;
+    }
+
+    if (options.rigidbody) {
+        var dir = options.rigidbody.speed;
+        this.rigidbody.speed = new Vec3(dir[0], dir[1], dir[2]);
     }
 }
 
@@ -286,15 +357,15 @@ Heaven.prototype.setInterstitialChanges = function(state0, state1, time) {
         physic1 = data1.physic;
 
     if (typeof physic0 === 'object' && typeof physic1 === 'object') {
-        var diameter0 = physic0.diameter,
-            diameter1 = physic1.diameter;
-        var maxspeed0 = physic0.maxspeed,
-            maxspeed1 = physic1.maxspeed;
+        var acceleration0 = physic0.acceleration,
+            diameter0 = physic0.diameter,
+            maxspeed0 = physic0.maxspeed;
 
         changes.physic = {
-            diameter: getInstFloat(diameter0, diameter1, multiplier),
-            maxspeed: getInstFloat(maxspeed0, maxspeed1, multiplier)
-        }
+            acceleration: acceleration0,
+            diameter: diameter0,
+            maxspeed: maxspeed0
+        };
     }
 
     this.setChanges(changes);
@@ -340,19 +411,9 @@ Heaven.shader = function() {
 
         void main() {
             vec2 st = v_UV;
-            vec4 color = vec4(step(.5, length(st)));
+            vec3 color = vec3(1.);
 
-            gl_FragColor = color;
+            gl_FragColor = vec4(color, 1.);
         }`
     ];
-}
-
-Heaven.prototype.toJSON = function() {
-    var out = {};
-
-    if (this.body) {
-        out.body = this.body.toJSON();
-    }
-
-    return out;
 }

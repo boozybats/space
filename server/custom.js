@@ -9,8 +9,8 @@ var Root = require('./classes/root');
     });
 
     root.setupSpawner({
-        count: 3,
-        interval: 10000,
+        count: 15,
+        interval: 3000,
         lifetime: 10000
-    })
+    });
 })();

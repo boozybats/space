@@ -34,6 +34,11 @@ function Physic(options = {}) {
 }
 
 Object.defineProperties(Physic.prototype, {
+    acceleration: {
+        get: function() {
+            return this.maxspeed * consts.ACCELERATION_RELATION;
+        }
+    },
     color: {
         get: function() {
             return this.matter.color;
@@ -65,7 +70,7 @@ Object.defineProperties(Physic.prototype, {
     maxspeed: {
         get: function() {
             // In second
-            return this.matter.maxspeed;
+            return this.diameter * consts.SPEED_RELATION;
         }
     },
     rotationSpeed: {
@@ -140,6 +145,10 @@ Physic.prototype.fireEvent = function(handlername, args) {
     }
 }
 
+Physic.gravitation = function(m0, m1, r) {
+    return consts.G * (m0 * m1) / Math.pow(r, 2);
+}
+
 Physic.prototype.Mass = function(R) {
     if (typeof R !== 'number') {
         logger.warn('Physic#Mass', 'R', R);
@@ -196,7 +205,7 @@ Physic.prototype.Pressure = function(R) {
     var self = this;
     this.matter.each((layer, radius) => {
         if (radius >= R) {
-            out = consts.G * (self.MassTotal(R) * self.Density(R) / Math.pow(R, 2));
+            out = Physic.gravitation(self.MassTotal(R), self.Density(R), R);
 
             return false;
         }
@@ -217,6 +226,7 @@ Physic.prototype.Temperature = function(R) {
 Physic.prototype.toJSON = function() {
     var out = {};
 
+    out.acceleration = this.acceleration;
     out.color = this.color.array();
     out.diameter = this.diameter;
     out.mass = this.mass;

@@ -111,11 +111,14 @@ Spawner.prototype.attachEvent = function(handlername, callback) {
 Spawner.prototype.checkExpiration = function(time) {
     var self = this;
     this.npcs.each((npc, ind, arr) => {
-        if (npc.instanceTime + self.lifetime < time) {
-            npc.remove();
-            arr.splice(ind, 1);
+        var endtime = npc.instanceTime + self.lifetime;
+        if (endtime < time) {
+            npc.destroy('collapsion', time);
+        }
 
+        if (typeof npc.destroyTime === 'number' && npc.destroyTime + consts.AFTERDEATH < time) {
             self.generator.clearID(npc.id);
+            arr.splice(ind, 1);
         }
     });
 }
