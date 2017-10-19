@@ -210,15 +210,6 @@ Project.prototype.initialize = function() {
         for (var i = 0; i < cameras.length; i++) {
             var camera = cameras[i];
 
-            // Execute onupdate functions at first
-            for (var j = 0; j < items.length; j++) {
-                var item = items[j];
-                if (!item.enabled) {
-                    continue;
-                }
-                update(item, options);
-            }
-
             // Initialze perspective matrix by camera body
             var mvpmatrix = camera.mvpmatrix();
 
@@ -235,11 +226,6 @@ Project.prototype.initialize = function() {
 
         webGLRenderer.renderer.end();
     });
-
-    function update(item, options) {
-        // update by custrom scripts
-        item.streamUpdate(options);
-    }
 
     function draw(item, mvpmatrix) {
         var gl = self.webGLRenderer.webGL;
@@ -341,8 +327,8 @@ Project.prototype.selectScene = function(scene) {
 Project.prototype.update = function() {
     var layers = this.layers;
 
-    var olddate = this.olddate || Date.now(),
-        newdate = Date.now(),
+    var newdate = Date.now();
+    var olddate = this.olddate || newdate,
         delta = newdate - olddate;
     this.olddate = newdate;
 

@@ -61,6 +61,19 @@ Object.defineProperties(Game.prototype, {
             return this.scene_;
         }
     },
+    sector: {
+        get: function() {
+            return this.sector_;
+        },
+        set: function(val) {
+            if (typeof val !== 'object') {
+                warn('Game#sector', 'val', val);
+                val = undefined;
+            }
+
+            this.sector_ = val;
+        }
+    },
     shaders: {
         get: function() {
             return this.shaders_;
@@ -330,6 +343,28 @@ Game.prototype.initialize = function(options = {}) {
     // Set first layer for webGL drawning in project
     project.initialize();
 
+    var self = this;
+    project.addLayer(options => {
+        var scene = project.currentScene;
+
+        if (!scene) {
+            return;
+        }
+
+        options.sector = self.sector;
+        var items = scene.items.concat(scene.systemitems);
+
+        // Execute onupdate functions at first
+        for (var j = 0; j < items.length; j++) {
+            var item = items[j];
+            if (!item.enabled) {
+                continue;
+            }
+
+            item.streamUpdate(options);
+        }
+    });
+
     // Initialize webGLRenderer by attributes
     project.initializeWebGLRenderer({
         attributes: {
@@ -388,6 +423,7 @@ Game.prototype.onDistribution = function(response) {
 
     var time = Date.now();
 
+    this.setSector(stack.sector);
     this.updateByPlayers(stack.players, time);
     this.updateByNpcs(stack.npcs, time);
 }
@@ -551,6 +587,17 @@ Game.prototype.setConnectionListeners = function(options) {
 
         connection.listen(i, callback);
     }
+}
+
+Game.prototype.setSector = function(sector) {
+    if (!sector) {
+        return;
+    }
+
+    this.sector = {
+        size: new Vec3(sector.width, sector.height, 1),
+        worldPosition: sector.worldPosition
+    };
 }
 
 // Creates scene, camera, player's objects and starts rendering

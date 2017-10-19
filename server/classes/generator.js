@@ -19,33 +19,14 @@ Generator.prototype.generateID = function() {
     }
 }
 
-Generator.prototype.getPosition = function(options = {}) {
-    if (typeof options !== 'object') {
-        logger.warn('Generator#getPosition', 'options', options);
-        options = {};
-    }
-
-    var area = consts.AREA_SIZES[options.level];
-    var width = area[0],
-        height = area[1];
-
+Generator.prototype.getPosition = function(width, height) {
     var position = new Vec3(Math.random() * width - width / 2, Math.random() * height - height / 2, 0);
 
     return position;
 }
 
-Generator.prototype.getVolume = function(options = {}) {
-    if (typeof options !== 'object') {
-        logger.warn('Generator#getVolume', 'options', options);
-        options = {};
-    }
-
-    var r = Math.random();
-
-    var level = options.level;
-
-    var size = options.npc ? consts.NPC_SIZES[level] : consts.PLAYER_SIZES[level];
-    size = size[0] + r * (size[1] - size[0]);
+Generator.prototype.getVolume = function(min, max) {
+    var size = min + Math.random() * (max - min);
 
     return size;
 }

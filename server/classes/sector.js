@@ -6,10 +6,11 @@ function Sector(options = {}) {
 
     this.width = options.width;
     this.height = options.height;
-    this.isSpawn = options.isSpawn || false;
+    this.spawn = options.spawn;
 
     this.npcs_ = new Storage;
     this.players_ = new Storage;
+    this.lastUpdate = 0;
 }
 
 Object.defineProperties(Sector.prototype, {
@@ -26,17 +27,17 @@ Object.defineProperties(Sector.prototype, {
             this.height_ = val;
         }
     },
-    isSpawn: {
+    lastUpdate: {
         get: function() {
-            return this.isSpawn_;
+            return this.lastUpdate_;
         },
         set: function(val) {
-            if (typeof val !== 'boolean') {
-                logger.warn('Sector#isSpawn', 'val', val);
-                val = false;
+            if (typeof val !== 'number') {
+                logger.warn('Sector#lastUpdate', 'val', val);
+                return;
             }
 
-            this.isSpawn_ = val;
+            this.lastUpdate_ = val;
         }
     },
     npcs: {
@@ -47,6 +48,19 @@ Object.defineProperties(Sector.prototype, {
     players: {
         get: function() {
             return this.players_;
+        }
+    },
+    spawn: {
+        get: function() {
+            return this.spawn_;
+        },
+        set: function(val) {
+            if (val && typeof val !== 'object') {
+                logger.warn('Sector#spawn', 'val', val);
+                val = undefined;
+            }
+
+            this.spawn_ = val;
         }
     },
     width: {
@@ -61,23 +75,73 @@ Object.defineProperties(Sector.prototype, {
 
             this.width_ = val;
         }
+    },
+    worldPosition: {
+        get: function() {
+            return this.worldPosition_;
+        },
+        set: function(val) {
+            if (typeof val !== 'object') {
+                logger.warn('Sector#worldPosition', 'val', val);
+                val = 0;
+            }
+
+            this.worldPosition_ = val;
+        }
     }
 });
 
-Sector.prototype.addNpc = function(npc) {
-    var npcs = this.npcs;
+Sector.prototype.addCluster = function(cluster) {
+    if (cluster instanceof Player) {
+        var players = this.players;
 
-    npcs.push(npc);
+        players.push(cluster);
 
-    npc.sector = this;
+        cluster.sector = this;
+    } else if (cluster instanceof NPC) {
+        var npcs = this.npcs;
+
+        npcs.push(cluster);
+
+        cluster.sector = this;
+    }
 }
 
-Sector.prototype.addPlayer = function(player) {
-    var players = this.players;
+Sector.prototype.defineDefaultCluster = function(generator, cluster) {
+    var spawn = this.spawn;
+    if (!spawn) {
+        logger.warnfree(`Sector#defineDefaultCluster: the sector isnt spawn, sector: ${this}`);
+        return;
+    }
 
-    players.push(player);
+    var vec, volume, rigidbody;
+    if (cluster instanceof Player) {
+        vec = generator.getPosition(this.width, this.height);
+        volume = generator.getVolume(spawn.playerSize[0], spawn.playerSize[1]);
+    } else if (cluster instanceof NPC) {
+        vec = generator.getPosition(this.width, this.height);
+        volume = generator.getVolume(spawn.npcSize[0], spawn.npcSize[1]);
+        rigidbody = new Rigidbody({
+            speed: amc('*', generator.getVector(), Math.random() * volume),
+            protozoa: true
+        });
+    } else {
+        return;
+    }
 
-    player.sector = this;
+    var item = new Heaven({
+        body: new Body({
+            position: vec
+        }),
+        physic: new Physic({
+            matter: new Matter({
+                Fe: volume
+            })
+        }),
+        rigidbody: rigidbody
+    });
+
+    cluster.item = item;
 }
 
 Sector.prototype.filterClusters = function(cluster, clusters) {
@@ -112,6 +176,38 @@ Sector.prototype.filterClusters = function(cluster, clusters) {
     return out;
 }
 
+Sector.prototype.getData = function() {
+    return {
+        worldPosition: this.worldPosition,
+        width: this.width,
+        height: this.height
+    };
+}
+
+Sector.prototype.removeCluster = function(cluster) {
+    if (cluster instanceof Player) {
+        var players = this.players;
+
+        var index = players.indexOf(cluster);
+        players.remove(index, 1);
+    } else if (cluster instanceof NPC) {
+        var npcs = this.npcs;
+
+        var index = npcs.indexOf(cluster);
+        npcs.remove(index, 1);
+    }
+}
+
 module.exports = Sector;
 
 var logger = require('../engine/logger');
+var math = require('../engine/math');
+var amc = math.amc;
+var Storage = require('../engine/storage');
+var Player = require('./player');
+var NPC = require('./npc');
+var Heaven = require('./heaven');
+var Physic = require('../engine/physic');
+var Matter = require('../engine/matter');
+var Body = require('../engine/body');
+var Rigidbody = require('../engine/rigidbody');

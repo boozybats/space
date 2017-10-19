@@ -1,23 +1,32 @@
-function Mechanics(options = {}) {
-    if (typeof options !== 'object') {
-        logger.warn('Mechanics', 'options', options);
-        options = {};
+function Mechanics(map) {
+    if (!(map instanceof Map)) {
+        logger.error('Mechanics', 'map', map);
+        map = undefined;
     }
 
-    this.storages_ = options.storages;
+    this.map = map;
 }
 
 Object.defineProperties(Mechanics.prototype, {
-    storages: {
+    map: {
         get: function() {
-            return this.storages_;
+            return this.map_;
+        },
+        set: function(val) {
+            if (val && !(val instanceof Map)) {
+                logger.warn('Mechanics#map', 'val', val);
+                val = undefined;
+            }
+
+            this.map_ = val;
         }
     }
 });
 
 // Compares sended items colliders
-Mechanics.prototype.allcollide = function(items, time) {
+Mechanics.prototype.collide = function(items, options) {
     var collisions = [];
+
     for (var i = 0; i < items.length; i++) {
         var item0 = items[i];
         var collider0 = item0.collider;
@@ -27,7 +36,7 @@ Mechanics.prototype.allcollide = function(items, time) {
             var collider1 = item1.collider;
 
             if (collider0.checkCollision(collider1)) {
-                var option = this.collide(item0, item1, time);
+                var option = collide(item0, item1, options);
 
                 switch (option) {
                     case 0:
@@ -48,7 +57,9 @@ Mechanics.prototype.allcollide = function(items, time) {
     }
 }
 
-Mechanics.prototype.collide = function(item0, item1, time) {
+function collide(item0, item1, options) {
+    var time = options.time;
+
     var mass0 = item0.physic.mass,
         mass1 = item1.physic.mass;
     var option;
@@ -75,41 +86,26 @@ Mechanics.prototype.collide = function(item0, item1, time) {
 }
 
 Mechanics.prototype.each = function(callback) {
-    var storages = this.storages;
-
-    for (var i in storages) {
-        if (!storages.hasOwnProperty(i)) {
-            continue;
-        }
-
-        var storage = storages[i];
-
-        if (!(storage instanceof Storage)) {
-            continue;
-        }
-
-        storage.each(cluster => {
-            if (cluster.isReady()) {
-                callback(cluster, i);
-            }
-        });
-    }
+    this.clusters.each(callback);
 }
 
-Mechanics.prototype.interaction = function(items, influe) {
+Mechanics.prototype.interact = function(items, influes) {
     for (var i = 0; i < items.length; i++) {
         var item = items[i];
-        for (var j = 0; j < influe.length; j++) {
-            if (item === influe[j]) {
+
+        for (var j = 0; j < influes.length; j++) {
+            var influe = influes[j];
+
+            if (item === influe) {
                 continue;
             }
 
-            item.rigidbody.externalities = interaction(items[i], influe[j]);
+            item.rigidbody.externalities = interact(item, influe);
         }
     }
 }
 
-function interaction(item0, item1) {
+function interact(item0, item1) {
     var vec = new Vec3;
 
     var physic0 = item0.physic,
@@ -123,41 +119,70 @@ function interaction(item0, item1) {
     return vec;
 }
 
+Mechanics.prototype.removeCluster = function(cluster) {
+    var clusters = this.clusters;
+
+    var index = clusters.indexOf(cluster);
+    clusters.remove(index, 1);
+}
+
 Mechanics.prototype.update = function(options = {}) {
-    // Store colliders to send them ALL in each cluster and check collision
-    var items = [];
-    var influe = [];
+    // Store colliders to send them ALL in each cluster and check collisions
+    var map = this.map;
+    var sectors = map.sectors;
 
-    // Update stream functions like physic.onupdate, rigidbody.onupdate
-    this.each((cluster, type) => {
-        cluster.streamUpdate(options);
+    var self = this;
+    sectors.each(sector => {
+        var players = process(sector, sector.players),
+            npcs = process(sector, sector.npcs);
 
-        cluster.each(item => {
-            if (!item.enabled) {
+        self.collide(players.collider.concat(npcs.collider), options);
+        self.interact(players.all.concat(npcs.all), players.influence.concat(npcs.influence));
+    });
+
+    function process(sector, clusters) {
+        var out = {
+            all: [],
+            collider: [],
+            influence: []
+        };
+
+        clusters.each(cluster => {
+            cluster.streamUpdate(options);
+
+            // checks is cluster in sector boundaries, if not then changes sector
+            if (map.updateInSector(sector, cluster)) {
                 return;
             }
 
-            var collider = item.collider;
-            if (collider) {
-                // Update sphere center position of collider and diameter
-                collider.defineProperties({
-                    center: amc('*', item.body.mvmatrix(), Vec4.homogeneousPos).toCartesian(),
-                    diameter: item.physic.diameter
-                });
+            var type = cluster instanceof Player ? 0 : 1;
 
-                items.push(item);
-
-                if (type === 'players') {
-                    influe.push(item);
+            cluster.each(item => {
+                if (!item.enabled) {
+                    return;
                 }
-            }
-        });
-    });
 
-    // check on collision all items
-    this.allcollide(items, options.time);
-    // make optional physic calculations by influence items
-    this.interaction(items, influe);
+                out.all.push(item);
+
+                var collider = item.collider;
+                if (collider) {
+                    // Update sphere center position of collider and diameter
+                    collider.defineProperties({
+                        center: amc('*', item.body.mvmatrix(), Vec4.homogeneousPos).toCartesian(),
+                        diameter: item.physic.diameter
+                    });
+
+                    out.collider.push(item);
+                }
+
+                if (item.physic && type === 0) {
+                    out.influence.push(item);
+                }
+            });
+        });
+
+        return out;
+    }
 }
 
 module.exports = Mechanics;
@@ -170,4 +195,7 @@ var Storage = require('../engine/storage');
 var v = require('../engine/vector');
 var Vec3 = v.Vec3;
 var Vec4 = v.Vec4;
+var Map = require('./map');
+var NPC = require('./npc');
+var Player = require('./player');
 var Physic = require('../engine/physic');

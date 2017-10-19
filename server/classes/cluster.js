@@ -5,11 +5,11 @@ function Cluster(options = {}) {
         options = {};
     }
 
-    this.generator = options.generator;
+    this.id = options.id || -1;
+    this.instanceTime = options.instanceTime || 0;
+
     this.status = 'alive';
     this.handlers = {};
-
-    this.initialize();
 }
 
 Object.defineProperties(Cluster.prototype, {
@@ -26,19 +26,6 @@ Object.defineProperties(Cluster.prototype, {
             this.destroyTime_ = val;
         }
     },
-    generator: {
-        get: function() {
-            return this.generator_;
-        },
-        set: function(val) {
-            if (!(val instanceof Generator)) {
-                logger.warn('Cluster#generator', 'val', val);
-                val = new Generator;
-            }
-
-            this.generator_ = val;
-        }
-    },
     id: {
         get: function() {
             return this.id_;
@@ -50,6 +37,19 @@ Object.defineProperties(Cluster.prototype, {
             }
 
             this.id_ = val;
+        }
+    },
+    instanceTime: {
+        get: function() {
+            return this.instanceTime_;
+        },
+        set: function(val) {
+            if (typeof val !== 'number') {
+                logger.warn('Cluster#instanceTime', 'val', val);
+                val = 0;
+            }
+
+            this.instanceTime_ = val;
         }
     },
     item: {
@@ -83,7 +83,7 @@ Object.defineProperties(Cluster.prototype, {
             return this.sector_;
         },
         set: function(val) {
-            if (val && !(Sector instanceof val)) {
+            if (val && !(val instanceof Sector)) {
                 logger.warn('Cluster#sector', 'val', val);
                 val = undefined;
             }
@@ -141,15 +141,17 @@ Cluster.prototype.streamUpdate = function(options) {
     }
 }
 
-Cluster.prototype.toJSON = function() {
+Cluster.prototype.toJSON = function(callback) {
     var out = {};
 
     out.id = this.id || -1;
     out.nick = this.nick || '';
     out.status = this.status;
 
+    var json;
     if (this.item) {
-        out.item = this.item.toJSON();
+        json = this.item.toJSON();
+        out.item = typeof callback === 'function' ? callback(json) : json;
     }
 
     return out;

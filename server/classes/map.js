@@ -32,12 +32,110 @@ Map.prototype.findSpawn = function(cluster) {
     var sectors = this.sectors;
 
     var matches = sectors.find(sector => {
-        return sector.isSpawn;
+        return sector.spawn;
     });
 
-    var rand = Math.floor(matches.length - Number.EPSILON);
+    var rand = matches[Math.floor(Math.random() * (matches.length - 1e-6))];
 
     return rand;
+}
+
+Map.prototype.updateInSector = function(sector, cluster) {
+    var self = this;
+    var w = sector.width / 2,
+        h = sector.height / 2;
+
+    var item = cluster.item;
+    var pos = item.body.position;
+
+    var wp = sector.worldPosition;
+
+    if (pos.x < -w || pos.x > w || pos.y < -h || pos.y > h) {
+        var nsector, nx, ny;
+
+        if (pos.x < -w && (nsector = findSector(0, wp.x, wp.y))) {
+            nx = nsector.width / 2 + (pos.x + w);
+            ny = Math.min(pos.y / h, 1) * nsector.height / 2;
+        } else if (pos.x > w && (nsector = findSector(1, wp.x, wp.y))) {
+            nx = -nsector.width / 2 + (pos.x - w);
+            ny = Math.min(pos.y / h, 1) * nsector.height / 2;
+        } else if (pos.y > h && (nsector = findSector(2, wp.x, wp.y))) {
+            nx = Math.min(pos.x / w, 1) * nsector.width / 2;
+            ny = -nsector.height / 2 + (pos.y - h);
+        } else if (pos.y < -h && (nsector = findSector(3, wp.x, wp.y))) {
+            nx = Math.min(pos.x / w, 1) * nsector.width / 2;
+            ny = nsector.height / 2 + (pos.y + h);
+        } else {
+            var x = Math.max(Math.min(pos.x, w), -w),
+                y = Math.max(Math.min(pos.y, h), -h);
+
+            var shift = new Vec3(x - pos.x, y - pos.y, 0);
+
+            cluster.each(item => {
+                item.body.position = amc('+', item.body.position, shift);
+            });
+
+            return 0;
+        }
+
+        sector.removeCluster(cluster);
+        nsector.addCluster(cluster);
+
+        var shift = new Vec3(nx - pos.x, ny - pos.y, 0);
+
+        cluster.each(item => {
+            item.body.position = amc('+', item.body.position, shift);
+        });
+    } else {
+        return 0;
+    }
+
+    return 1;
+
+    // 0 - left, 1 - right, 2 - top, 3 - bottom
+    function findSector(side, x, y) {
+        var out;
+
+        self.sectors.each(sector => {
+            var wp = sector.worldPosition;
+
+            switch (side) {
+                case 0:
+                    if (x > wp.x && y == wp.y) {
+                        x = wp.x;
+                        out = sector;
+                    }
+
+                    break;
+
+                case 1:
+                    if (x < wp.x && y == wp.y) {
+                        x = wp.x;
+                        out = sector;
+                    }
+
+                    break;
+
+                case 2:
+                    if (y > wp.y && x == wp.x) {
+                        y = wp.y;
+                        out = sector;
+                    }
+
+                    break;
+
+                case 3:
+                    if (y < wp.y && x == wp.x) {
+                        y = wp.y;
+                        out = sector;
+                    }
+
+                    break;
+            }
+        });
+
+        return out;
+    }
 }
 
 Map.prototype.removeSector = function(x, y) {
@@ -58,6 +156,11 @@ Map.prototype.setSector = function(sector, x, y) {
         logger.warn('Map#setSector', 'y', y);
         return;
     }
+
+    sector.worldPosition = {
+        x: x,
+        y: y
+    };
 
     var des = `${designate(x)}${y}`;
     this.sectors.set(des, sector);
@@ -82,4 +185,8 @@ module.exports = Map;
 var logger = require('../engine/logger');
 var Storage = require('../engine/storage');
 var consts = require('./constants');
+var math = require('../engine/math');
+var amc = math.amc;
 var Sector = require('./sector');
+var v = require('../engine/vector');
+var Vec3 = v.Vec3;

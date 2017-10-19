@@ -1,21 +1,6 @@
-/* Some values which have 2 or more arrays have a logic like:
-0 index - 1 lvl values, 1 - 2 lvl, e.t.c. */
-
 var wrap = {
-    LEVELS: 1,
-    PLAYER_SIZES: [
-        [6, 8],
-        [60, 80]
-    ], //[[4e+5, 5e+5]],
-    NPC_SIZES: [
-        [0.2, 0.3],
-        [2, 4]
-    ],
-    SPAWN_LIFETIME: 60000,
-    SPAWN_INTERVAL: 5000,
-    SPAWN_COUNT: 5,
-    AFTERDEATH: 3000,
-    MAX_DESTROY_OVERWEIGHT: 4,
+    AFTERDEATH: 3000, // how much time object lives after death
+    MAX_DESTROY_OVERWEIGHT: 4, // more bigger objecet will "eat" another (minimum this multiplier times)
     VISION_RANGE: 5, // visible objects for player range multiplier on diameter
     DESIGNATIONS: 'ABCDEFGHIJKLMNOPQRSTUVWXYZ',
     MAP: map()
@@ -24,24 +9,44 @@ var wrap = {
 module.exports = wrap;
 
 function map() {
-    var out = [
+    return [
         [{
-                width: 100,
-                height: 100,
-                isSpawn: true
+                width: 10e+5,
+                height: 10e+5,
+                spawn: {
+                    count: 10,
+                    interval: 5000,
+                    lifetime: 25000,
+                    playerSize: [4e+5, 5e+5],
+                    npcSize: [2e+4, 3e+4]
+                }
             },
             {
-                width: 500,
-                height: 500
+                width: 10e+5,
+                height: 10e+5,
+                spawn: {
+                    count: 3,
+                    interval: 10000,
+                    lifetime: 25000,
+                    playerSize: [4e+5, 5e+5],
+                    npcSize: [1.5e+5, 2e+5]
+                }
             }
         ],
         [{
-                width: 500,
-                height: 500
+                width: 10e+5,
+                height: 10e+5
             },
             {
-                width: 1e+3,
-                height: 3e+3
+                width: 10e+5,
+                height: 10e+5,
+                spawn: {
+                    count: 6,
+                    interval: 5000,
+                    lifetime: 25000,
+                    playerSize: [4e+5, 5e+5],
+                    npcSize: [5e+4, 6e+4]
+                }
             }
         ]
     ];

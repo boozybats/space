@@ -174,6 +174,18 @@ Heaven.prototype.initialize = function() {
         var diameter = self.physic.diameter,
             cdiameter = _private.diameter || 0;
 
+        var body = self.body;
+
+        if (options.sector) {
+            var sector = options.sector;
+            // TODO: crutch
+            // if "k" very big then objects wouldn't be showed
+            var k = Math.max(sector.size.x, sector.size.y) / 2;
+
+            body.position = amc('/', body.position, k);
+            diameter /= k;
+        }
+
         if (cdiameter !== diameter) {
             _private.diameter = diameter;
 
@@ -189,7 +201,7 @@ Heaven.prototype.initialize = function() {
         if (self.observer) {
             var z = diameter * -2.5;
 
-            self.observer.body.position = new Vec3(self.body.position.xy, z);
+            self.observer.body.position = new Vec3(body.position.xy, z);
         }
     });
 
@@ -256,7 +268,10 @@ Heaven.prototype.interpolate = function(time) {
     var interval;
 
     var tmpData = this.tmpData;
-    if (tmpData.length < 2) {
+    if (tmpData.length < 1) {
+        return;
+    } else if (tmpData.length < 2) {
+        this.extrapolate(time);
         return;
     }
 

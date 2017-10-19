@@ -58,11 +58,11 @@ Object.defineProperties(Connection.prototype, {
 
 Connection.prototype.attachEvent = function(handlername, callback) {
     if (typeof callback !== 'function') {
-        warn('Connection#attachEvent', 'callback', callback);
+        logger.warn('Connection#attachEvent', 'callback', callback);
         return;
     }
     if (!this.events[handlername]) {
-        warnfree(`Connection#attachEvent: unexpected handlername, handlername: ${handlername}`);
+        logger.warnfree(`Connection#attachEvent: unexpected handlername, handlername: ${handlername}`);
         return;
     }
 

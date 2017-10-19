@@ -135,7 +135,7 @@ Distribution.prototype.send = function(options) {
     if (isDistribute) {
         var out = {};
 
-        this.fireEvent('beforeClientSend', [client, options.stack, out]);
+        this.fireEvent('beforeClientSend', [client, out]);
 
         client.distribute(out, time, this.minrateTime, this.maxrateTime);
     }

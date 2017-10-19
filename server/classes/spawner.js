@@ -6,76 +6,39 @@ function Spawner(options = {}) {
 
     this.generator = options.generator;
     this.updater = options.updater;
-    // How much npcs henerate by time
-    this.count = typeof options.count === 'number' ? options.count : consts.SPAWN_COUNT;
-    this.interval = typeof options.interval === 'number' ? options.interval : consts.SPAWN_INTERVAL;
-    this.lifetime = typeof options.lifetime === 'number' ? options.lifetime : consts.SPAWN_LIFETIME;
+    this.map = options.map;
 
     this.events = {
+        instance: [],
         remove: []
     };
-
-    var npcs = new Storage;
-    npcs.filter = (data => data instanceof NPC);
-    this.npcs_ = npcs;
 }
 
 Object.defineProperties(Spawner.prototype, {
-    count: {
-        get: function() {
-            return this.count_;
-        },
-        set: function(val) {
-            if (typeof val !== 'number') {
-                logger.warn('Spawner#count', 'val', val);
-                val = consts.SPAWN_COUNT;
-            }
-
-            this.count_ = val;
-        }
-    },
     generator: {
         get: function() {
             return this.generator_;
         },
         set: function(val) {
             if (!(val instanceof Generator)) {
-                logger.warn('Spawner#generator', 'val', val);
+                logger.error('Spawner#generator', 'val', val);
                 return;
             }
 
             this.generator_ = val;
         }
     },
-    interval: {
+    map: {
         get: function() {
-            return this.interval_;
+            return this.map_;
         },
         set: function(val) {
-            if (typeof val !== 'number') {
-                logger.warn('Spawner#interval', 'val', val);
-                val = consts.SPAWN_INTERVAL;
+            if (!(val instanceof Map)) {
+                logger.error('Spawner#map', 'val', val);
+                return;
             }
 
-            this.interval_ = val;
-        }
-    },
-    lifetime: {
-        get: function() {
-            return this.lifetime_;
-        },
-        set: function(val) {
-            if (typeof val !== 'number') {
-                logger.warn('Spawner#lifetime', 'val', val);
-                val = consts.SPAWN_LIFETIME;
-            }
-
-            this.lifetime_ = val;
-        }
-    },
-    npcs: {
-        get: function() {
-            return this.npcs_;
+            this.map_ = val;
         }
     },
     updater: {
@@ -108,21 +71,6 @@ Spawner.prototype.attachEvent = function(handlername, callback) {
     return [handlername, callback];
 }
 
-Spawner.prototype.checkExpiration = function(time) {
-    var self = this;
-    this.npcs.each((npc, ind, arr) => {
-        var endtime = npc.instanceTime + self.lifetime;
-        if (endtime < time) {
-            npc.destroy('collapsion', time);
-        }
-
-        if (typeof npc.destroyTime === 'number' && npc.destroyTime + consts.AFTERDEATH < time) {
-            self.generator.clearID(npc.id);
-            arr.splice(ind, 1);
-        }
-    });
-}
-
 Spawner.prototype.detachEvent = function(handler) {
     if (!(handler instanceof Array)) {
         return;
@@ -149,14 +97,18 @@ Spawner.prototype.fireEvent = function(handlername, args) {
     }
 }
 
-Spawner.prototype.instance = function(level, time) {
+Spawner.prototype.instance = function(sector, time) {
+    var generator = this.generator;
+
     var npc = new NPC({
-        generator: this.generator,
-        instanceTime: time,
-        level: level
+        id: generator.generateID(),
+        instanceTime: time
     });
 
-    this.npcs.push(npc);
+    sector.addCluster(npc);
+    sector.defineDefaultCluster(generator, npc);
+
+    this.fireEvent('instance', [npc]);
 }
 
 Spawner.prototype.start = function() {
@@ -174,28 +126,45 @@ Spawner.prototype.update = function(options) {
     var time = options.time,
         deltaTime = options.deltaTime;
 
-    // Remove items by life time and add event to distribution
-    this.checkExpiration(time);
+    this.map.sectors.each(sector => {
+        this.updateSector(sector, time);
+    });
+}
 
-    if (this.lastupdate + this.interval > time) {
-        return;
-    }
+Spawner.prototype.updateSector = function(sector, time) {
+    var spawn = sector.spawn;
 
-    // Instance asteroids for each level
-    for (var i = 0; i < consts.LEVELS; i++) {
-        for (var j = 0; j < this.count; j++) {
-            this.instance(i, time);
+    if (spawn) {
+        if (sector.lastUpdate + spawn.interval <= time) {
+            for (var i = 0; i < spawn.count; i++) {
+                this.instance(sector, time);
+            }
+
+            sector.lastUpdate = time;
         }
-    }
 
-    this.lastupdate = time;
+        var self = this;
+        sector.npcs.each((npc, ind, arr) => {
+            var endtime = npc.instanceTime + spawn.lifetime;
+            if (endtime < time) {
+                npc.destroy('collapsion', time);
+            }
+
+            if (typeof npc.destroyTime === 'number' && npc.destroyTime + consts.AFTERDEATH < time) {
+                self.generator.clearID(npc.id);
+                sector.removeCluster(npc);
+            }
+        });
+    }
 }
 
 module.exports = Spawner;
 
-var Storage = require('../engine/storage');
+var logger = require('../engine/logger');
 var consts = require('./constants');
+var Storage = require('../engine/storage');
 var Updater = require('./updater');
 var Generator = require('./generator');
 var Heaven = require('./heaven');
 var NPC = require('./npc');
+var Map = require('./map');

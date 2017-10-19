@@ -286,8 +286,6 @@ Item.prototype.setAttribute = function(name, value) {
 }
 
 Item.prototype.streamUpdate = function(options) {
-    this.fireEvent('update', [options]);
-
     if (this.rigidbody) {
         this.rigidbody.fireEvent('update', [options]);
     }
@@ -295,6 +293,8 @@ Item.prototype.streamUpdate = function(options) {
     if (this.physic) {
         this.physic.fireEvent('update', [options]);
     }
+
+    this.fireEvent('update', [options]);
 }
 
 Item.prototype.toJSON = function() {

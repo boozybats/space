@@ -1012,19 +1012,28 @@ Vec.sum = function() {
  * @class
  * @extends Vec
  */
-function Vec2(x = 0, y = 0) {
+function Vec2(x, y) {
     if (typeof x === 'number' && typeof y === 'number') {
         //
     } else if (x && (x.constructor === Vec3 || x.constructor === Vec4)) {
         y = x.y;
         x = x.x;
+    } else if (typeof x === 'number' && typeof y === 'undefined') {
+        y = x;
     } else {
         if (typeof x !== 'number') {
-            warn('Vec2', 'x', x);
+            if (typeof x !== 'undefined') {
+                warn('Vec2', 'x', x);
+            }
+
             x = 0;
         }
+
         if (typeof y !== 'number') {
-            warn('Vec2', 'y', y);
+            if (typeof y !== 'undefined') {
+                warn('Vec2', 'y', y);
+            }
+
             y = 0;
         }
     }
@@ -1047,11 +1056,11 @@ Vec2.prototype.constructor = Vec2;
  * @class
  * @extends Vec
  */
-function Vec3(x = 0, y = 0, z = 0) {
+function Vec3(x, y, z) {
     if (typeof x === 'number' && typeof y === 'number' &&
         typeof z === 'number') {
         //
-    } else if (!z && x && x.constructor === Vec2) {
+    } else if (typeof z === 'undefined' && x && x.constructor === Vec2) {
         if (typeof y !== 'number') {
             warn('Vec3', 'y', y);
             y = 0;
@@ -1060,7 +1069,7 @@ function Vec3(x = 0, y = 0, z = 0) {
         z = y;
         y = x.y;
         x = x.x;
-    } else if (!z && y && y.constructor === Vec2) {
+    } else if (typeof z === 'undefined' && y && y.constructor === Vec2) {
         if (typeof x !== 'number') {
             warn('Vec3', 'x', x);
             x = 0;
@@ -1068,21 +1077,35 @@ function Vec3(x = 0, y = 0, z = 0) {
 
         z = y.y;
         y = y.x;
-    } else if (!y && x && x.constructor === Vec4) {
+    } else if (typeof z === 'undefined' && x && x.constructor === Vec4) {
         z = x.z;
         y = x.y;
         x = x.x;
+    } else if (typeof x === 'number' && typeof y === 'undefined') {
+        y = x;
+        z = x;
     } else {
         if (typeof x !== 'number') {
-            warn('Vec3', 'x', x);
+            if (typeof x !== 'undefined') {
+                warn('Vec3', 'x', x);
+            }
+
             x = 0;
         }
+
         if (typeof y !== 'number') {
-            warn('Vec3', 'y', y);
+            if (typeof y !== 'undefined') {
+                warn('Vec3', 'y', y);
+            }
+
             y = 0;
         }
+
         if (typeof z !== 'number') {
-            warn('Vec3', 'z', z);
+            if (typeof z !== 'undefined') {
+                warn('Vec3', 'z', z);
+            }
+
             z = 0;
         }
     }
@@ -1131,16 +1154,16 @@ Vec3.cross = function(vec1, vec2) {
  * @class
  * @extends Vec
  */
-function Vec4(x = 0, y = 0, z = 0, w = 0) {
+function Vec4(x, y, z, w) {
     if (typeof x === 'number' && typeof y === 'number' &&
         typeof z === 'number' && typeof w === 'number') {
         //
-    } else if (!z && x && x.constructor === Vec2 && y && y.constructor === Vec2) {
+    } else if (typeof z === 'undefined' && x && x.constructor === Vec2 && y && y.constructor === Vec2) {
         w = y.y;
         z = y.x;
         y = x.y;
         x = x.x;
-    } else if (!w && x && x.constructor === Vec2) {
+    } else if (typeof w === 'undefined' && x && x.constructor === Vec2) {
         if (typeof z !== 'number') {
             warn('Vec4', 'z', z);
             z = 0
@@ -1154,7 +1177,7 @@ function Vec4(x = 0, y = 0, z = 0, w = 0) {
         z = y;
         y = x.y;
         x = x.x;
-    } else if (!w && y && y.constructor === Vec2) {
+    } else if (typeof w === 'undefined' && y && y.constructor === Vec2) {
         if (typeof z !== 'number') {
             warn('Vec4', 'z', z);
             z = 0
@@ -1167,7 +1190,7 @@ function Vec4(x = 0, y = 0, z = 0, w = 0) {
         w = z;
         z = y.y;
         y = y.x;
-    } else if (!w && z && z.constructor == Vec2) {
+    } else if (typeof w === 'undefined' && z && z.constructor == Vec2) {
         if (typeof y !== 'number') {
             warn('Vec4', 'y', y);
             y = 0
@@ -1179,7 +1202,7 @@ function Vec4(x = 0, y = 0, z = 0, w = 0) {
 
         w = z.y;
         z = z.x;
-    } else if (!z && x && x.constructor == Vec3) {
+    } else if (typeof z === 'undefined' && x && x.constructor == Vec3) {
         if (typeof y !== 'number') {
             warn('Vec4', 'y', y);
             y = 0;
@@ -1189,7 +1212,7 @@ function Vec4(x = 0, y = 0, z = 0, w = 0) {
         z = x.z;
         y = x.y;
         x = x.x;
-    } else if (!z && y && y.constructor === Vec3) {
+    } else if (typeof z === 'undefined' && y && y.constructor === Vec3) {
         if (typeof x !== 'number') {
             warn('Vec4', 'x', x);
             x = 0;
@@ -1198,21 +1221,40 @@ function Vec4(x = 0, y = 0, z = 0, w = 0) {
         w = y.z;
         z = y.y;
         y = y.x;
+    } else if (typeof x === 'number' && typeof y === 'undefined') {
+        y = x;
+        z = x;
+        w = x;
     } else {
         if (typeof x !== 'number') {
-            warn('Vec4', 'x', x);
+            if (typeof x !== 'undefined') {
+                warn('Vec4', 'x', x);
+            }
+
             x = 0;
         }
+
         if (typeof y !== 'number') {
-            warn('Vec4', 'y', y);
+            if (typeof y !== 'undefined') {
+                warn('Vec4', 'y', y);
+            }
+
             y = 0;
         }
+
         if (typeof z !== 'number') {
-            warn('Vec4', 'z', z);
+            if (typeof z !== 'undefined') {
+                warn('Vec4', 'z', z);
+            }
+
             z = 0;
         }
+
         if (typeof w !== 'number') {
-            warn('Vec4', 'w', w);
+            if (typeof w !== 'undefined') {
+                warn('Vec4', 'w', w);
+            }
+
             w = 0;
         }
     }

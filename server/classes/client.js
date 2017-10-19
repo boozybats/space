@@ -249,7 +249,7 @@ Client.prototype.inherit = function(clone) {
 }
 
 // Creates new player for client and returns it
-Client.prototype.instancePlayer = function(options) {
+Client.prototype.instancePlayer = function(options = {}) {
     if (typeof options !== 'object') {
         logger.warn('Client#instancePlayer', 'options', options);
         options = {};

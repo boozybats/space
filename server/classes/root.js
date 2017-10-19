@@ -1,6 +1,4 @@
 function Root() {
-    this.storages = {};
-
     this.initialize();
     this.initializeStream();
 }
@@ -44,52 +42,58 @@ Object.defineProperties(Root.prototype, {
 });
 
 Root.prototype.configureConnection = function() {
+    var connection = this.connection;
+
     this.setConnectionListeners({
         client: this.responseClient.bind(this)
+    });
+
+    var map = this.map;
+    var mechanics = this.mechanics;
+    connection.attachEvent('instancePlayer', player => {
+        // finds free place for new player
+        var sector = map.findSpawn(player);
+        sector.addCluster(player);
+        sector.defineDefaultCluster(this.generator, player);
+    });
+
+    connection.attachEvent('enablePlayer', player => {
+        // if player was replaced for another client and enabled
+        var sector = player.sector;
+        if (sector instanceof Sector) {
+            sector.addCluster(player);
+        }
+    });
+
+    connection.attachEvent('disablePlayer', player => {
+        var sector = player.sector;
+        if (sector instanceof Sector) {
+            sector.removeCluster(player);
+        }
     });
 }
 
 Root.prototype.initialize = function() {
+    // Generates id, heavens
+    this.generator_ = new Generator;
+
     var map = new Map(consts.MAP);
     this.map_ = map;
+
+    // Game mechanics
+    var mechanics = new Mechanics(map);
+    this.mechanics_ = mechanics;
 
     // Connection binding and configuration setup
     var connection = new Connection;
     this.connection_ = connection;
     this.configureConnection();
 
-    // Make new storage that collects all players on the server
-    var players = new Storage;
-    this.storages.players = players;
-
-    connection.attachEvent('instancePlayer', player => {
-        var sector = map.findSpawn(player);
-        sector.addCluster(player);
-    });
-    connection.attachEvent('enablePlayer', player => {
-        // If player was replaced for another client and enabled
-        players.push(player);
-    });
-    connection.attachEvent('disablePlayer', player => {
-        var index = players.indexOf(player);
-        if (~index) {
-            players.splice(index, 1);
-        }
-    });
-
-    // Generates id, heavens
-    this.generator_ = new Generator;
-
     // Updates with same interval
     var updater = new Updater({
         clients: connection.clients
     });
     this.updater_ = updater;
-
-    // Game mechanic
-    this.mechanics_ = new Mechanics({
-        storages: this.storages
-    });
 }
 
 /* Stream is always-updating function that changes items state
@@ -123,11 +127,11 @@ Root.prototype.responseClient = function(response, client) {
     switch (method) {
         case 'getId':
             // If client asking for id then create new Player
-            var player = client.instancePlayer({
-                generator: this.generator
-            });
+            var id = this.generator.generateID();
+            var player = client.instancePlayer();
+            player.id = id;
 
-            response.answer(player.id);
+            response.answer(id);
 
             break;
 
@@ -200,31 +204,22 @@ Root.prototype.setupDistribution = function(options = {}) {
     this.distribution_ = distribution;
 
     var self = this;
-    // change visible items for each client
-    distribution.attachEvent('beforeClientSend', (client, stack, out) => {
-        var sector = client.sector;
+    distribution.attachEvent('beforeClientSend', (client, out) => {
+        var player = client.player;
 
-        out.players = sector.filterClusters(client.player, stack.players);
-        out.npcs = sector.filterClusters(client.player, stack.npcs);
-    });
+        if (!player) {
+            return;
+        }
 
-    // collect all items before new distribution and set in memory
-    distribution.attachEvent('beforeSend', function() {
-        var players = [],
-            npcs = [];
+        var sector = player.sector;
 
-        self.map.sectors.each(sector => {
-            sector.players.each(player => {
-                players.push(player.toJSON());
-            });
+        if (!sector) {
+            return;
+        }
 
-            sector.npcs.each(npc => {
-                npcs.push(npc.toJSON());
-            });
-        });
-
-        distribution.setInMemory('players', players);
-        distribution.setInMemory('npcs', npcs);
+        out.players = treat(player, sector.players);
+        out.npcs = treat(player, sector.npcs);
+        out.sector = sector.getData();
     });
 
     // On answer from client redirect response to function
@@ -236,7 +231,7 @@ Root.prototype.setupDistribution = function(options = {}) {
 }
 
 // check can player see the item
-function filterSafeRange(cluster, clusters) {
+function treat(cluster, clusters) {
     var out = [];
 
     if (!cluster || !cluster.isReady()) {
@@ -244,26 +239,23 @@ function filterSafeRange(cluster, clusters) {
     }
 
     var item0 = cluster.item;
+    var pos0 = item0.body.position;
 
     var range = item0.physic.diameter * consts.VISION_RANGE;
 
-    for (var i = 0; i < clusters.length; i++) {
-        var cluster = clusters[i];
-
+    clusters.each(cluster => {
         if (!cluster.item) {
-            continue;
+            return;
         }
 
         var item1 = cluster.item;
+        var pos1 = item1.body.position;
 
-        var pos = item1.body.position;
-        pos = new Vec3(pos[0], pos[1], pos[2]);
-
-        var length = amc('-', item0.body.position, pos).length() - item1.physic.diameter / 2;
+        var length = amc('-', pos0, pos1).length() - item1.physic.diameter / 2;
         if (length <= range) {
-            out.push(cluster);
+            out.push(cluster.toJSON());
         }
-    }
+    });
 
     return out;
 }
@@ -272,12 +264,10 @@ function filterSafeRange(cluster, clusters) {
 Root.prototype.setupSpawner = function(options = {}) {
     options.generator = this.generator;
     options.updater = this.updater;
+    options.map = this.map;
 
     var spawner = new Spawner(options);
     this.spawner_ = spawner;
-
-    // Add to storages "npcs" by spawner
-    this.storages.npcs = spawner.npcs;
 
     spawner.start();
 }
@@ -302,6 +292,7 @@ var Mechanics = require('./mechanics');
 var consts = require('./constants');
 var math = require('../engine/math');
 var Map = require('./map');
+var Sector = require('./sector');
 var amc = math.amc;
 var v = require('../engine/vector');
 var Vec3 = v.Vec3;
